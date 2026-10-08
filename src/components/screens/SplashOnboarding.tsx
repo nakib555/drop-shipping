@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft,
+  ArrowRight,
   Box,
   CheckCircle2,
   Eye,
@@ -29,29 +30,29 @@ export const SplashOnboarding: React.FC = () => {
   const [password, setPassword] = useState('••••••••••••');
   const [showPass, setShowPass] = useState(false);
 
-  // 1. ANIMATED SPLASH SCREEN
+  // 1. RESPONSIVE MOBILE SPLASH SCREEN (Fits all mobile viewports cleanly without clipping)
   if (currentScreen === 'splash') {
     return (
-      <div className="flex-1 bg-slate-900 text-white p-6 flex flex-col justify-between items-center text-center select-none overflow-hidden relative">
-        {/* Subtle Animated Background Radial Rings */}
+      <div className="flex-1 min-h-full bg-slate-900 text-white px-5 py-4 flex flex-col justify-between items-center text-center select-none overflow-y-auto overflow-x-hidden relative">
+        {/* Subtle Animated Background Radial Glow */}
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: [1, 1.12, 1], opacity: [0.12, 0.22, 0.12] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-[#059669]/25 blur-3xl pointer-events-none"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#059669]/25 blur-3xl pointer-events-none"
         />
 
         {/* Top Bar: Language Toggle + Skip to Store */}
         <motion.div
-          initial={{ y: -16, opacity: 0 }}
+          initial={{ y: -12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="w-full flex items-center justify-between relative z-10"
+          transition={{ duration: 0.35 }}
+          className="w-full flex items-center justify-between relative z-10 shrink-0"
         >
           <button
             type="button"
             onClick={() => setLanguage(language === 'EN' ? 'BN' : 'EN')}
-            className="text-xs font-semibold text-white px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            className="h-8 px-3 rounded-xl text-xs leading-4 font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/10 transition-colors inline-flex items-center justify-center"
           >
             {language === 'EN' ? 'বাংলা' : 'English'}
           </button>
@@ -59,172 +60,216 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 transition-colors"
+            className="h-8 px-3 rounded-xl text-xs leading-4 font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/15 border border-white/10 transition-colors inline-flex items-center gap-1"
           >
-            {language === 'BN' ? 'স্টোরে যান →' : 'Skip to Store →'}
+            <span>{language === 'BN' ? 'স্টোরে যান' : 'Skip to Store'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </motion.div>
 
-        {/* Center Animated Brand Lockup & Global Logistics Scene */}
-        <div className="my-auto flex flex-col items-center relative z-10">
+        {/* Center Brand Lockup & Compact Cross-Border Logistics Scene */}
+        <div className="my-auto py-3 flex flex-col items-center relative z-10 w-full">
           {/* Spring-Animated DeshiMart Shopping Bag Logo */}
           <motion.div
-            initial={{ scale: 0.4, opacity: 0, y: 20 }}
+            initial={{ scale: 0.5, opacity: 0, y: 14 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-            className="relative mb-4"
+            className="relative mb-3"
           >
-            <div className="w-20 h-20 rounded-3xl bg-white text-slate-900 flex items-center justify-center shadow-2xl relative">
-              <ShoppingBag className="w-10 h-10 stroke-[2]" />
+            <div className="w-16 h-16 rounded-2xl bg-white text-slate-900 flex items-center justify-center shadow-2xl relative">
+              <ShoppingBag className="w-8 h-8 stroke-[2]" />
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.35, type: 'spring', stiffness: 300 }}
-                className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#059669] text-white flex items-center justify-center border-2 border-slate-900 shadow-md"
+                transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
+                className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#059669] text-white flex items-center justify-center border-2 border-slate-900 shadow-md"
               >
-                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
               </motion.span>
             </div>
           </motion.div>
 
           <motion.h1
-            initial={{ y: 12, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-            className="text-3xl font-bold tracking-tight"
+            transition={{ delay: 0.12, duration: 0.35 }}
+            className="text-2xl leading-7 font-bold tracking-tight"
           >
             DeshiMart
           </motion.h1>
 
           <motion.p
-            initial={{ y: 10, opacity: 0 }}
+            initial={{ y: 8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.4 }}
-            className="text-xs font-medium text-slate-400 mt-1"
+            transition={{ delay: 0.2, duration: 0.35 }}
+            className="text-xs leading-4 font-medium text-emerald-400 mt-1"
           >
             {language === 'BN'
-              ? 'গ্লোবাল পণ্য → আপনার দরজায়'
+              ? 'গ্লোবাল পণ্য · ল্যান্ডেড প্রাইস অন্তর্ভুক্ত'
               : 'Global Products · Landed Cost Included'}
           </motion.p>
 
-          {/* Animated Orbiting Globe, Cargo Plane & Customs Shield Scene */}
+          {/* Compact Animated Orbiting Globe, Cargo Plane & Customs Shield Scene */}
           <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="mt-6 relative w-56 h-56 flex items-center justify-center"
+            transition={{ delay: 0.25, duration: 0.45 }}
+            className="mt-4 relative w-44 h-44 flex items-center justify-center shrink-0"
           >
             {/* Outer Rotating Dashed Orbit Ring */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-              className="absolute inset-0 rounded-full border border-dashed border-slate-700"
+              className="absolute inset-0 rounded-full border border-dashed border-slate-700/90"
             />
 
             {/* Middle Pulsing Glow Sphere */}
             <motion.div
-              animate={{ y: [-5, 5, -5] }}
+              animate={{ y: [-4, 4, -4] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-44 h-44 rounded-full bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center p-4 shadow-2xl relative"
+              className="w-34 h-34 rounded-full bg-slate-800/90 border border-slate-700 flex flex-col items-center justify-center p-3 shadow-2xl relative"
             >
-              <Globe className="w-20 h-20 text-emerald-400 stroke-[1.4] mb-1.5" />
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold bg-slate-900 px-3 py-1 rounded-xl border border-slate-700">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <Globe className="w-14 h-14 text-emerald-400 stroke-[1.5] mb-1.5" />
+              <div className="flex items-center gap-1 text-[10px] leading-3.5 font-semibold bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 whitespace-nowrap">
+                <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
                 <span>
-                  {language === 'BN'
-                    ? 'ল্যান্ডেড প্রাইস অন্তর্ভুক্ত'
-                    : 'Zero Hidden Tax'}
+                  {language === 'BN' ? 'কোনো লুকানো চার্জ নেই' : 'Zero Hidden Tax'}
                 </span>
               </div>
             </motion.div>
 
             {/* Floating Air Freight Plane Badge (Top Right) */}
             <motion.div
-              animate={{ x: [-4, 6, -4], y: [-6, 4, -6] }}
+              animate={{ x: [-3, 5, -3], y: [-5, 3, -5] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-1 right-2 w-11 h-11 rounded-2xl bg-white text-slate-900 shadow-xl flex items-center justify-center"
+              className="absolute top-0 right-1 w-9 h-9 rounded-xl bg-white text-slate-900 shadow-xl flex items-center justify-center"
             >
-              <Plane className="w-5 h-5" />
+              <Plane className="w-4 h-4" />
             </motion.div>
 
             {/* Floating Verified Parcel Box (Bottom Left) */}
             <motion.div
-              animate={{ x: [4, -5, 4], y: [4, -6, 4] }}
+              animate={{ x: [3, -4, 3], y: [3, -5, 3] }}
               transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-2 left-1 w-11 h-11 rounded-2xl bg-[#059669] text-white shadow-xl flex items-center justify-center border-2 border-slate-900"
+              className="absolute bottom-1 left-1 w-9 h-9 rounded-xl bg-[#059669] text-white shadow-xl flex items-center justify-center border-2 border-slate-900"
             >
-              <Package className="w-5 h-5" />
+              <Package className="w-4 h-4" />
             </motion.div>
 
             {/* Floating Shield Trust Badge (Bottom Right) */}
             <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
+              animate={{ scale: [1, 1.06, 1] }}
               transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-3 right-1 px-2.5 py-1 rounded-xl bg-white text-slate-900 shadow-lg text-[10px] font-bold flex items-center gap-1"
+              className="absolute bottom-2 right-0 px-2 py-1 rounded-lg bg-white text-slate-900 shadow-lg text-[10px] leading-3.5 font-bold flex items-center gap-1 whitespace-nowrap"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
+              <ShieldCheck className="w-3 h-3 text-[#059669] shrink-0" />
               <span>DropScore 9.1</span>
             </motion.div>
           </motion.div>
 
-          {/* Staggered Tagline */}
+          {/* 3-Pillar Trust Strip */}
           <motion.div
-            initial={{ y: 14, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.45, duration: 0.4 }}
-            className="mt-5 space-y-1"
+            transition={{ delay: 0.35, duration: 0.35 }}
+            className="mt-4 grid grid-cols-3 gap-2 w-full max-w-[330px]"
           >
-            <p className="text-base font-bold text-white tracking-tight">
+            <div className="bg-slate-800/70 border border-slate-700/80 rounded-xl p-2 text-center">
+              <p className="text-[11px] leading-4 font-bold text-white font-mono-num">
+                100% Landed
+              </p>
+              <p className="text-[10px] leading-3.5 text-slate-400 mt-0.5">
+                Duty & VAT in price
+              </p>
+            </div>
+            <div className="bg-slate-800/70 border border-slate-700/80 rounded-xl p-2 text-center">
+              <p className="text-[11px] leading-4 font-bold text-emerald-400 font-mono-num">
+                3 Routes
+              </p>
+              <p className="text-[10px] leading-3.5 text-slate-400 mt-0.5">
+                Direct · Express · BD
+              </p>
+            </div>
+            <div className="bg-slate-800/70 border border-slate-700/80 rounded-xl p-2 text-center">
+              <p className="text-[11px] leading-4 font-bold text-white font-mono-num">
+                bKash & COD
+              </p>
+              <p className="text-[10px] leading-3.5 text-slate-400 mt-0.5">
+                Safe local payment
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Tagline */}
+          <motion.div
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.42, duration: 0.35 }}
+            className="mt-3.5 space-y-1"
+          >
+            <p className="text-sm leading-5 font-bold text-white tracking-tight">
               {language === 'BN'
                 ? 'স্মার্ট শপিং। আসল দাম। পূর্ণ আস্থা।'
-                : 'Smarter Shopping. Real Confidence.'}
+                : 'Smarter Cross-Border Shopping for Bangladesh'}
             </p>
-            <p className="text-xs text-slate-400 max-w-[260px] mx-auto">
+            <p className="text-[11px] leading-4 text-slate-400 max-w-[280px] mx-auto">
               {language === 'BN'
                 ? 'কাস্টমস ডিউটি ও ভ্যাটসহ প্রকৃত মূল্য দেখুন এবং নিশ্চিন্তে অর্ডার করুন।'
-                : 'See the real landed cost · Know the supplier · Track every step.'}
+                : 'See the exact landed cost · Verify the supplier · Track every step.'}
             </p>
           </motion.div>
         </div>
 
-        {/* Bottom Animated Action Zone */}
+        {/* Bottom Action Zone */}
         <motion.div
-          initial={{ y: 24, opacity: 0 }}
+          initial={{ y: 18, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.55, duration: 0.4 }}
-          className="w-full space-y-2.5 relative z-10"
+          transition={{ delay: 0.48, duration: 0.35 }}
+          className="w-full space-y-2 relative z-10 shrink-0 pt-1"
         >
           <button
             type="button"
-            onClick={() => {
-              setSlideIndex(0);
-              setDirection(1);
-              navigateTo('onboarding');
-            }}
-            className="w-full h-12 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            onClick={() => navigateTo('home')}
+            className="w-full h-11 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs leading-4 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#059669]/20"
           >
-            <span>{language === 'BN' ? 'শুরু করুন (Get Started)' : 'Get Started'}</span>
+            <span>
+              {language === 'BN'
+                ? 'স্টোর ব্রাউজ করুন (Start Shopping)'
+                : 'Start Shopping Now'}
+            </span>
+            <ArrowRight className="w-4 h-4" />
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode('login');
-              navigateTo('auth');
-            }}
-            className="w-full py-1.5 text-xs font-medium text-slate-400 hover:text-white"
-          >
-            {language === 'BN' ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? ' : 'Already have an account? '}
-            <span className="font-semibold underline text-white">
-              {language === 'BN' ? 'লগইন করুন' : 'Sign In'}
-            </span>
-          </button>
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                setSlideIndex(0);
+                setDirection(1);
+                navigateTo('onboarding');
+              }}
+              className="flex-1 h-9 rounded-xl bg-white/10 hover:bg-white/15 text-xs leading-4 font-medium text-slate-200 transition-colors"
+            >
+              {language === 'BN' ? 'কিভাবে কাজ করে' : 'How It Works (3 Steps)'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('login');
+                navigateTo('auth');
+              }}
+              className="flex-1 h-9 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs leading-4 font-medium text-white transition-colors"
+            >
+              {language === 'BN' ? 'লগইন / রেজিস্টার' : 'Sign In / Register'}
+            </button>
+          </div>
         </motion.div>
       </div>
     );
   }
 
-  // 2. ANIMATED 3-SLIDE ONBOARDING FLOW
+  // 2. ANIMATED 3-SLIDE ONBOARDING FLOW (Supports touch swipe + buttons)
   if (currentScreen === 'onboarding') {
     const slides = [
       {
@@ -236,7 +281,7 @@ export const SplashOnboarding: React.FC = () => {
         subtitle:
           language === 'BN'
             ? 'টপ গ্লোবাল ব্র্যান্ড থেকে শুরু করে ভেরিফাইড ফ্যাক্টরির পণ্য সরাসরি বাংলাদেশে।'
-            : 'From top global brands to unique factory finds, we bring the world to Bangladesh.',
+            : 'From top global brands to verified factory finds, we bring the world to Bangladesh.',
         highlights: [
           {
             icon: CheckCircle2,
@@ -306,7 +351,7 @@ export const SplashOnboarding: React.FC = () => {
     };
 
     return (
-      <div className="flex-1 bg-white p-6 flex flex-col justify-between overflow-hidden">
+      <div className="flex-1 min-h-full bg-white px-5 py-4 flex flex-col justify-between overflow-y-auto overflow-x-hidden">
         {/* Top Navigation Row */}
         <div className="flex items-center justify-between shrink-0">
           <button
@@ -319,65 +364,75 @@ export const SplashOnboarding: React.FC = () => {
                 navigateTo('splash');
               }
             }}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-9 h-9 -ml-1.5 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => setLanguage(language === 'EN' ? 'BN' : 'EN')}
-              className="text-xs font-semibold text-slate-700 px-2.5 py-1 rounded-lg bg-slate-100"
+              className="h-7 px-2.5 rounded-lg text-xs leading-4 font-semibold text-slate-700 bg-slate-100 inline-flex items-center justify-center"
             >
               {language === 'EN' ? 'বাংলা' : 'EN'}
             </button>
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="text-xs font-medium text-slate-500 hover:text-slate-900"
+              className="text-xs leading-4 font-medium text-slate-500 hover:text-slate-900"
             >
               {language === 'BN' ? 'স্কিপ' : 'Skip'}
             </button>
           </div>
         </div>
 
-        {/* Animated Slide Content with AnimatePresence */}
+        {/* Animated Slide Content with Swipe Support */}
         <div className="my-auto flex-1 flex flex-col items-center justify-center overflow-hidden py-2">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={activeSlide.id}
               custom={direction}
-              initial={{ opacity: 0, x: direction > 0 ? 70 : -70 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.18}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -45 && slideIndex < slides.length - 1) {
+                  goToSlide(slideIndex + 1);
+                } else if (info.offset.x > 45 && slideIndex > 0) {
+                  goToSlide(slideIndex - 1);
+                }
+              }}
+              initial={{ opacity: 0, x: direction > 0 ? 60 : -60 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: direction > 0 ? -70 : 70 }}
-              transition={{ duration: 0.28, ease: 'easeOut' }}
-              className="w-full flex flex-col items-center text-center"
+              exit={{ opacity: 0, x: direction > 0 ? -60 : 60 }}
+              transition={{ duration: 0.24, ease: 'easeOut' }}
+              className="w-full flex flex-col items-center text-center cursor-grab active:cursor-grabbing"
             >
               {/* Slide-Specific Animated Vector Illustration Scene */}
-              <div className="relative w-44 h-44 rounded-full bg-slate-50 flex items-center justify-center mb-5 border border-slate-200/80">
+              <div className="relative w-36 h-36 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-200/80 shrink-0">
                 {slideIndex === 0 && (
                   <>
                     <motion.div
-                      animate={{ y: [-4, 4, -4] }}
+                      animate={{ y: [-3, 3, -3] }}
                       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
+                      className="w-20 h-20 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
                     >
-                      <Globe className="w-12 h-12" />
+                      <Globe className="w-10 h-10" />
                     </motion.div>
                     <motion.div
-                      animate={{ x: [-6, 6, -6], y: [-4, 4, -4] }}
+                      animate={{ x: [-5, 5, -5], y: [-3, 3, -3] }}
                       transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                      className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white text-[#059669] shadow-md flex items-center justify-center border border-slate-200"
+                      className="absolute top-2 right-2 w-9 h-9 rounded-xl bg-white text-[#059669] shadow-md flex items-center justify-center border border-slate-200"
                     >
-                      <Plane className="w-5 h-5" />
+                      <Plane className="w-4 h-4" />
                     </motion.div>
                     <motion.div
-                      animate={{ scale: [1, 1.08, 1] }}
+                      animate={{ scale: [1, 1.07, 1] }}
                       transition={{ duration: 2.4, repeat: Infinity }}
-                      className="absolute bottom-3 left-3 w-10 h-10 rounded-2xl bg-[#059669] text-white shadow-md flex items-center justify-center"
+                      className="absolute bottom-2 left-2 w-9 h-9 rounded-xl bg-[#059669] text-white shadow-md flex items-center justify-center"
                     >
-                      <Package className="w-5 h-5" />
+                      <Package className="w-4 h-4" />
                     </motion.div>
                   </>
                 )}
@@ -385,23 +440,23 @@ export const SplashOnboarding: React.FC = () => {
                 {slideIndex === 1 && (
                   <>
                     <motion.div
-                      animate={{ scale: [1, 1.06, 1] }}
+                      animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
+                      className="w-20 h-20 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
                     >
-                      <ShieldCheck className="w-12 h-12" />
+                      <ShieldCheck className="w-10 h-10" />
                     </motion.div>
                     <motion.div
-                      animate={{ y: [-4, 4, -4] }}
+                      animate={{ y: [-3, 3, -3] }}
                       transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-white text-slate-900 shadow-md text-[10px] font-bold border border-slate-200"
+                      className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-white text-slate-900 shadow-md text-[10px] leading-3.5 font-bold border border-slate-200"
                     >
                       ৳ Landed
                     </motion.div>
                     <motion.div
-                      animate={{ y: [4, -4, 4] }}
+                      animate={{ y: [3, -3, 3] }}
                       transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute bottom-3 right-2 px-2.5 py-1 rounded-xl bg-[#059669] text-white shadow-md text-[10px] font-bold"
+                      className="absolute bottom-2 right-1 px-2 py-1 rounded-lg bg-[#059669] text-white shadow-md text-[10px] leading-3.5 font-bold"
                     >
                       9.1/10 Trust
                     </motion.div>
@@ -411,23 +466,23 @@ export const SplashOnboarding: React.FC = () => {
                 {slideIndex === 2 && (
                   <>
                     <motion.div
-                      animate={{ x: [-4, 5, -4] }}
+                      animate={{ x: [-3, 4, -3] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
+                      className="w-20 h-20 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
                     >
-                      <Truck className="w-12 h-12" />
+                      <Truck className="w-10 h-10" />
                     </motion.div>
                     <motion.div
-                      animate={{ y: [-5, 3, -5] }}
+                      animate={{ y: [-4, 3, -4] }}
                       transition={{ duration: 2.2, repeat: Infinity }}
-                      className="absolute top-2 right-4 w-10 h-10 rounded-2xl bg-white text-[#059669] shadow-md flex items-center justify-center border border-slate-200"
+                      className="absolute top-1.5 right-3 w-9 h-9 rounded-xl bg-white text-[#059669] shadow-md flex items-center justify-center border border-slate-200"
                     >
-                      <MapPin className="w-5 h-5" />
+                      <MapPin className="w-4 h-4" />
                     </motion.div>
                     <motion.div
-                      animate={{ scale: [1, 1.07, 1] }}
+                      animate={{ scale: [1, 1.06, 1] }}
                       transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute bottom-2 left-3 px-2.5 py-1 rounded-xl bg-[#059669] text-white shadow-md text-[10px] font-mono-num font-semibold"
+                      className="absolute bottom-1.5 left-2 px-2 py-1 rounded-lg bg-[#059669] text-white shadow-md text-[10px] leading-3.5 font-mono-num font-semibold"
                     >
                       7–12 Days
                     </motion.div>
@@ -435,15 +490,15 @@ export const SplashOnboarding: React.FC = () => {
                 )}
               </div>
 
-              <h2 className="text-xl font-bold text-slate-900 max-w-[290px] leading-snug">
+              <h2 className="text-lg leading-6 font-bold text-slate-900 max-w-[280px]">
                 {activeSlide.title}
               </h2>
-              <p className="text-xs text-slate-500 mt-2 max-w-[300px] leading-relaxed">
+              <p className="text-xs leading-4 text-slate-500 mt-1.5 max-w-[290px]">
                 {activeSlide.subtitle}
               </p>
 
               {/* Feature Cards Stack */}
-              <div className="mt-5 w-full space-y-2 text-left">
+              <div className="mt-4 w-full space-y-2 text-left">
                 {activeSlide.highlights.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -451,14 +506,14 @@ export const SplashOnboarding: React.FC = () => {
                       key={item.title}
                       className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 text-slate-700 flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 text-[#059669] flex items-center justify-center shrink-0">
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-slate-900">
+                        <p className="text-xs leading-4 font-semibold text-slate-900">
                           {item.title}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate">
+                        <p className="text-[11px] leading-4 text-slate-500 truncate">
                           {item.desc}
                         </p>
                       </div>
@@ -471,7 +526,7 @@ export const SplashOnboarding: React.FC = () => {
         </div>
 
         {/* Bottom Pagination Dots & Primary Action Button */}
-        <div className="space-y-4 shrink-0">
+        <div className="space-y-3 shrink-0 pt-1">
           <div className="flex items-center justify-center gap-2">
             {slides.map((_, idx) => (
               <button
@@ -493,28 +548,28 @@ export const SplashOnboarding: React.FC = () => {
                 if (slideIndex < slides.length - 1) {
                   goToSlide(slideIndex + 1);
                 } else {
-                  navigateTo('auth');
+                  navigateTo('home');
                 }
               }}
-              className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm active:scale-[0.99] transition-all"
+              className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs leading-4 active:scale-[0.99] transition-all"
             >
               {slideIndex < slides.length - 1
                 ? language === 'BN'
                   ? 'পরবর্তী (Next)'
                   : 'Next'
                 : language === 'BN'
-                ? 'শুরু করুন (Get Started)'
-                : 'Get Started'}
+                ? 'শপিং শুরু করুন (Start Shopping)'
+                : 'Start Shopping'}
             </button>
 
             <button
               type="button"
-              onClick={() => navigateTo('home')}
-              className="w-full py-1 text-xs font-medium text-slate-500 hover:text-slate-900"
+              onClick={() => navigateTo('auth')}
+              className="w-full py-1 text-xs leading-4 font-medium text-slate-500 hover:text-slate-900"
             >
               {language === 'BN'
-                ? 'সরাসরি স্টোর ব্রাউজ করুন'
-                : 'Skip & Explore Store Directly'}
+                ? 'অ্যাকাউন্টে লগইন বা রেজিস্টার করুন'
+                : 'Sign In or Create an Account'}
             </button>
           </div>
         </div>
@@ -533,32 +588,32 @@ export const SplashOnboarding: React.FC = () => {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="flex-1 bg-white p-6 flex flex-col justify-between overflow-y-auto"
+      className="flex-1 min-h-full bg-white px-5 py-4 flex flex-col justify-between overflow-y-auto"
     >
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <button
             type="button"
             aria-label="Back"
-            onClick={() => navigateTo('onboarding')}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100"
+            onClick={() => navigateTo('splash')}
+            className="w-9 h-9 -ml-1.5 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="text-xs font-semibold text-[#059669]"
+            className="text-xs leading-4 font-semibold text-[#059669]"
           >
             {language === 'BN' ? 'গেস্ট হিসেবে প্রবেশ করুন' : 'Continue as Guest'}
           </button>
         </div>
 
-        <div className="flex flex-col items-center text-center mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-3">
-            <ShoppingBag className="w-6 h-6" />
+        <div className="flex flex-col items-center text-center mb-4">
+          <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-2.5">
+            <ShoppingBag className="w-5 h-5" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-lg leading-6 font-bold text-slate-900">
             {authMode === 'login'
               ? language === 'BN'
                 ? 'স্বাগতম (Welcome Back)'
@@ -567,7 +622,7 @@ export const SplashOnboarding: React.FC = () => {
               ? 'নতুন অ্যাকাউন্ট খুলুন'
               : 'Create Your Account'}
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs leading-4 text-slate-500 mt-0.5">
             {authMode === 'login'
               ? 'Sign in to your DeshiMart account'
               : 'Join DeshiMart and start shopping globally'}
@@ -577,7 +632,7 @@ export const SplashOnboarding: React.FC = () => {
         <form onSubmit={handleAuthSubmit} className="space-y-3">
           {authMode === 'register' && (
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs leading-4 font-medium text-slate-700 mb-1">
                 Full Name
               </label>
               <input
@@ -586,13 +641,13 @@ export const SplashOnboarding: React.FC = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
+                className="w-full h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 text-slate-900 focus:outline-none focus:border-slate-400"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs leading-4 font-medium text-slate-700 mb-1">
               {authMode === 'login' ? 'Email or Phone' : 'Email Address'}
             </label>
             <input
@@ -601,13 +656,13 @@ export const SplashOnboarding: React.FC = () => {
               value={emailOrPhone}
               onChange={(e) => setEmailOrPhone(e.target.value)}
               placeholder="name@example.com"
-              className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
+              className="w-full h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 text-slate-900 focus:outline-none focus:border-slate-400"
             />
           </div>
 
           {authMode === 'register' && (
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs leading-4 font-medium text-slate-700 mb-1">
                 Phone Number (Bangladesh)
               </label>
               <input
@@ -616,19 +671,21 @@ export const SplashOnboarding: React.FC = () => {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="+880 1712 345678"
-                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono-num text-slate-900 focus:outline-none focus:border-slate-400"
+                className="w-full h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 font-mono-num text-slate-900 focus:outline-none focus:border-slate-400"
               />
             </div>
           )}
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-slate-700">Password</label>
+              <label className="text-xs leading-4 font-medium text-slate-700">
+                Password
+              </label>
               {authMode === 'login' && (
                 <button
                   type="button"
                   onClick={() => loginUser(emailOrPhone)}
-                  className="text-[11px] font-medium text-[#059669]"
+                  className="text-[11px] leading-4 font-medium text-[#059669]"
                 >
                   Forgot Password?
                 </button>
@@ -641,7 +698,7 @@ export const SplashOnboarding: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full h-11 pl-3.5 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
+                className="w-full h-10 pl-3.5 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 text-slate-900 focus:outline-none focus:border-slate-400"
               />
               <button
                 type="button"
@@ -649,22 +706,26 @@ export const SplashOnboarding: React.FC = () => {
                 onClick={() => setShowPass(!showPass)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400"
               >
-                {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPass ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-colors mt-2"
+            className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs leading-4 transition-colors mt-1"
           >
             {authMode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
-        <div className="my-4 flex items-center gap-3">
+        <div className="my-3.5 flex items-center gap-3">
           <div className="h-px bg-slate-200 flex-1" />
-          <span className="text-[11px] text-slate-400">or</span>
+          <span className="text-[11px] leading-4 text-slate-400">or</span>
           <div className="h-px bg-slate-200 flex-1" />
         </div>
 
@@ -672,7 +733,7 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => loginUser('john@example.com', 'John Doe')}
-            className="w-full h-11 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-medium text-slate-700 transition-colors"
+            className="w-full h-10 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs leading-4 font-medium text-slate-700 transition-colors"
           >
             <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-900 font-bold flex items-center justify-center text-xs">
               G
@@ -682,7 +743,7 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => loginUser('john@example.com', 'John Doe')}
-            className="w-full h-11 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-medium text-slate-700 transition-colors"
+            className="w-full h-10 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs leading-4 font-medium text-slate-700 transition-colors"
           >
             <span className="w-5 h-5 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-xs">
               f
@@ -692,11 +753,15 @@ export const SplashOnboarding: React.FC = () => {
         </div>
       </div>
 
-      <p className="text-center text-xs text-slate-500 mt-5">
-        {authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+      <p className="text-center text-xs leading-4 text-slate-500 mt-4">
+        {authMode === 'login'
+          ? "Don't have an account? "
+          : 'Already have an account? '}
         <button
           type="button"
-          onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+          onClick={() =>
+            setAuthMode(authMode === 'login' ? 'register' : 'login')
+          }
           className="font-semibold text-[#059669] underline"
         >
           {authMode === 'login' ? 'Register' : 'Sign In'}
