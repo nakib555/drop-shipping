@@ -380,37 +380,49 @@ export const HomeScreen: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Cross-Border Intelligence Bar (3 Static Informational Cards) */}
+      {/* 3. Cross-Border Intelligence Bar (Interactive Tool Shortcuts) */}
       <section aria-label="Cross-Border Highlights" className="grid grid-cols-3 gap-2.5">
-        <div className="p-3 rounded-2xl bg-white border border-slate-200/80 text-left">
-          <TrendingDown className="w-4 h-4 text-[#059669] mb-2" />
+        <button
+          type="button"
+          onClick={() => navigateTo('price_tracker')}
+          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors group"
+        >
+          <TrendingDown className="w-4 h-4 text-[#059669] mb-2 group-hover:scale-105 transition-transform" />
           <span className="block text-xs leading-4 font-semibold text-slate-900">
             {language === 'BN' ? 'প্রাইস হিস্ট্রি' : 'Price History'}
           </span>
           <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
             30-day landed lows
           </span>
-        </div>
+        </button>
 
-        <div className="p-3 rounded-2xl bg-white border border-slate-200/80 text-left">
-          <Scale className="w-4 h-4 text-[#059669] mb-2" />
+        <button
+          type="button"
+          onClick={() => navigateTo('seller_compare')}
+          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors group"
+        >
+          <Scale className="w-4 h-4 text-[#059669] mb-2 group-hover:scale-105 transition-transform" />
           <span className="block text-xs leading-4 font-semibold text-slate-900">
             {language === 'BN' ? '৩ রুট তুলনা' : '3-Route Compare'}
           </span>
           <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
             CN vs. BD vs. Air
           </span>
-        </div>
+        </button>
 
-        <div className="p-3 rounded-2xl bg-white border border-slate-200/80 text-left">
-          <Truck className="w-4 h-4 text-[#059669] mb-2" />
+        <button
+          type="button"
+          onClick={() => navigateTo('orders')}
+          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors group"
+        >
+          <Truck className="w-4 h-4 text-[#059669] mb-2 group-hover:scale-105 transition-transform" />
           <span className="block text-xs leading-4 font-semibold text-slate-900">
             {language === 'BN' ? 'লাইভ ট্র্যাকিং' : 'Live Tracking'}
           </span>
           <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
             Customs & courier
           </span>
-        </div>
+        </button>
       </section>
 
       {/* 4. Horizontal Snap-Sliding "Flash Landed Drops" Rail */}

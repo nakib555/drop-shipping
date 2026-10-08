@@ -242,33 +242,86 @@ export const CategoriesScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Category Switcher */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      {/* Category Switcher Slidebar */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
         <button
           type="button"
           onClick={() => setSelectedCategoryId('all')}
-          className={`h-8 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap shrink-0 inline-flex items-center justify-center transition-colors border ${
+          className={`relative h-10 px-3.5 rounded-xl text-xs leading-4 font-semibold whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 justify-center transition-colors border ${
             selectedCategoryId === 'all'
-              ? 'bg-slate-900 text-white border-slate-900'
-              : 'bg-white text-slate-700 border-slate-200/80'
+              ? 'text-white border-slate-900'
+              : 'bg-white text-slate-700 border-slate-200/90 hover:border-slate-300'
           }`}
         >
-          All ({products.length})
+          {selectedCategoryId === 'all' && (
+            <motion.span
+              layoutId="catActiveSlidePill"
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0 rounded-xl bg-slate-900"
+            />
+          )}
+          <span className="relative z-10">{language === 'BN' ? 'সব পণ্য' : 'All'}</span>
+          <span
+            aria-hidden="true"
+            className={`relative z-10 ${
+              selectedCategoryId === 'all' ? 'text-slate-400' : 'text-slate-300'
+            }`}
+          >
+            ·
+          </span>
+          <span
+            className={`relative z-10 font-mono-num text-[11px] leading-4 ${
+              selectedCategoryId === 'all' ? 'text-emerald-400' : 'text-slate-400'
+            }`}
+          >
+            {products.length}
+          </span>
         </button>
         {CATEGORIES.map((c) => {
           const count = products.filter((p) => p.category === c.id).length;
+          const Icon = iconMap[c.id] || Cpu;
+          const isSelected = selectedCategoryId === c.id;
           return (
             <button
               key={c.id}
               type="button"
               onClick={() => setSelectedCategoryId(c.id)}
-              className={`h-8 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap shrink-0 inline-flex items-center justify-center transition-colors border ${
-                selectedCategoryId === c.id
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-700 border-slate-200/80'
+              className={`relative h-10 px-3.5 rounded-xl text-xs leading-4 font-semibold whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 justify-center transition-colors border ${
+                isSelected
+                  ? 'text-white border-slate-900'
+                  : 'bg-white text-slate-700 border-slate-200/90 hover:border-slate-300'
               }`}
             >
-              {language === 'BN' ? c.nameBn : c.name} ({count})
+              {isSelected && (
+                <motion.span
+                  layoutId="catActiveSlidePill"
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-0 rounded-xl bg-slate-900"
+                />
+              )}
+              <Icon
+                className={`relative z-10 w-3.5 h-3.5 ${
+                  isSelected ? 'text-emerald-400' : 'text-slate-400'
+                }`}
+              />
+              <span className="relative z-10">
+                {language === 'BN' ? c.nameBn : c.name}
+              </span>
+              <span
+                aria-hidden="true"
+                className={`relative z-10 ${
+                  isSelected ? 'text-slate-400' : 'text-slate-300'
+                }`}
+              >
+                ·
+              </span>
+              <span
+                className={`relative z-10 font-mono-num text-[11px] leading-4 ${
+                  isSelected ? 'text-emerald-400' : 'text-slate-400'
+                }`}
+              >
+                {count}
+              </span>
             </button>
           );
         })}
@@ -446,37 +499,98 @@ export const CategoriesScreen: React.FC = () => {
                 </button>
               </div>
 
-              {/* Max Landed Price Range (Up to 250,000 BDT) */}
-              <div>
-                <div className="flex items-center justify-between text-xs leading-4 font-medium text-slate-700 mb-2">
-                  <span>Max Total Landed Price</span>
-                  <span className="font-mono-num text-slate-900 font-semibold">
+              {/* Max Landed Price Range Slidebar (Up to 250,000 BDT) */}
+              <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs leading-4 font-medium text-slate-600">
+                    Max Total Landed Price
+                  </span>
+                  <span className="font-mono-num text-sm leading-5 font-bold text-slate-900">
                     {formatPrice(smartFilters.maxPriceBdt)}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min={1500}
-                  max={250000}
-                  step={1000}
-                  value={smartFilters.maxPriceBdt}
-                  onChange={(e) =>
-                    setSmartFilters((prev) => ({
-                      ...prev,
-                      maxPriceBdt: Number(e.target.value),
-                    }))
-                  }
-                  className="w-full accent-[#059669]"
-                />
-                <div className="flex justify-between text-[10px] leading-4 font-mono-num text-slate-400 mt-1">
-                  <span>{formatPrice(1500)}</span>
-                  <span>{formatPrice(250000)}</span>
+
+                {/* Tactile Range Slider Track */}
+                <div className="relative flex items-center h-7">
+                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full bg-[#059669] rounded-full transition-all duration-75"
+                      style={{
+                        width: `${Math.max(
+                          2,
+                          Math.min(
+                            100,
+                            ((smartFilters.maxPriceBdt - 1500) / (250000 - 1500)) * 100
+                          )
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    aria-label="Maximum total landed price"
+                    min={1500}
+                    max={250000}
+                    step={1000}
+                    value={smartFilters.maxPriceBdt}
+                    onChange={(e) =>
+                      setSmartFilters((prev) => ({
+                        ...prev,
+                        maxPriceBdt: Number(e.target.value),
+                      }))
+                    }
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute w-5 h-5 rounded-full bg-white border-2 border-[#059669] shadow-sm -translate-x-1/2 transition-all duration-75"
+                    style={{
+                      left: `${Math.max(
+                        3,
+                        Math.min(
+                          97,
+                          ((smartFilters.maxPriceBdt - 1500) / (250000 - 1500)) * 100
+                        )
+                      )}%`,
+                    }}
+                  />
+                </div>
+
+                {/* Quick Price Preset Buttons */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { label: '≤ 5k', value: 5000 },
+                    { label: '≤ 25k', value: 25000 },
+                    { label: '≤ 100k', value: 100000 },
+                    { label: 'Any', value: 250000 },
+                  ].map((preset) => {
+                    const active = smartFilters.maxPriceBdt === preset.value;
+                    return (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        onClick={() =>
+                          setSmartFilters((prev) => ({
+                            ...prev,
+                            maxPriceBdt: preset.value,
+                          }))
+                        }
+                        className={`h-8 rounded-lg font-mono-num text-[11px] leading-4 font-semibold transition-colors ${
+                          active
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-white border border-slate-200/80 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Toggles */}
-              <div className="space-y-3 pt-1">
-                <label className="flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
+              <div className="space-y-1 pt-1">
+                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
                   <span>In Stock & Ready to Ship Only</span>
                   <input
                     type="checkbox"
@@ -491,7 +605,7 @@ export const CategoriesScreen: React.FC = () => {
                   />
                 </label>
 
-                <label className="flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
+                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
                   <span>Deals & Price Drops Only</span>
                   <input
                     type="checkbox"
@@ -506,7 +620,7 @@ export const CategoriesScreen: React.FC = () => {
                   />
                 </label>
 
-                <label className="flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
+                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
                   <span>Verified Suppliers Only (DropScore 8.5+)</span>
                   <input
                     type="checkbox"
@@ -522,18 +636,18 @@ export const CategoriesScreen: React.FC = () => {
                 </label>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2">
+              <div className="grid grid-cols-2 gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={resetSmartFilters}
-                  className="h-10 rounded-xl border border-slate-200 text-xs leading-4 font-semibold text-slate-700 hover:bg-slate-50"
+                  className="min-h-[44px] rounded-xl border border-slate-200 text-xs leading-4 font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   Reset
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterSheetOpen(false)}
-                  className="h-10 rounded-xl bg-[#059669] text-white text-xs leading-4 font-semibold hover:bg-[#047857]"
+                  className="min-h-[44px] rounded-xl bg-[#059669] text-white text-xs leading-4 font-semibold hover:bg-[#047857] transition-colors"
                 >
                   Apply Filters
                 </button>
