@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Camera,
   CheckCircle2,
@@ -31,6 +31,7 @@ import { ToastContainer } from '../shared/ToastContainer';
 export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
     currentScreen,
+    selectedProductId,
     navigateTo,
     currency,
     setCurrency,
@@ -38,6 +39,13 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     setLanguage,
   } = useDeshiMart();
   const [showFlowDock, setShowFlowDock] = useState(true);
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+    }
+  }, [currentScreen, selectedProductId]);
 
   const flowGroups: {
     groupTitle: string;
@@ -212,7 +220,10 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
         <SideDrawer />
 
         {/* Dedicated Scrollable Screen Body Between Fixed Top Bar and Fixed Bottom Bar */}
-        <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative">
+        <main
+          ref={mainScrollRef}
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
+        >
           {children}
         </main>
 

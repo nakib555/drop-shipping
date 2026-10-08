@@ -130,7 +130,7 @@ export const OrdersTrackingScreen: React.FC = () => {
       : 1;
 
   return (
-    <div className="p-3.5 space-y-4 pb-6">
+    <div className="p-4 space-y-4 pb-6">
       {/* Order Header Card */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
         <div className="flex items-center justify-between">
@@ -306,12 +306,12 @@ export const OrdersTrackingScreen: React.FC = () => {
 
       {/* Landed Cost Receipt / Invoice Modal */}
       {invoiceOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="absolute inset-0 z-50 flex items-end justify-center">
           <div
             onClick={() => setInvoiceOpen(false)}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
           />
-          <div className="relative z-10 w-full max-w-[412px] bg-white rounded-t-3xl p-5 shadow-2xl space-y-3.5">
+          <div className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-sm font-extrabold text-[#0B3D2E]">

@@ -196,7 +196,7 @@ export const SellerCompareScreen: React.FC = () => {
   });
 
   return (
-    <div className="p-3.5 space-y-4 pb-6">
+    <div className="p-4 space-y-4 pb-6">
       {/* Product Selector Header */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">

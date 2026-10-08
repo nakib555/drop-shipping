@@ -152,35 +152,35 @@ export const CategoriesScreen: React.FC = () => {
     });
 
   return (
-    <div className="p-3.5 space-y-3.5 pb-6">
+    <div className="p-4 space-y-4 pb-6">
       {/* Search + Filter Drawer Trigger */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#6B7280] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={catSearch}
             onChange={(e) => setCatSearch(e.target.value)}
             placeholder="Search in category..."
-            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200 text-xs text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200 text-xs leading-4 text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
           />
         </div>
         <button
           type="button"
           onClick={() => setFilterSheetOpen(true)}
-          className="h-10 px-3 rounded-xl bg-white border border-slate-200 text-xs font-bold text-[#0B3D2E] flex items-center gap-1.5 hover:border-[#0EA75F]"
+          className="h-10 px-3 rounded-xl bg-white border border-slate-200 text-xs leading-4 font-bold text-[#0B3D2E] flex items-center gap-2 hover:border-[#0EA75F]"
         >
-          <SlidersHorizontal className="w-3.5 h-3.5 text-[#0EA75F]" />
+          <SlidersHorizontal className="w-4 h-4 text-[#0EA75F]" />
           <span>Filters</span>
         </button>
       </div>
 
       {/* Category Pill Switcher */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setSelectedCategoryId('all')}
-          className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+          className={`h-8 px-3 rounded-xl text-xs leading-4 font-semibold whitespace-nowrap transition-colors ${
             selectedCategoryId === 'all'
               ? 'bg-[#0EA75F] text-white'
               : 'bg-white text-[#6B7280] border border-slate-200'
@@ -193,20 +193,20 @@ export const CategoriesScreen: React.FC = () => {
             key={c.id}
             type="button"
             onClick={() => setSelectedCategoryId(c.id)}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`h-8 px-3 rounded-xl text-xs leading-4 font-semibold whitespace-nowrap transition-colors ${
               selectedCategoryId === c.id
                 ? 'bg-[#0EA75F] text-white'
                 : 'bg-white text-[#6B7280] border border-slate-200'
             }`}
           >
-            {c.name}
+            {language === 'BN' ? c.nameBn : c.name}
           </button>
         ))}
       </div>
 
       {/* Sort Bar */}
       <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {(
             [
               { id: 'best', label: 'Best Match' },
@@ -218,7 +218,7 @@ export const CategoriesScreen: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setSortBy(tab.id)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+              className={`h-7 px-2.5 rounded-lg text-[11px] leading-4 font-semibold transition-colors ${
                 sortBy === tab.id
                   ? 'bg-[#0B3D2E] text-white'
                   : 'bg-white text-[#6B7280] border border-slate-200'
@@ -231,7 +231,7 @@ export const CategoriesScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('spec_compare')}
-          className="text-[11px] font-bold text-[#0EA75F] hover:underline"
+          className="text-xs leading-4 font-bold text-[#0EA75F] hover:underline"
         >
           Compare Specs
         </button>
@@ -239,14 +239,14 @@ export const CategoriesScreen: React.FC = () => {
 
       {/* Product Grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           {filtered.map((prod) => (
             <ProductCard key={prod.id} product={prod} />
           ))}
         </div>
       ) : (
         <div className="bg-white rounded-2xl p-6 text-center border border-slate-200">
-          <p className="text-xs font-bold text-[#0B3D2E]">
+          <p className="text-xs leading-4 font-bold text-[#0B3D2E]">
             No products in this filter range
           </p>
           <button
@@ -255,24 +255,24 @@ export const CategoriesScreen: React.FC = () => {
               setSelectedCategoryId('all');
               resetSmartFilters();
             }}
-            className="mt-3 px-4 py-2 rounded-xl bg-[#0EA75F] text-white text-xs font-bold"
+            className="mt-3 h-10 px-4 rounded-xl bg-[#0EA75F] text-white text-xs leading-4 font-bold"
           >
             Show All Products
           </button>
         </div>
       )}
 
-      {/* Slide-Up Filter Bottom Sheet (Screen 23 / 25 in UI Kit) */}
+      {/* Slide-Up Filter Bottom Sheet (Anchored to Mobile Viewport) */}
       {filterSheetOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="absolute inset-0 z-50 flex items-end justify-center">
           <div
             onClick={() => setFilterSheetOpen(false)}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
           />
-          <div className="relative z-10 w-full max-w-[412px] bg-white rounded-t-3xl p-5 shadow-2xl space-y-4">
-            <div className="w-10 h-1.5 bg-slate-300 rounded-full mx-auto -mt-1 mb-2" />
+          <div className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-4">
+            <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-extrabold text-[#0B3D2E]">
+              <h3 className="text-sm leading-5 font-extrabold text-[#0B3D2E]">
                 Smart Filters
               </h3>
               <button
@@ -286,7 +286,7 @@ export const CategoriesScreen: React.FC = () => {
 
             {/* Max Landed Price Range */}
             <div>
-              <div className="flex items-center justify-between text-xs font-semibold text-[#0B3D2E] mb-2">
+              <div className="flex items-center justify-between text-xs leading-4 font-semibold text-[#0B3D2E] mb-2">
                 <span>Max Total Landed Price</span>
                 <span className="font-mono-num text-[#0EA75F] font-bold">
                   {formatPrice(smartFilters.maxPriceBdt)}
@@ -306,15 +306,15 @@ export const CategoriesScreen: React.FC = () => {
                 }
                 className="w-full accent-[#0EA75F]"
               />
-              <div className="flex justify-between text-[10px] font-mono-num text-[#6B7280] mt-1">
+              <div className="flex justify-between text-[10px] leading-4 font-mono-num text-[#6B7280] mt-1">
                 <span>{formatPrice(1500)}</span>
                 <span>{formatPrice(90000)}</span>
               </div>
             </div>
 
             {/* Toggles */}
-            <div className="space-y-2.5 pt-1">
-              <label className="flex items-center justify-between text-xs font-semibold text-[#0B3D2E] cursor-pointer">
+            <div className="space-y-3 pt-1">
+              <label className="flex items-center justify-between text-xs leading-4 font-semibold text-[#0B3D2E] cursor-pointer">
                 <span>In Stock & Ready to Ship Only</span>
                 <input
                   type="checkbox"
@@ -329,7 +329,7 @@ export const CategoriesScreen: React.FC = () => {
                 />
               </label>
 
-              <label className="flex items-center justify-between text-xs font-semibold text-[#0B3D2E] cursor-pointer">
+              <label className="flex items-center justify-between text-xs leading-4 font-semibold text-[#0B3D2E] cursor-pointer">
                 <span>Deals & Price Drops Only</span>
                 <input
                   type="checkbox"
@@ -344,7 +344,7 @@ export const CategoriesScreen: React.FC = () => {
                 />
               </label>
 
-              <label className="flex items-center justify-between text-xs font-semibold text-[#0B3D2E] cursor-pointer">
+              <label className="flex items-center justify-between text-xs leading-4 font-semibold text-[#0B3D2E] cursor-pointer">
                 <span>Verified Suppliers Only (DropScore 8.5+)</span>
                 <input
                   type="checkbox"
@@ -360,18 +360,18 @@ export const CategoriesScreen: React.FC = () => {
               </label>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 pt-3">
+            <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 type="button"
                 onClick={resetSmartFilters}
-                className="h-11 rounded-xl border border-slate-200 text-xs font-bold text-[#0B3D2E] hover:bg-slate-50"
+                className="h-10 rounded-xl border border-slate-200 text-xs leading-4 font-bold text-[#0B3D2E] hover:bg-slate-50"
               >
                 Reset
               </button>
               <button
                 type="button"
                 onClick={() => setFilterSheetOpen(false)}
-                className="h-11 rounded-xl bg-[#0EA75F] text-white text-xs font-bold shadow-md hover:bg-[#0B8A4D]"
+                className="h-10 rounded-xl bg-[#0EA75F] text-white text-xs leading-4 font-bold shadow-md hover:bg-[#0B8A4D]"
               >
                 Apply Filters
               </button>

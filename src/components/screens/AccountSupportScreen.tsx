@@ -161,7 +161,7 @@ export const AccountSupportScreen: React.FC = () => {
     }
 
     return (
-      <div className="p-3.5 space-y-3 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-bold text-[#0B3D2E]">
             {language === 'BN'
@@ -240,7 +240,7 @@ export const AccountSupportScreen: React.FC = () => {
   // 2. DEDICATED SAVED ADDRESSES MANAGER
   if (currentScreen === 'addresses') {
     return (
-      <div className="p-3.5 space-y-3.5 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-extrabold text-[#0B3D2E]">
             {language === 'BN'
@@ -442,8 +442,8 @@ export const AccountSupportScreen: React.FC = () => {
     ];
 
     return (
-      <div className="p-3.5 space-y-3.5 pb-6">
-        <div className="bg-[#ECFDF5] border border-[#0EA75F]/30 rounded-2xl p-3.5 flex items-center gap-2.5">
+      <div className="p-4 space-y-4 pb-6">
+        <div className="bg-[#ECFDF5] border border-[#0EA75F]/30 rounded-2xl p-4 flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-[#0EA75F] shrink-0" />
           <p className="text-xs text-[#0B3D2E] leading-relaxed">
             {language === 'BN'
@@ -506,7 +506,7 @@ export const AccountSupportScreen: React.FC = () => {
     );
 
     return (
-      <div className="p-3.5 space-y-4 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         {/* Supplier Header Card */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
@@ -577,7 +577,7 @@ export const AccountSupportScreen: React.FC = () => {
               ? 'সাপ্লায়ারের ভেরিফাইড পণ্যসমূহ'
               : 'Verified Factory Catalog (Landed Price)'}
           </h3>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {supplierCatalog.map((prod) => (
               <ProductCard key={prod.id} product={prod} />
             ))}
@@ -590,7 +590,7 @@ export const AccountSupportScreen: React.FC = () => {
   // 5. NOTIFICATIONS SCREEN (Screen 20 in UI Kits 2 & 3)
   if (currentScreen === 'notifications') {
     return (
-      <div className="p-3.5 space-y-3 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-bold text-[#0B3D2E]">
             Recent Alerts & Updates
@@ -649,7 +649,7 @@ export const AccountSupportScreen: React.FC = () => {
   // 6. SHOPPING GUIDES / BLOG SCREEN (Screen 26 in Image 2 & Screen 27 in Image 4)
   if (currentScreen === 'guides') {
     return (
-      <div className="p-3.5 space-y-3.5 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         <div className="bg-[#0B3D2E] text-white rounded-2xl p-4">
           <h2 className="text-sm font-extrabold">
             Smarter Cross-Border Shopping Guides
@@ -699,7 +699,7 @@ export const AccountSupportScreen: React.FC = () => {
   // 7. SETTINGS & CURRENCY / LANGUAGE SCREEN (Screen 27 in Image 2 & Screen 24 in Image 4)
   if (currentScreen === 'settings') {
     return (
-      <div className="p-3.5 space-y-4 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         {/* Currency Selection */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2.5">
           <h2 className="text-xs font-extrabold text-[#0B3D2E]">
@@ -822,7 +822,7 @@ export const AccountSupportScreen: React.FC = () => {
   // 8. HELP & SUPPORT SCREEN (Screen 20/21/23 in UI Kits)
   if (currentScreen === 'support') {
     return (
-      <div className="p-3.5 space-y-4 pb-6">
+      <div className="p-4 space-y-4 pb-6">
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
           <h2 className="text-sm font-extrabold text-[#0B3D2E]">
             How can we help you today?

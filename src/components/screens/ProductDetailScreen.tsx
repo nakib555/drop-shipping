@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   CheckCircle2,
   ChevronRight,
@@ -39,6 +39,13 @@ export const ProductDetailScreen: React.FC = () => {
   );
   const [activeImageView, setActiveImageView] = useState<0 | 1 | 2>(0);
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setSelectedColor(selectedProduct.colors[0]?.name || 'Standard');
+    setSelectedSize(selectedProduct.sizes?.[2] || selectedProduct.sizes?.[0] || '');
+    setActiveImageView(0);
+    setImgError(false);
+  }, [selectedProduct]);
   const [activeInfoModal, setActiveInfoModal] = useState<
     null | 'supplier' | 'warranty' | 'review'
   >(null);

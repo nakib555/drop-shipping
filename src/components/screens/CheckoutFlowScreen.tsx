@@ -64,7 +64,7 @@ export const CheckoutFlowScreen: React.FC = () => {
   // STEP 1: Checkout - Shipping Address & Method (Screen 12 / 16 in UI Kits)
   if (currentScreen === 'checkout_shipping') {
     return (
-      <div className="p-3.5 space-y-4 pb-6 flex-1 flex flex-col justify-between">
+      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between">
         <div className="space-y-4">
           {/* Step Progress Bar */}
           <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-bold">
@@ -336,7 +336,7 @@ export const CheckoutFlowScreen: React.FC = () => {
     ];
 
     return (
-      <div className="p-3.5 space-y-4 pb-6 flex-1 flex flex-col justify-between">
+      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between">
         <div className="space-y-4">
           {/* Step Progress Bar */}
           <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-bold">
@@ -482,10 +482,10 @@ export const CheckoutFlowScreen: React.FC = () => {
     };
 
     return (
-      <div className="p-3.5 space-y-3.5 pb-6 flex-1 flex flex-col justify-between">
-        <div className="space-y-3.5">
+      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between">
+        <div className="space-y-4">
           {/* Shipping Address Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-extrabold text-[#0B3D2E]">
                 Shipping Address
