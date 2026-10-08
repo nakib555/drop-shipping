@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  Lock,
   MessageSquare,
   Package,
   Plus,
@@ -12,7 +11,6 @@ import {
   ShoppingCart,
   Star,
   Store,
-  Truck,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { DropScoreBadge } from '../shared/DropScoreBadge';
@@ -46,6 +44,7 @@ export const ProductDetailScreen: React.FC = () => {
     setActiveImageView(0);
     setImgError(false);
   }, [selectedProduct]);
+
   const [activeInfoModal, setActiveInfoModal] = useState<
     null | 'supplier' | 'warranty' | 'review'
   >(null);
@@ -90,45 +89,35 @@ export const ProductDetailScreen: React.FC = () => {
 
   const viewTransformClasses = [
     'scale-100 rotate-0',
-    'scale-110 -rotate-3',
-    'scale-105 rotate-3',
+    'scale-110 -rotate-2',
+    'scale-105 rotate-2',
   ];
 
-  // 8pt Grid: p-4 (16px), space-y-4 (16px), gap-2 (8px), gap-3 (12px), h-10 (40px), h-12 (48px)
+  // Clean Single-Surface Product Detail Architecture (No Nested Card Clutter)
   return (
     <div className="flex-1 bg-white flex flex-col justify-between">
-      {/* Clean Single-Surface Product Details (No Bento Grid Boxes) */}
-      <div className="p-4 space-y-4">
-        {/* 1. Product Image Showcase + Interactive 3-Angle Thumbnail Strip */}
+      <div className="p-4 space-y-5">
+        {/* 1. Product Image Showcase + 3-Angle Selector */}
         <div className="space-y-2">
-          <div className="relative w-full aspect-square max-h-64 rounded-2xl bg-[#F8FAFC] border border-slate-100 overflow-hidden flex items-center justify-center">
+          <div className="relative w-full aspect-square max-h-64 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center">
             {!imgError ? (
               <img
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
                 referrerPolicy="no-referrer"
                 onError={() => setImgError(true)}
-                className={`w-full h-full object-contain transition-transform duration-300 ${viewTransformClasses[activeImageView]}`}
+                className={`w-full h-full object-contain transition-transform duration-200 ${viewTransformClasses[activeImageView]}`}
               />
             ) : (
               <div className="flex flex-col items-center justify-center p-6 text-center">
-                <Package className="w-12 h-12 text-[#0EA75F] mb-2" />
-                <span className="text-xs leading-4 font-bold text-[#0B3D2E]">
+                <Package className="w-10 h-10 text-slate-400 mb-2" />
+                <span className="text-xs leading-4 font-medium text-slate-700">
                   {selectedProduct.name}
                 </span>
               </div>
             )}
-
-            <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-white/90 backdrop-blur-xs border border-slate-200/80 text-[10px] leading-4 font-bold text-[#0B3D2E]">
-              {activeImageView === 0
-                ? 'Studio View'
-                : activeImageView === 1
-                ? 'Close-Up Detail'
-                : 'Side Profile'}
-            </div>
           </div>
 
-          {/* 3-Angle Thumbnail Selector Row (w-12 h-12 = 48px = 6*8, gap-2 = 8px) */}
           <div className="flex items-center justify-center gap-2">
             {(['Studio', 'Detail', 'Profile'] as const).map((label, idx) => {
               const isSelected = activeImageView === idx;
@@ -137,10 +126,10 @@ export const ProductDetailScreen: React.FC = () => {
                   key={label}
                   type="button"
                   onClick={() => setActiveImageView(idx as 0 | 1 | 2)}
-                  className={`w-12 h-12 rounded-xl bg-[#F8FAFC] border overflow-hidden p-1 transition-all ${
+                  className={`w-12 h-12 rounded-xl bg-slate-50 border overflow-hidden p-1 transition-all ${
                     isSelected
-                      ? 'border-2 border-[#0EA75F] ring-2 ring-[#0EA75F]/20'
-                      : 'border-slate-200 opacity-75 hover:opacity-100'
+                      ? 'border-slate-900'
+                      : 'border-slate-200 opacity-65 hover:opacity-100'
                   }`}
                 >
                   <img
@@ -148,7 +137,7 @@ export const ProductDetailScreen: React.FC = () => {
                     alt={`${selectedProduct.name} ${label}`}
                     referrerPolicy="no-referrer"
                     className={`w-full h-full object-cover rounded-lg ${
-                      idx === 1 ? 'scale-125' : idx === 2 ? 'scale-110 rotate-6' : ''
+                      idx === 1 ? 'scale-125' : idx === 2 ? 'scale-110 rotate-3' : ''
                     }`}
                   />
                 </button>
@@ -157,79 +146,69 @@ export const ProductDetailScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. Core Product Title, Origin, Rating, Price & DropScore */}
-        <div className="space-y-2">
-          {/* Unboxed Origin & Delivery Metadata */}
-          <div className="flex items-center justify-between text-xs leading-4 text-[#6B7280]">
-            <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-[#0EA75F]" />
-              <span className="font-semibold text-[#0B3D2E]">
-                {selectedProduct.originLabel} · Verified Supplier
-              </span>
-            </div>
-            <span className="text-[#0EA75F] font-bold">
-              {activeRoute?.deliveryDays || '7–12 days'}
+        {/* 2. Product Title, Unboxed Metadata, Landed Price & DropScore */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between text-xs leading-4 text-slate-500">
+            <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
+              {selectedProduct.originLabel}
             </span>
+            <span>{activeRoute?.deliveryDays || '7–12 days'} delivery</span>
           </div>
 
           <div>
-            <h1 className="text-lg leading-6 font-extrabold text-[#0B3D2E]">
+            <h1 className="text-lg leading-6 font-semibold text-slate-900">
               {language === 'BN' ? selectedProduct.nameBn : selectedProduct.name}
             </h1>
-            <p className="text-xs leading-4 text-[#6B7280] mt-1">
+            <p className="text-xs leading-4 text-slate-500 mt-1">
               {selectedProduct.subtitle}
             </p>
           </div>
 
-          {/* Rating & Reviews Summary */}
-          <div className="flex items-center justify-between text-xs leading-4 text-[#6B7280]">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-0.5 text-amber-400">
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-              </div>
-              <span className="font-mono-num font-bold text-[#0B3D2E]">
+          {/* Unboxed Rating & Price History Link */}
+          <div className="flex items-center justify-between text-xs leading-4 text-slate-500">
+            <div className="flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span className="font-mono-num font-semibold text-slate-900">
                 {selectedProduct.rating.toFixed(1)}
               </span>
-              <span>({selectedProduct.reviewCount.toLocaleString()} reviews)</span>
+              <span>·</span>
+              <span>{selectedProduct.reviewCount.toLocaleString()} reviews</span>
             </div>
 
             <button
               type="button"
               onClick={() => navigateTo('price_tracker')}
-              className="text-xs leading-4 font-bold text-[#0EA75F] hover:underline"
+              className="text-xs leading-4 font-medium text-[#059669] hover:underline"
             >
-              {language === 'BN' ? 'প্রাইস হিস্ট্রি দেখুন' : 'Price History →'}
+              {language === 'BN' ? 'প্রাইস হিস্ট্রি →' : '30-Day Price History →'}
             </button>
           </div>
 
-          {/* Primary Landed Price Callout (24px / 32px line-height = 4*8) */}
+          {/* Primary Landed Price Callout (Zero-Pill Unboxed Metadata) */}
           <div className="flex items-baseline gap-2 pt-1">
-            <span className="font-mono-num text-2xl leading-8 font-extrabold text-[#0EA75F]">
+            <span className="font-mono-num text-2xl leading-8 font-semibold text-slate-900">
               {formatPrice(totalLandedBdt)}
             </span>
             <span className="font-mono-num text-xs leading-4 text-slate-400 line-through">
               {formatPrice(selectedProduct.originalLandedBdt)}
             </span>
-            <span className="px-2 py-0.5 rounded-lg bg-[#ECFDF5] text-xs leading-4 font-mono-num font-extrabold text-[#0EA75F]">
-              -{selectedProduct.discountPercent}% OFF
+            <span className="text-xs leading-4 font-mono-num font-medium text-[#059669]">
+              Save {selectedProduct.discountPercent}%
             </span>
           </div>
 
-          {/* Signature DropScore™ Component */}
+          {/* Editorial DropScore Row */}
           <DropScoreBadge
             score={selectedProduct.dropScore}
             label={selectedProduct.dropScoreLabel}
           />
 
           {/* Unboxed Feature Highlights */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs leading-4 text-[#6B7280]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs leading-4 text-slate-500">
             {selectedProduct.highlights.map((hl, idx) => (
               <React.Fragment key={hl}>
-                <span className="text-[#0B3D2E] font-medium">{hl}</span>
+                <span className="text-slate-700">{hl}</span>
                 {idx < selectedProduct.highlights.length - 1 && (
                   <span aria-hidden="true">·</span>
                 )}
@@ -238,70 +217,68 @@ export const ProductDetailScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. Clean Landed Cost Breakdown */}
-        <section className="pt-4 border-t border-slate-100 space-y-2">
+        {/* 3. Transparent Landed Cost Breakdown */}
+        <section className="pt-4 border-t border-slate-100 space-y-2.5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xs leading-4 font-extrabold text-[#0B3D2E]">
+              <h2 className="text-xs leading-4 font-semibold text-slate-900">
                 {language === 'BN'
-                  ? 'ল্যান্ডেড প্রাইস ব্রেকডাউন (সকল খরচসহ)'
-                  : 'Landed Cost Breakdown'}
+                  ? 'ল্যান্ডেড প্রাইস ব্রেকডাউন'
+                  : 'True Landed Cost Breakdown'}
               </h2>
-              <p className="text-[11px] leading-4 text-[#6B7280] mt-0.5">
+              <p className="text-[11px] leading-4 text-slate-500 mt-0.5">
                 {activeRoute?.name} · {activeRoute?.originCountry}
               </p>
             </div>
             <button
               type="button"
               onClick={() => navigateTo('seller_compare')}
-              className="text-xs leading-4 font-bold text-[#0EA75F] hover:underline"
+              className="text-xs leading-4 font-medium text-[#059669] hover:underline"
             >
-              {language === 'BN' ? 'রুট তুলনা করুন' : 'Compare Routes →'}
+              {language === 'BN' ? '৩ রুট তুলনা →' : 'Compare 3 Routes →'}
             </button>
           </div>
 
-          <div className="space-y-2 text-xs leading-4 pt-1">
-            <div className="flex justify-between text-[#6B7280]">
-              <span>{language === 'BN' ? 'পণ্যের মূল দাম' : 'Product Price'}</span>
-              <span className="font-mono-num font-semibold text-[#0B3D2E]">
+          <div className="space-y-1.5 text-xs leading-4 pt-1">
+            <div className="flex justify-between text-slate-500">
+              <span>{language === 'BN' ? 'পণ্যের মূল দাম' : 'Factory Price'}</span>
+              <span className="font-mono-num text-slate-900">
                 {formatPrice(baseBdt)}
               </span>
             </div>
-            <div className="flex justify-between text-[#6B7280]">
+            <div className="flex justify-between text-slate-500">
               <span>
                 {language === 'BN'
-                  ? `শিপিং চার্জ (${activeRoute?.deliveryDays})`
-                  : `Shipping (${activeRoute?.deliveryDays})`}
+                  ? `শিপিং (${activeRoute?.deliveryDays})`
+                  : `International Shipping (${activeRoute?.deliveryDays})`}
               </span>
-              <span className="font-mono-num font-semibold text-[#0B3D2E]">
+              <span className="font-mono-num text-slate-900">
                 {formatPrice(shippingBdt)}
               </span>
             </div>
-            <div className="flex justify-between text-[#6B7280]">
+            <div className="flex justify-between text-slate-500">
               <span>
                 {language === 'BN'
                   ? 'ইমপোর্ট ডিউটি (১০%)'
-                  : 'Import Duty (10%)'}
+                  : 'Customs Import Duty (10%)'}
               </span>
-              <span className="font-mono-num font-semibold text-[#0B3D2E]">
+              <span className="font-mono-num text-slate-900">
                 {formatPrice(dutyBdt)}
               </span>
             </div>
-            <div className="flex justify-between text-[#6B7280]">
-              <span>
-                {language === 'BN' ? 'ভ্যাট (১৫%)' : 'VAT (15%)'}
-              </span>
-              <span className="font-mono-num font-semibold text-[#0B3D2E]">
+            <div className="flex justify-between text-slate-500">
+              <span>{language === 'BN' ? 'ভ্যাট (১৫%)' : 'Bangladesh VAT (15%)'}</span>
+              <span className="font-mono-num text-slate-900">
                 {formatPrice(vatBdt)}
               </span>
             </div>
-            <div className="p-3 mt-1 rounded-xl bg-[#ECFDF5] flex justify-between items-center font-bold text-[#0B3D2E]">
+            <div className="pt-2.5 mt-1 border-t border-slate-100 flex justify-between items-center font-semibold text-slate-900">
               <span>
                 {language === 'BN'
                   ? 'সর্বমোট ল্যান্ডেড প্রাইস'
-                  : 'Total Landed Cost'}
+                  : 'Total Landed Price'}
               </span>
-              <span className="font-mono-num text-sm leading-5 font-extrabold text-[#0EA75F]">
+              <span className="font-mono-num text-sm leading-5 text-[#059669]">
                 {formatPrice(totalLandedBdt)}
               </span>
             </div>
@@ -311,9 +288,9 @@ export const ProductDetailScreen: React.FC = () => {
         {/* 4. Variant Selection (Color & Size) */}
         <section className="pt-4 border-t border-slate-100 space-y-3">
           <div>
-            <span className="block text-xs leading-4 font-bold text-[#0B3D2E] mb-2">
-              {language === 'BN' ? 'রঙ (Color): ' : 'Color: '}
-              <span className="text-[#0EA75F]">{selectedColor}</span>
+            <span className="block text-xs leading-4 font-medium text-slate-500 mb-2">
+              {language === 'BN' ? 'রঙ: ' : 'Color: '}
+              <strong className="text-slate-900 font-semibold">{selectedColor}</strong>
             </span>
             <div className="flex flex-wrap items-center gap-2">
               {selectedProduct.colors.map((c) => {
@@ -323,14 +300,14 @@ export const ProductDetailScreen: React.FC = () => {
                     key={c.name}
                     type="button"
                     onClick={() => setSelectedColor(c.name)}
-                    className={`h-8 px-3 rounded-xl border flex items-center gap-2 text-xs leading-4 font-semibold transition-all ${
+                    className={`h-8 px-3 rounded-lg border flex items-center gap-2 text-xs leading-4 font-medium transition-colors ${
                       active
-                        ? 'border-[#0EA75F] bg-[#ECFDF5] text-[#0B3D2E]'
-                        : 'border-slate-200 bg-white text-[#6B7280]'
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/15"
+                      className="w-3 h-3 rounded-full border border-white/20"
                       style={{ backgroundColor: c.hex }}
                     />
                     <span>{c.name}</span>
@@ -341,9 +318,9 @@ export const ProductDetailScreen: React.FC = () => {
           </div>
 
           {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
-            <div className="pt-2">
-              <span className="block text-xs leading-4 font-bold text-[#0B3D2E] mb-2">
-                Size (EU): <span className="text-[#0EA75F]">{selectedSize}</span>
+            <div className="pt-1">
+              <span className="block text-xs leading-4 font-medium text-slate-500 mb-2">
+                Size (EU): <strong className="text-slate-900 font-semibold">{selectedSize}</strong>
               </span>
               <div className="flex items-center gap-2">
                 {selectedProduct.sizes.map((sz) => (
@@ -351,10 +328,10 @@ export const ProductDetailScreen: React.FC = () => {
                     key={sz}
                     type="button"
                     onClick={() => setSelectedSize(sz)}
-                    className={`w-10 h-10 rounded-xl font-mono-num text-xs leading-4 font-bold border transition-colors ${
+                    className={`w-10 h-10 rounded-lg font-mono-num text-xs leading-4 font-semibold border transition-colors ${
                       selectedSize === sz
-                        ? 'bg-[#0EA75F] text-white border-[#0EA75F]'
-                        : 'bg-white text-[#0B3D2E] border-slate-200'
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     {sz}
@@ -364,35 +341,26 @@ export const ProductDetailScreen: React.FC = () => {
             </div>
           )}
 
-          {/* Clean Inline Trust Row */}
-          <div className="pt-2 flex items-center justify-between text-[11px] leading-4 text-[#6B7280]">
-            <span className="flex items-center gap-1">
-              <Truck className="w-3.5 h-3.5 text-[#0EA75F]" />
-              <span>Worldwide Shipping</span>
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1">
-              <RefreshCcw className="w-3.5 h-3.5 text-[#0EA75F]" />
-              <span>30 Days Return</span>
-            </span>
-            <span>·</span>
-            <span className="flex items-center gap-1">
-              <Lock className="w-3.5 h-3.5 text-[#0EA75F]" />
-              <span>Secure Payment</span>
-            </span>
+          {/* Unboxed Guarantee Metadata */}
+          <div className="pt-1 text-[11px] leading-4 text-slate-500 flex items-center gap-1.5">
+            <span>Worldwide Air Freight</span>
+            <span aria-hidden="true">·</span>
+            <span>30-Day Dhaka Return</span>
+            <span aria-hidden="true">·</span>
+            <span>COD & bKash</span>
           </div>
         </section>
 
         {/* 5. Technical Specifications List */}
         <section className="pt-4 border-t border-slate-100 space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs leading-4 font-extrabold text-[#0B3D2E]">
-              {language === 'BN' ? 'টেকনিক্যাল স্পেসিফিকেশন' : 'Technical Specifications'}
+            <h3 className="text-xs leading-4 font-semibold text-slate-900">
+              {language === 'BN' ? 'স্পেসিফিকেশন' : 'Specifications'}
             </h3>
             <button
               type="button"
               onClick={() => navigateTo('spec_compare')}
-              className="text-xs leading-4 font-bold text-[#0EA75F] hover:underline"
+              className="text-xs leading-4 font-medium text-[#059669] hover:underline"
             >
               {language === 'BN' ? 'তুলনা করুন →' : 'Compare Specs →'}
             </button>
@@ -400,8 +368,8 @@ export const ProductDetailScreen: React.FC = () => {
           <div className="divide-y divide-slate-100 text-xs leading-4">
             {specRows.map((row) => (
               <div key={row.label} className="py-2 flex items-center justify-between gap-4">
-                <span className="text-[#6B7280]">{row.label}</span>
-                <span className="font-semibold text-[#0B3D2E] text-right">
+                <span className="text-slate-500">{row.label}</span>
+                <span className="font-medium text-slate-900 text-right">
                   {row.value}
                 </span>
               </div>
@@ -412,58 +380,51 @@ export const ProductDetailScreen: React.FC = () => {
         {/* 6. Verified Supplier & Warranty Row */}
         <section className="pt-4 border-t border-slate-100 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center">
-                <Store className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                <Store className="w-4 h-4" />
               </div>
               <div>
-                <div className="flex items-center gap-1">
-                  <h3 className="text-xs leading-4 font-extrabold text-[#0B3D2E]">
-                    {selectedProduct.supplierName}
-                  </h3>
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0EA75F]" />
-                </div>
-                <p className="text-[11px] leading-4 text-[#6B7280] mt-0.5">
+                <h3 className="text-xs leading-4 font-semibold text-slate-900">
+                  {selectedProduct.supplierName}
+                </h3>
+                <p className="text-[11px] leading-4 text-slate-500 mt-0.5">
                   On-time {activeRoute?.onTimeRate || '98%'} · Return{' '}
-                  {activeRoute?.returnRate || '2%'} · Response{' '}
-                  {activeRoute?.responseTime || '< 6h'}
+                  {activeRoute?.returnRate || '2%'}
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => navigateTo('supplier_store')}
-              className="text-xs leading-4 font-bold text-[#0EA75F] hover:underline"
+              className="text-xs leading-4 font-medium text-[#059669] hover:underline"
             >
-              {language === 'BN' ? 'স্টোর দেখুন →' : 'Visit Store →'}
+              {language === 'BN' ? 'স্টোর দেখুন →' : 'Storefront →'}
             </button>
           </div>
 
           <button
             type="button"
             onClick={() => setActiveInfoModal('warranty')}
-            className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-xs leading-4 font-semibold text-[#0B3D2E] hover:text-[#0EA75F]"
+            className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 hover:text-slate-900"
           >
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#0EA75F]" />
-              <span>{selectedProduct.specs.warranty}</span>
-            </div>
+            <span>{selectedProduct.specs.warranty}</span>
             <ChevronRight className="w-4 h-4 text-slate-400" />
           </button>
         </section>
 
-        {/* 7. Verified Buyer Reviews + Write a Review */}
+        {/* 7. Verified Buyer Reviews */}
         <section className="pt-4 border-t border-slate-100 space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs leading-4 font-extrabold text-[#0B3D2E]">
+            <h3 className="text-xs leading-4 font-semibold text-slate-900">
               {language === 'BN'
-                ? `ভেরিফাইড ক্রেতা রিভিউ (${selectedProduct.reviewCount})`
-                : `Verified Buyer Reviews (${selectedProduct.reviewCount})`}
+                ? `ক্রেতা রিভিউ (${selectedProduct.reviewCount})`
+                : `Buyer Reviews (${selectedProduct.reviewCount})`}
             </h3>
             <button
               type="button"
               onClick={() => setActiveInfoModal('review')}
-              className="text-xs leading-4 font-bold text-[#0EA75F] flex items-center gap-1 hover:underline"
+              className="text-xs leading-4 font-medium text-[#059669] flex items-center gap-1 hover:underline"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{language === 'BN' ? 'রিভিউ লিখুন' : 'Write Review'}</span>
@@ -473,41 +434,39 @@ export const ProductDetailScreen: React.FC = () => {
           {selectedProduct.reviews.length > 0 ? (
             <div className="divide-y divide-slate-100">
               {selectedProduct.reviews.map((rev) => (
-                <div key={rev.id} className="py-2 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs leading-4 font-bold text-[#0B3D2E]">
-                      {rev.author} ·{' '}
-                      <span className="text-[#0EA75F] font-medium">Verified Buyer</span>
+                <div key={rev.id} className="py-2.5 space-y-1">
+                  <div className="flex items-center justify-between text-xs leading-4">
+                    <span className="font-semibold text-slate-900">
+                      {rev.author} <span className="text-slate-400 font-normal">· Verified</span>
                     </span>
-                    <span className="text-[10px] leading-4 text-[#6B7280]">{rev.date}</span>
+                    <span className="text-[11px] text-slate-400">{rev.date}</span>
                   </div>
-                  <p className="text-xs leading-4 text-[#0B3D2E]">{rev.comment}</p>
-                  <p className="text-[10px] leading-4 text-[#6B7280]">{rev.variantChosen}</p>
+                  <p className="text-xs leading-4 text-slate-600">{rev.comment}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs leading-4 text-[#6B7280]">
+            <p className="text-xs leading-4 text-slate-500">
               98% positive feedback from verified Bangladesh cross-border buyers.
             </p>
           )}
         </section>
 
         {/* 8. Related Global Products */}
-        <section className="pt-4 border-t border-slate-100 space-y-2">
+        <section className="pt-4 border-t border-slate-100 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs leading-4 font-extrabold text-[#0B3D2E]">
-              {language === 'BN' ? 'আপনার জন্য আরও পণ্য' : 'You May Also Like'}
+            <h3 className="text-xs leading-4 font-semibold text-slate-900">
+              {language === 'BN' ? 'সম্পর্কিত পণ্য' : 'Related Products'}
             </h3>
             <button
               type="button"
               onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-              className="text-xs leading-4 font-bold text-[#0EA75F]"
+              className="text-xs leading-4 font-medium text-slate-500 hover:text-slate-900"
             >
               {language === 'BN' ? 'সব দেখুন' : 'View All'}
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {relatedProducts.map((item) => (
               <ProductCard key={item.id} product={item} compact />
             ))}
@@ -515,8 +474,8 @@ export const ProductDetailScreen: React.FC = () => {
         </section>
       </div>
 
-      {/* Contiguous Sticky Bottom Purchase Bar Docked Above Fixed Bottom Nav (p-3 = 12px, gap-2 = 8px, h-12 = 48px) */}
-      <div className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 flex items-center gap-2 shadow-[0_-8px_20px_-6px_rgba(0,0,0,0.08)]">
+      {/* Sticky Bottom Purchase Bar (Single Emerald Primary CTA) */}
+      <div className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() =>
@@ -528,10 +487,10 @@ export const ProductDetailScreen: React.FC = () => {
               activeRoute?.id
             )
           }
-          className="flex-1 h-12 rounded-xl border-2 border-[#0EA75F] text-[#0EA75F] hover:bg-[#ECFDF5] font-bold text-xs leading-4 flex items-center justify-center gap-2 transition-colors"
+          className="h-11 px-4 rounded-xl border border-slate-200 text-slate-900 hover:bg-slate-50 font-semibold text-xs leading-4 flex items-center justify-center gap-1.5 transition-colors shrink-0"
         >
           <ShoppingCart className="w-4 h-4" />
-          <span>{language === 'BN' ? 'কার্টে যোগ করুন' : 'Add to Cart'}</span>
+          <span>{language === 'BN' ? 'ব্যাগে দিন' : 'Add to Bag'}</span>
         </button>
         <button
           type="button"
@@ -545,11 +504,11 @@ export const ProductDetailScreen: React.FC = () => {
             );
             navigateTo('checkout_shipping');
           }}
-          className="flex-1 h-12 rounded-xl bg-[#0EA75F] hover:bg-[#0B8A4D] text-white font-bold text-xs leading-4 flex items-center justify-center gap-2 shadow-md transition-colors"
+          className="flex-1 h-11 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs leading-4 flex items-center justify-center gap-2 transition-colors"
         >
           <span>
             {language === 'BN' ? 'এখনই কিনুন' : 'Buy Now'} ·{' '}
-            {formatPrice(totalLandedBdt)}
+            <span className="font-mono-num">{formatPrice(totalLandedBdt)}</span>
           </span>
         </button>
       </div>
@@ -566,11 +525,11 @@ export const ProductDetailScreen: React.FC = () => {
 
             {activeInfoModal === 'review' ? (
               <form onSubmit={handleReviewSubmit} className="space-y-3">
-                <h3 className="text-sm leading-5 font-extrabold text-[#0B3D2E]">
+                <h3 className="text-sm leading-5 font-semibold text-slate-900">
                   {language === 'BN' ? 'আপনার রিভিউ দিন' : 'Write a Verified Review'}
                 </h3>
                 <div>
-                  <span className="block text-xs leading-4 font-semibold text-[#6B7280] mb-1">
+                  <span className="block text-xs leading-4 font-medium text-slate-500 mb-1">
                     Rating
                   </span>
                   <div className="flex items-center gap-1">
@@ -593,7 +552,7 @@ export const ProductDetailScreen: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs leading-4 font-semibold text-[#0B3D2E] mb-1">
+                  <label className="block text-xs leading-4 font-medium text-slate-700 mb-1">
                     Your Experience
                   </label>
                   <textarea
@@ -602,20 +561,20 @@ export const ProductDetailScreen: React.FC = () => {
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
                     placeholder="Share your experience with product quality and landed delivery..."
-                    className="w-full p-3 rounded-xl bg-[#F8FAFC] border border-slate-200 text-xs leading-4 text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 text-slate-900 focus:outline-none focus:border-slate-900"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setActiveInfoModal(null)}
-                    className="flex-1 h-10 rounded-xl border border-slate-200 text-xs leading-4 font-bold text-[#6B7280]"
+                    className="flex-1 h-10 rounded-xl border border-slate-200 text-xs leading-4 font-semibold text-slate-600"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 h-10 rounded-xl bg-[#0EA75F] text-white text-xs leading-4 font-bold"
+                    className="flex-1 h-10 rounded-xl bg-[#059669] text-white text-xs leading-4 font-semibold"
                   >
                     Submit Review
                   </button>
@@ -624,34 +583,34 @@ export const ProductDetailScreen: React.FC = () => {
             ) : activeInfoModal === 'supplier' ? (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center">
-                    <Store className="w-6 h-6" />
+                  <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                    <Store className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm leading-5 font-extrabold text-[#0B3D2E]">
+                    <h3 className="text-sm leading-5 font-semibold text-slate-900">
                       {selectedProduct.supplierName}
                     </h3>
-                    <p className="text-xs leading-4 text-[#0EA75F] font-semibold">
+                    <p className="text-xs leading-4 text-[#059669] font-medium">
                       Verified Tier-1 Global Exporter
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between py-2 border-y border-slate-100 text-xs leading-4">
-                  <span className="text-[#6B7280]">
+                  <span className="text-slate-500">
                     Catalog:{' '}
-                    <strong className="font-mono-num text-[#0B3D2E]">
+                    <strong className="font-mono-num text-slate-900">
                       {selectedProduct.supplierProductsCount}
                     </strong>
                   </span>
-                  <span className="text-[#6B7280]">
+                  <span className="text-slate-500">
                     Followers:{' '}
-                    <strong className="font-mono-num text-[#0B3D2E]">
+                    <strong className="font-mono-num text-slate-900">
                       {selectedProduct.supplierFollowers}
                     </strong>
                   </span>
                 </div>
-                <p className="text-xs leading-4 text-[#6B7280]">
-                  All shipments from {selectedProduct.supplierName} undergo automated X-ray and physical QC verification at DeshiMart hub before boarding air freight.
+                <p className="text-xs leading-4 text-slate-600">
+                  All shipments from {selectedProduct.supplierName} undergo physical QC verification before boarding air freight.
                 </p>
                 <button
                   type="button"
@@ -659,50 +618,50 @@ export const ProductDetailScreen: React.FC = () => {
                     setActiveInfoModal(null);
                     navigateTo('supplier_store');
                   }}
-                  className="w-full h-10 rounded-xl bg-[#0EA75F] text-white text-xs leading-4 font-bold"
+                  className="w-full h-10 rounded-xl bg-slate-900 text-white text-xs leading-4 font-semibold"
                 >
-                  Open Full Supplier Store
+                  Open Supplier Storefront
                 </button>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center">
-                    <ShieldCheck className="w-6 h-6" />
+                  <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5 text-[#059669]" />
                   </div>
                   <div>
-                    <h3 className="text-sm leading-5 font-extrabold text-[#0B3D2E]">
+                    <h3 className="text-sm leading-5 font-semibold text-slate-900">
                       Warranty & Return Protection
                     </h3>
-                    <p className="text-xs leading-4 text-[#6B7280]">
+                    <p className="text-xs leading-4 text-slate-500">
                       Up to 30 days return · 1 year local warranty
                     </p>
                   </div>
                 </div>
-                <div className="divide-y divide-slate-100 text-xs leading-4 text-[#0B3D2E]">
-                  <div className="py-2 flex items-start gap-2">
-                    <RefreshCcw className="w-4 h-4 text-[#0EA75F] shrink-0 mt-0.5" />
+                <div className="divide-y divide-slate-100 text-xs leading-4 text-slate-900">
+                  <div className="py-2 flex items-start gap-2.5">
+                    <RefreshCcw className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold block">Easy Local Return Process</span>
-                      <span className="text-[#6B7280]">
+                      <span className="font-semibold block">Easy Local Return Process</span>
+                      <span className="text-slate-500">
                         Drop off at our Dhaka hub or schedule free eCourier pickup within 30 days.
                       </span>
                     </div>
                   </div>
-                  <div className="py-2 flex items-start gap-2">
-                    <Clock className="w-4 h-4 text-[#0EA75F] shrink-0 mt-0.5" />
+                  <div className="py-2 flex items-start gap-2.5">
+                    <Clock className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold block">Instant bKash / Card Refund</span>
-                      <span className="text-[#6B7280]">
+                      <span className="font-semibold block">24-Hour bKash / Card Refund</span>
+                      <span className="text-slate-500">
                         Refunds are processed within 24 hours of return inspection.
                       </span>
                     </div>
                   </div>
-                  <div className="py-2 flex items-start gap-2">
-                    <MessageSquare className="w-4 h-4 text-[#0EA75F] shrink-0 mt-0.5" />
+                  <div className="py-2 flex items-start gap-2.5">
+                    <MessageSquare className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold block">24/7 Claims Support</span>
-                      <span className="text-[#6B7280]">
+                      <span className="font-semibold block">24/7 Claims Support</span>
+                      <span className="text-slate-500">
                         Dedicated Bengali & English warranty support team.
                       </span>
                     </div>
@@ -714,9 +673,9 @@ export const ProductDetailScreen: React.FC = () => {
                     setActiveInfoModal(null);
                     showToast('Verified guarantee active on your order', 'info');
                   }}
-                  className="w-full h-10 rounded-xl bg-[#0EA75F] text-white text-xs leading-4 font-bold"
+                  className="w-full h-10 rounded-xl bg-slate-900 text-white text-xs leading-4 font-semibold"
                 >
-                  Got It
+                  Close
                 </button>
               </>
             )}

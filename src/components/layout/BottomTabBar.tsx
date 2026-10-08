@@ -36,8 +36,8 @@ export const BottomTabBar: React.FC = () => {
     },
     {
       id: 'categories',
-      label: 'Categories',
-      labelBn: 'ক্যাটাগরি',
+      label: 'Catalog',
+      labelBn: 'ক্যাটালগ',
       icon: Grid,
       matchScreens: ['categories', 'category_products', 'product_detail', 'supplier_store'],
     },
@@ -50,8 +50,8 @@ export const BottomTabBar: React.FC = () => {
     },
     {
       id: 'cart',
-      label: 'Cart',
-      labelBn: 'কার্ট',
+      label: 'Bag',
+      labelBn: 'ব্যাগ',
       icon: ShoppingCart,
       matchScreens: [
         'cart',
@@ -82,11 +82,11 @@ export const BottomTabBar: React.FC = () => {
     },
   ];
 
-  // 8pt Grid: h-16 (64px = 8*8), px-2 (8px = 1*8), gap-1 (4px sub-grid)
+  // 8pt Grid: h-16 (64px = 8*8), px-2 (8px), gap-1 (4px)
   return (
     <nav
       aria-label="Primary Bottom Navigation"
-      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-4px_16px_-6px_rgba(11,61,46,0.08)] grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
+      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-slate-200/80 grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -96,34 +96,26 @@ export const BottomTabBar: React.FC = () => {
           <motion.button
             key={tab.id}
             type="button"
-            whileTap={{ scale: 0.92 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => navigateTo(tab.id)}
-            className={`relative h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-colors ${
+            className={`relative h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors ${
               isActive
-                ? 'text-[#0EA75F]'
-                : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                ? 'text-[#059669]'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            {/* Spring-gliding Top Active Indicator Bar (32px wide x 4px tall) */}
             {isActive && (
               <motion.span
                 layoutId="bottom-tab-indicator"
-                transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-b-full bg-[#0EA75F]"
+                transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#059669]"
               />
             )}
 
-            <div className="relative px-3 py-1 rounded-xl">
-              {isActive && (
-                <motion.span
-                  layoutId="bottom-tab-pill"
-                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                  className="absolute inset-0 rounded-xl bg-[#ECFDF5]"
-                />
-              )}
+            <div className="relative px-3 py-0.5">
               <Icon
                 className={`relative z-10 w-4 h-4 transition-transform duration-150 ${
-                  isActive ? 'stroke-[2.5] scale-105' : 'stroke-2'
+                  isActive ? 'stroke-[2.3]' : 'stroke-[1.8]'
                 }`}
               />
               {typeof tab.badge === 'number' && tab.badge > 0 && (
@@ -132,7 +124,7 @@ export const BottomTabBar: React.FC = () => {
                   initial={{ scale: 0.6 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1 -right-1 z-20 min-w-[16px] h-4 px-1 rounded-full bg-[#0EA75F] text-white font-mono-num text-[10px] leading-4 font-bold flex items-center justify-center shadow-2xs"
+                  className="absolute -top-1.5 -right-0.5 z-20 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center"
                 >
                   {tab.badge}
                 </motion.span>
@@ -140,7 +132,7 @@ export const BottomTabBar: React.FC = () => {
             </div>
             <span
               className={`text-[10px] leading-3 tracking-tight whitespace-nowrap ${
-                isActive ? 'font-extrabold text-[#0EA75F]' : 'font-semibold'
+                isActive ? 'font-semibold text-slate-900' : 'font-normal text-slate-500'
               }`}
             >
               {language === 'BN' ? tab.labelBn : tab.label}

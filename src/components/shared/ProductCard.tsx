@@ -31,9 +31,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   // 8pt Grid: p-3 (12px), rounded-2xl (16px), mb-2 (8px), w-8 h-8 (32px) buttons
   return (
     <motion.div
-      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.985 }}
-      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => navigateTo('product_detail', { productId: product.id })}
       role="button"
       tabIndex={0}
@@ -43,96 +42,75 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           navigateTo('product_detail', { productId: product.id });
         }
       }}
-      className="group relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between shadow-[0_2px_8px_-4px_rgba(11,61,46,0.06)] hover:border-[#0EA75F]/50 cursor-pointer text-left"
+      className="group relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between hover:border-slate-300 transition-colors cursor-pointer text-left"
     >
-      {/* Top Wishlist Button (32px = 4*8) with Spring Heart Pop */}
+      {/* Top Wishlist Button (32px = 4*8) */}
       <motion.button
         type="button"
-        whileTap={{ scale: 1.3 }}
+        whileTap={{ scale: 1.25 }}
         transition={{ type: 'spring', stiffness: 500, damping: 18 }}
         aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         onClick={(e) => {
           e.stopPropagation();
           toggleWishlist(product.id);
         }}
-        className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-xs flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-xs border border-slate-100"
+        className="absolute top-5 right-5 z-10 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-slate-400 hover:text-rose-500 border border-slate-200/60"
       >
         <Heart
-          className={`w-4 h-4 transition-transform duration-150 ${
-            isWishlisted ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'
+          className={`w-3.5 h-3.5 transition-transform duration-150 ${
+            isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-500'
           }`}
         />
       </motion.button>
 
-      {/* Product Image Slot with Zero-Broken-Image Fallback */}
+      {/* Clean Product Image Slot (Zero Clutter Overlays) */}
       <div>
-        <div className="relative w-full aspect-square rounded-xl bg-[#F8FAFC] overflow-hidden mb-2 flex items-center justify-center border border-slate-100/80">
+        <div className="relative w-full aspect-square rounded-xl bg-slate-50 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100">
           {!imgError ? (
             <img
               src={product.image}
               alt={product.name}
               referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-200"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center p-4 text-center bg-gradient-to-br from-[#ECFDF5] to-[#F1F5F9] w-full h-full">
-              <Package className="w-8 h-8 text-[#0EA75F] mb-2" />
-              <span className="text-xs leading-4 font-semibold text-[#0B3D2E] line-clamp-2">
+            <div className="flex flex-col items-center justify-center p-4 text-center bg-slate-50 w-full h-full">
+              <Package className="w-7 h-7 text-slate-400 mb-1.5" />
+              <span className="text-xs leading-4 font-medium text-slate-600 line-clamp-2">
                 {product.name}
               </span>
             </div>
           )}
+        </div>
 
-          {/* Top-Left Discount Callout */}
-          {product.discountPercent > 0 && (
-            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-[#0EA75F] text-white font-mono-num text-[10px] leading-4 font-bold">
-              -{product.discountPercent}%
-            </div>
+        {/* Clean Unboxed Metadata Line (Zero-Pill Discipline) */}
+        <div className="text-[11px] leading-4 text-slate-500 truncate mb-1 flex items-center gap-1">
+          <span className="truncate">{product.originLabel.split(' ')[0]}</span>
+          <span aria-hidden="true">·</span>
+          <span>{activeRoute?.deliveryDays || '7–12d'}</span>
+          {!compact && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="inline-flex items-center gap-0.5 font-mono-num text-slate-700 font-medium">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline" />
+                {product.rating.toFixed(1)}
+              </span>
+            </>
           )}
-
-          {/* Bottom-Left DropScore Indicator */}
-          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg bg-[#0B3D2E]/90 backdrop-blur-xs text-white text-[10px] leading-4 font-mono-num font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00C853] animate-pulse" />
-            <span>{product.dropScore.toFixed(1)}</span>
-          </div>
         </div>
 
-        {/* Clean Unboxed Origin & Delivery Metadata */}
-        <div className="text-[11px] leading-4 text-[#6B7280] truncate mb-1 flex items-center justify-between gap-1">
-          <span className="truncate">{product.originLabel}</span>
-          <span className="text-[#0EA75F] font-semibold shrink-0">
-            {activeRoute?.deliveryDays || '7–12d'}
-          </span>
-        </div>
-
-        {/* Product Title (12px / 16px line-height) */}
-        <h3 className="text-xs leading-4 font-extrabold text-[#0B3D2E] truncate">
+        {/* Product Title (12px / 16px line-height, Semibold) */}
+        <h3 className="text-xs leading-4 font-semibold text-slate-900 truncate">
           {language === 'BN' ? product.nameBn : product.name}
         </h3>
-
-        {/* Rating Row */}
-        {!compact && (
-          <div className="flex items-center gap-1 mt-1 text-[11px] leading-4 text-[#6B7280]">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span className="font-mono-num font-bold text-[#0B3D2E]">
-              {product.rating.toFixed(1)}
-            </span>
-            <span className="font-mono-num text-[10px] leading-4">
-              ({product.reviewCount})
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* Price + Tactile Emerald Quick-Add Button */}
-      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+      {/* Price + Restrained Quick-Add Button */}
+      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <span className="block text-[10px] leading-3 font-semibold text-[#6B7280] mb-1">
-            {language === 'BN' ? 'ল্যান্ডেড প্রাইস' : 'Landed Price'}
-          </span>
-          <div className="flex items-baseline gap-1">
-            <span className="font-mono-num text-sm leading-5 font-extrabold text-[#0EA75F]">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-mono-num text-sm leading-5 font-semibold text-slate-900">
               {formatPrice(landedBdt)}
             </span>
             {product.discountPercent > 0 && (
@@ -141,11 +119,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
               </span>
             )}
           </div>
+          <span className="block text-[10px] leading-3 text-slate-500 mt-0.5">
+            {language === 'BN' ? 'ডিউটি ও ভ্যাটসহ' : 'Incl. duty & VAT'}
+          </span>
         </div>
 
         <motion.button
           type="button"
-          whileTap={{ scale: 0.85 }}
+          whileTap={{ scale: 0.88 }}
           aria-label={`Add ${product.name} to cart`}
           onClick={(e) => {
             e.stopPropagation();
@@ -153,14 +134,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             setJustAdded(true);
             setTimeout(() => setJustAdded(false), 750);
           }}
-          className={`w-8 h-8 rounded-xl text-white flex items-center justify-center transition-colors shadow-2xs shrink-0 ${
-            justAdded ? 'bg-[#0B3D2E]' : 'bg-[#0EA75F] hover:bg-[#0B8A4D]'
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+            justAdded
+              ? 'bg-[#059669] text-white'
+              : 'bg-slate-900 hover:bg-[#059669] text-white'
           }`}
         >
           {justAdded ? (
-            <Check className="w-4 h-4 stroke-[2.8]" />
+            <Check className="w-4 h-4 stroke-[2.5]" />
           ) : (
-            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <Plus className="w-4 h-4 stroke-[2.2]" />
           )}
         </motion.button>
       </div>
