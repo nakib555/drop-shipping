@@ -147,7 +147,7 @@ export const HomeScreen: React.FC = () => {
                   navigateTo('product_detail', { productId: heroProduct.id });
                 }
               }}
-              className="w-28 shrink-0 bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-2 text-center cursor-pointer hover:bg-white/20 transition-all shadow-lg"
+              className="w-28 shrink-0 bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-2 text-center cursor-pointer hover:bg-white/20 transition-all shadow-lg animate-float-soft"
             >
               <div className="w-full aspect-square rounded-xl bg-white overflow-hidden mb-1">
                 <img

@@ -189,13 +189,14 @@ export const OrdersTrackingScreen: React.FC = () => {
             viewBox="0 0 340 110"
             className="w-full h-full select-none"
           >
-            {/* Subtle Map Grid */}
+            {/* Animated Flowing Route Path */}
             <path
               d="M 20 85 Q 110 20, 195 60 T 315 35"
               fill="none"
               stroke="#0EA75F"
               strokeWidth="3"
-              strokeDasharray="5 5"
+              strokeDasharray="6 4"
+              className="animate-route-dash"
             />
             {/* Origin Hub Node */}
             <circle cx="25" cy="82" r="6" fill="#0B3D2E" />
@@ -209,7 +210,15 @@ export const OrdersTrackingScreen: React.FC = () => {
               BD Customs (Cleared)
             </text>
 
-            {/* Destination Dhaka Node */}
+            {/* Destination Dhaka Node with Pulsing Beacon */}
+            <circle
+              cx="310"
+              cy="35"
+              r="14"
+              fill="#00C853"
+              opacity="0.25"
+              className="animate-ping"
+            />
             <circle cx="310" cy="35" r="8" fill="#00C853" stroke="#FFFFFF" strokeWidth="2.5" />
             <text x="305" y="18" textAnchor="end" className="text-[10px] fill-[#0EA75F] font-extrabold">
               Dhaka Doorstep

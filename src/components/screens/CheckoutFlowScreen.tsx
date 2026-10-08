@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   Banknote,
   CheckCircle2,
@@ -620,33 +621,53 @@ export const CheckoutFlowScreen: React.FC = () => {
   // STEP 4: Order Placed Successfully (Screen 15 in UI Kits 1 & 2)
   return (
     <div className="p-6 flex-1 flex flex-col items-center justify-center text-center bg-white">
-      <div className="w-20 h-20 rounded-full bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center mb-4 shadow-sm border border-[#0EA75F]/20">
+      <motion.div
+        initial={{ scale: 0.3, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+        className="w-20 h-20 rounded-full bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center mb-4 shadow-sm border border-[#0EA75F]/20"
+      >
         <CheckCircle2 className="w-11 h-11" />
-      </div>
+      </motion.div>
 
-      <h1 className="text-xl font-extrabold text-[#0B3D2E]">
+      <motion.h1
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.2 }}
+        className="text-xl font-extrabold text-[#0B3D2E]"
+      >
         Order Placed Successfully!
-      </h1>
-      <p className="text-xs text-[#6B7280] mt-1">
+      </motion.h1>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.16, duration: 0.2 }}
+        className="text-xs text-[#6B7280] mt-1"
+      >
         Your order{' '}
         <strong className="font-mono-num text-[#0B3D2E]">
           #{selectedOrder?.id || 'DM123456'}
         </strong>{' '}
         has been confirmed and customs pre-cleared.
-      </p>
+      </motion.p>
 
-      <div className="my-6 w-full bg-[#F8FAFC] rounded-2xl p-4 border border-slate-200/80 space-y-2">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.22, duration: 0.22 }}
+        className="my-6 w-full bg-[#F8FAFC] rounded-2xl p-4 border border-slate-200/80 space-y-2"
+      >
         <span className="block text-xs text-[#6B7280]">Estimated Delivery</span>
         <span className="block font-mono-num text-lg font-extrabold text-[#0EA75F]">
           {selectedOrder?.estimatedDelivery || '7 – 14 days'}
         </span>
-        <div className="w-14 h-14 rounded-2xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center mx-auto my-2">
+        <div className="w-14 h-14 rounded-2xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center mx-auto my-2 animate-float-soft">
           <Package className="w-7 h-7" />
         </div>
         <p className="text-[11px] text-[#6B7280]">
           Courier: <strong className="text-[#0B3D2E]">eCourier Bangladesh</strong>
         </p>
-      </div>
+      </motion.div>
 
       <div className="w-full space-y-2.5">
         <button

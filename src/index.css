@@ -85,3 +85,59 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Compositor-Only Keyframe Animations */
+@keyframes dm-scan-laser {
+  0% {
+    transform: translateY(0%);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(200px);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 0.25;
+  }
+}
+
+@keyframes dm-route-dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+@keyframes dm-float-soft {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-scan-laser {
+  animation: dm-scan-laser 2.6s ease-in-out infinite;
+}
+
+.animate-route-dash {
+  animation: dm-route-dash 1.2s linear infinite;
+}
+
+.animate-float-soft {
+  animation: dm-float-soft 3.4s ease-in-out infinite;
+}
+
+/* Respect Reduced Motion Accessibility Preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

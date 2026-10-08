@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Bell,
   BookOpen,
@@ -30,8 +31,6 @@ export const SideDrawer: React.FC = () => {
     setLanguage,
   } = useDeshiMart();
 
-  if (!drawerOpen) return null;
-
   const menuItems: { label: string; labelBn: string; screen: ScreenId; icon: React.FC<{ className?: string }> }[] = [
     { label: 'Home', labelBn: 'হোম', screen: 'home', icon: Home },
     { label: 'My Orders', labelBn: 'আমার অর্ডার', screen: 'orders', icon: Package },
@@ -46,137 +45,159 @@ export const SideDrawer: React.FC = () => {
   ];
 
   return (
-    <div className="absolute inset-0 z-50 flex">
-      {/* Backdrop */}
-      <div
-        onClick={() => setDrawerOpen(false)}
-        className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
-      />
+    <AnimatePresence>
+      {drawerOpen && (
+        <div className="absolute inset-0 z-50 flex">
+          {/* Animated Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setDrawerOpen(false)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+          />
 
-      {/* Drawer Content */}
-      <aside className="relative z-10 w-72 max-w-[82%] bg-white h-full shadow-2xl flex flex-col justify-between p-4 overflow-y-auto">
-        <div>
-          {/* Top User Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-[#0EA75F] text-white font-bold text-sm flex items-center justify-center shadow-xs">
-                JD
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-[#0B3D2E]">{user.fullName}</h2>
-                <p className="text-xs text-[#6B7280]">{user.email}</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              aria-label="Close menu"
-              onClick={() => setDrawerOpen(false)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Quick Currency & Language Switchers */}
-          <div className="my-3 space-y-2">
-            <div className="p-2.5 rounded-xl bg-[#F1F5F9] flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0B3D2E]">
-                <Globe className="w-4 h-4 text-[#0EA75F]" />
-                <span>{language === 'BN' ? 'কারেন্সি' : 'Currency'}</span>
-              </div>
-              <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setCurrency('BDT')}
-                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                    currency === 'BDT'
-                      ? 'bg-[#0EA75F] text-white'
-                      : 'text-[#6B7280] hover:text-[#0B3D2E]'
-                  }`}
-                >
-                  ৳ BDT
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency('USD')}
-                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                    currency === 'USD'
-                      ? 'bg-[#0EA75F] text-white'
-                      : 'text-[#6B7280] hover:text-[#0B3D2E]'
-                  }`}
-                >
-                  $ USD
-                </button>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-[#F1F5F9] flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#0B3D2E]">
-                {language === 'BN' ? 'ভাষা (Language)' : 'Language (ভাষা)'}
-              </span>
-              <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setLanguage('EN')}
-                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                    language === 'EN'
-                      ? 'bg-[#0EA75F] text-white'
-                      : 'text-[#6B7280] hover:text-[#0B3D2E]'
-                  }`}
-                >
-                  English
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLanguage('BN')}
-                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                    language === 'BN'
-                      ? 'bg-[#0EA75F] text-white'
-                      : 'text-[#6B7280] hover:text-[#0B3D2E]'
-                  }`}
-                >
-                  বাংলা
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation List */}
-          <nav className="space-y-1 mt-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => navigateTo(item.screen)}
-                  className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-semibold text-[#0B3D2E] hover:bg-[#ECFDF5] hover:text-[#0EA75F] transition-colors text-left"
-                >
-                  <Icon className="w-4 h-4 text-[#0EA75F]" />
-                  <span className="truncate">
-                    {language === 'BN' ? item.labelBn : item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Bottom Logout & Trust Footer */}
-        <div className="pt-4 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={logoutUser}
-            className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+          {/* Slide-Out Drawer Content */}
+          <motion.aside
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 360, damping: 32 }}
+            className="relative z-10 w-72 max-w-[82%] bg-white h-full shadow-2xl flex flex-col justify-between p-4 overflow-y-auto"
           >
-            <LogOut className="w-4 h-4" />
-            <span>{language === 'BN' ? 'লগ আউট' : 'Log Out'}</span>
-          </button>
-          <p className="mt-2.5 text-[11px] text-[#6B7280] px-3">
-            DeshiMart™ · Global Products → Your Door
-          </p>
+            <div>
+              {/* Top User Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-[#0EA75F] text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                    {user.fullName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-[#0B3D2E]">{user.fullName}</h2>
+                    <p className="text-xs text-[#6B7280]">{user.email}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setDrawerOpen(false)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Currency & Language Switchers */}
+              <div className="my-3 space-y-2">
+                <div className="p-2.5 rounded-xl bg-[#F1F5F9] flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0B3D2E]">
+                    <Globe className="w-4 h-4 text-[#0EA75F]" />
+                    <span>{language === 'BN' ? 'কারেন্সি' : 'Currency'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setCurrency('BDT')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        currency === 'BDT'
+                          ? 'bg-[#0EA75F] text-white'
+                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                      }`}
+                    >
+                      ৳ BDT
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrency('USD')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        currency === 'USD'
+                          ? 'bg-[#0EA75F] text-white'
+                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                      }`}
+                    >
+                      $ USD
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#F1F5F9] flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#0B3D2E]">
+                    {language === 'BN' ? 'ভাষা (Language)' : 'Language (ভাষা)'}
+                  </span>
+                  <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('EN')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        language === 'EN'
+                          ? 'bg-[#0EA75F] text-white'
+                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                      }`}
+                    >
+                      English
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('BN')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        language === 'BN'
+                          ? 'bg-[#0EA75F] text-white'
+                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                      }`}
+                    >
+                      বাংলা
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Staggered Navigation List */}
+              <nav className="space-y-1 mt-2">
+                {menuItems.map((item, idx) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.button
+                      key={item.label}
+                      type="button"
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.025, duration: 0.16 }}
+                      onClick={() => navigateTo(item.screen)}
+                      className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-semibold text-[#0B3D2E] hover:bg-[#ECFDF5] hover:text-[#0EA75F] transition-colors text-left"
+                    >
+                      <Icon className="w-4 h-4 text-[#0EA75F]" />
+                      <span className="truncate">
+                        {language === 'BN' ? item.labelBn : item.label}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Bottom Logout & Trust Footer */}
+            <div className="pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={logoutUser}
+                className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{language === 'BN' ? 'লগ আউট' : 'Log Out'}</span>
+              </button>
+              <p className="mt-2.5 text-[11px] text-[#6B7280] px-3">
+                DeshiMart™ · Global Products → Your Door
+              </p>
+            </div>
+          </motion.aside>
         </div>
-      </aside>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };

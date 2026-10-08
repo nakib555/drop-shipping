@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import {
   Camera,
   Grid,
@@ -92,31 +93,49 @@ export const BottomTabBar: React.FC = () => {
         const isActive = tab.matchScreens.includes(currentScreen);
 
         return (
-          <button
+          <motion.button
             key={tab.id}
             type="button"
+            whileTap={{ scale: 0.92 }}
             onClick={() => navigateTo(tab.id)}
-            className={`relative h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all ${
+            className={`relative h-14 rounded-2xl flex flex-col items-center justify-center gap-1 transition-colors ${
               isActive
                 ? 'text-[#0EA75F]'
                 : 'text-[#6B7280] hover:text-[#0B3D2E]'
             }`}
           >
-            {/* Top Active Indicator Bar (32px wide x 4px tall) */}
+            {/* Spring-gliding Top Active Indicator Bar (32px wide x 4px tall) */}
             {isActive && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-b-full bg-[#0EA75F]" />
+              <motion.span
+                layoutId="bottom-tab-indicator"
+                transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-b-full bg-[#0EA75F]"
+              />
             )}
 
-            <div
-              className={`relative px-3 py-1 rounded-xl transition-colors ${
-                isActive ? 'bg-[#ECFDF5]' : 'bg-transparent'
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+            <div className="relative px-3 py-1 rounded-xl">
+              {isActive && (
+                <motion.span
+                  layoutId="bottom-tab-pill"
+                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  className="absolute inset-0 rounded-xl bg-[#ECFDF5]"
+                />
+              )}
+              <Icon
+                className={`relative z-10 w-4 h-4 transition-transform duration-150 ${
+                  isActive ? 'stroke-[2.5] scale-105' : 'stroke-2'
+                }`}
+              />
               {typeof tab.badge === 'number' && tab.badge > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#0EA75F] text-white font-mono-num text-[10px] leading-4 font-bold flex items-center justify-center shadow-2xs">
+                <motion.span
+                  key={tab.badge}
+                  initial={{ scale: 0.6 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="absolute -top-1 -right-1 z-20 min-w-[16px] h-4 px-1 rounded-full bg-[#0EA75F] text-white font-mono-num text-[10px] leading-4 font-bold flex items-center justify-center shadow-2xs"
+                >
                   {tab.badge}
-                </span>
+                </motion.span>
               )}
             </div>
             <span
@@ -126,7 +145,7 @@ export const BottomTabBar: React.FC = () => {
             >
               {language === 'BN' ? tab.labelBn : tab.label}
             </span>
-          </button>
+          </motion.button>
         );
       })}
     </nav>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Heart, Package, Plus, Star } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Check, Heart, Package, Plus, Star } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { Product } from '../../types/deshimart';
 
@@ -19,6 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
     selectedRouteByProduct,
   } = useDeshiMart();
   const [imgError, setImgError] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
 
   const isWishlisted = wishlist.includes(product.id);
   const activeRouteId = selectedRouteByProduct[product.id];
@@ -28,7 +30,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
 
   // 8pt Grid: p-3 (12px), rounded-2xl (16px), mb-2 (8px), w-8 h-8 (32px) buttons
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => navigateTo('product_detail', { productId: product.id })}
       role="button"
       tabIndex={0}
@@ -38,11 +43,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           navigateTo('product_detail', { productId: product.id });
         }
       }}
-      className="group relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between shadow-[0_2px_8px_-4px_rgba(11,61,46,0.06)] transition-all duration-150 active:scale-[0.98] hover:border-[#0EA75F]/50 cursor-pointer text-left"
+      className="group relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between shadow-[0_2px_8px_-4px_rgba(11,61,46,0.06)] hover:border-[#0EA75F]/50 cursor-pointer text-left"
     >
-      {/* Top Wishlist Button (32px = 4*8) */}
-      <button
+      {/* Top Wishlist Button (32px = 4*8) with Spring Heart Pop */}
+      <motion.button
         type="button"
+        whileTap={{ scale: 1.3 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 18 }}
         aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         onClick={(e) => {
           e.stopPropagation();
@@ -51,11 +58,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-xs flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-xs border border-slate-100"
       >
         <Heart
-          className={`w-4 h-4 ${
-            isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-400'
+          className={`w-4 h-4 transition-transform duration-150 ${
+            isWishlisted ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-400'
           }`}
         />
-      </button>
+      </motion.button>
 
       {/* Product Image Slot with Zero-Broken-Image Fallback */}
       <div>
@@ -86,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
 
           {/* Bottom-Left DropScore Indicator */}
           <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg bg-[#0B3D2E]/90 backdrop-blur-xs text-white text-[10px] leading-4 font-mono-num font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00C853]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00C853] animate-pulse" />
             <span>{product.dropScore.toFixed(1)}</span>
           </div>
         </div>
@@ -136,18 +143,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           </div>
         </div>
 
-        <button
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.85 }}
           aria-label={`Add ${product.name} to cart`}
           onClick={(e) => {
             e.stopPropagation();
             addToCart(product.id, 1);
+            setJustAdded(true);
+            setTimeout(() => setJustAdded(false), 750);
           }}
-          className="w-8 h-8 rounded-xl bg-[#0EA75F] hover:bg-[#0B8A4D] text-white flex items-center justify-center transition-colors shadow-2xs shrink-0"
+          className={`w-8 h-8 rounded-xl text-white flex items-center justify-center transition-colors shadow-2xs shrink-0 ${
+            justAdded ? 'bg-[#0B3D2E]' : 'bg-[#0EA75F] hover:bg-[#0B8A4D]'
+          }`}
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-        </button>
+          {justAdded ? (
+            <Check className="w-4 h-4 stroke-[2.8]" />
+          ) : (
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+          )}
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };

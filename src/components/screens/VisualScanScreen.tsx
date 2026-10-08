@@ -70,6 +70,9 @@ export const VisualScanScreen: React.FC = () => {
             }`}
           />
 
+          {/* Continuous Sweeping AI Laser Scan Line */}
+          <div className="absolute top-2 inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-[#00C853] to-transparent shadow-[0_0_12px_2px_rgba(0,200,83,0.85)] animate-scan-laser pointer-events-none" />
+
           {/* Corner Viewfinder Brackets */}
           <div className="absolute top-4 left-4 w-7 h-7 border-t-3 border-l-3 border-[#00C853] rounded-tl-lg pointer-events-none" />
           <div className="absolute top-4 right-4 w-7 h-7 border-t-3 border-r-3 border-[#00C853] rounded-tr-lg pointer-events-none" />

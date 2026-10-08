@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Camera,
   CheckCircle2,
@@ -224,7 +225,18 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
           ref={mainScrollRef}
           className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
         >
-          {children}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={`${currentScreen}-${selectedProductId}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="flex-1 flex flex-col min-h-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Fixed Bottom Navigation Bar */}
