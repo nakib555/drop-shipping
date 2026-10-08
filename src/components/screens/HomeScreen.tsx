@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowRight,
   Camera,
   ChevronLeft,
   ChevronRight,
+  Loader2,
   Plus,
   Scale,
   Search,
@@ -17,9 +18,12 @@ import { CATEGORIES } from '../../data/catalogData';
 import { CategoryId } from '../../types/deshimart';
 import { ProductCard } from '../shared/ProductCard';
 
+const PAGE_SIZE = 16;
+
 export const HomeScreen: React.FC = () => {
   const {
     products,
+    isLoadingProducts,
     navigateTo,
     addToCart,
     searchQuery,
@@ -31,7 +35,10 @@ export const HomeScreen: React.FC = () => {
   } = useDeshiMart();
 
   const [homeCategory, setHomeCategory] = useState<CategoryId>('all');
-  const [visibleLimit, setVisibleLimit] = useState<number>(24);
+  const [visibleLimit, setVisibleLimit] = useState<number>(PAGE_SIZE);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
+  const loadingTimerRef = useRef<number | null>(null);
 
   // 1. Interactive 3-Slide Hero Banner Carousel State
   const [heroIndex, setHeroIndex] = useState(0);
@@ -154,6 +161,56 @@ export const HomeScreen: React.FC = () => {
     : filteredProducts;
 
   const slicedProducts = displayedProducts.slice(0, visibleLimit);
+  const hasMoreProducts = displayedProducts.length > visibleLimit;
+
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMore || !hasMoreProducts) return;
+    setIsLoadingMore(true);
+    if (loadingTimerRef.current) {
+      window.clearTimeout(loadingTimerRef.current);
+    }
+    loadingTimerRef.current = window.setTimeout(() => {
+      setVisibleLimit((prev) => prev + PAGE_SIZE);
+      setIsLoadingMore(false);
+    }, 360);
+  }, [hasMoreProducts, isLoadingMore]);
+
+  useEffect(() => {
+    setVisibleLimit(PAGE_SIZE);
+    setIsLoadingMore(false);
+  }, [
+    homeCategory,
+    searchQuery,
+    smartFilters.under2000Bdt,
+    smartFilters.arrivesThisWeek,
+    smartFilters.lowestLandedCost,
+    smartFilters.verifiedOnly,
+  ]);
+
+  useEffect(() => {
+    const node = loadMoreTriggerRef.current;
+    if (!node || !hasMoreProducts) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isLoadingMore) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '140px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [handleLoadMore, hasMoreProducts, isLoadingMore]);
+
+  useEffect(() => {
+    return () => {
+      if (loadingTimerRef.current) {
+        window.clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="p-4 space-y-5 pb-6 bg-[#F8FAFC]">
@@ -459,7 +516,7 @@ export const HomeScreen: React.FC = () => {
             type="button"
             onClick={() => {
               setHomeCategory('all');
-              setVisibleLimit(24);
+              setVisibleLimit(PAGE_SIZE);
             }}
             className={`relative h-8 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
               homeCategory === 'all'
@@ -487,7 +544,7 @@ export const HomeScreen: React.FC = () => {
                 type="button"
                 onClick={() => {
                   setHomeCategory(active ? 'all' : cat.id);
-                  setVisibleLimit(24);
+                  setVisibleLimit(PAGE_SIZE);
                 }}
                 className={`relative h-8 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
                   active
@@ -582,7 +639,31 @@ export const HomeScreen: React.FC = () => {
         </div>
 
         {/* 2-Column Product Card Grid */}
-        {slicedProducts.length > 0 ? (
+        {isLoadingProducts && slicedProducts.length === 0 ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="space-y-3 pt-1"
+          >
+            <div className="flex items-center justify-center gap-2 py-2 text-xs leading-4 font-medium text-slate-600">
+              <Loader2 className="w-4 h-4 text-[#059669] animate-spin" />
+              <span>Loading global catalog items...</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl border border-slate-200/80 p-3 space-y-2.5 animate-pulse"
+                >
+                  <div className="aspect-square rounded-xl bg-slate-100" />
+                  <div className="h-3 bg-slate-100 rounded w-4/5" />
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                  <div className="h-6 bg-slate-100 rounded-lg w-full mt-2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : slicedProducts.length > 0 ? (
           <>
             <motion.div
               key={`${homeCategory}-${searchQuery}`}
@@ -594,16 +675,92 @@ export const HomeScreen: React.FC = () => {
               {slicedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
+
+              {/* Batch Skeleton Placeholders when loading more items */}
+              {isLoadingMore &&
+                Array.from({ length: 2 }).map((_, idx) => (
+                  <div
+                    key={`skeleton-more-${idx}`}
+                    className="bg-white rounded-2xl border border-slate-200/80 p-3 space-y-2.5 animate-pulse"
+                  >
+                    <div className="aspect-square rounded-xl bg-slate-100" />
+                    <div className="h-3 bg-slate-100 rounded w-4/5" />
+                    <div className="h-3 bg-slate-100 rounded w-3/5" />
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="h-4 bg-slate-100 rounded w-16" />
+                      <div className="w-8 h-8 rounded-lg bg-slate-100" />
+                    </div>
+                  </div>
+                ))}
             </motion.div>
 
-            {displayedProducts.length > visibleLimit && (
-              <button
-                type="button"
-                onClick={() => setVisibleLimit((prev) => prev + 24)}
-                className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs leading-4 font-semibold text-slate-900 transition-colors"
+            {/* Progressive List Loader & Item Count Progress Footer */}
+            {displayedProducts.length > PAGE_SIZE && (
+              <div
+                ref={loadMoreTriggerRef}
+                role="status"
+                aria-live="polite"
+                className="pt-2 space-y-2.5"
               >
-                Load More Products ({displayedProducts.length - visibleLimit} remaining)
-              </button>
+                <div className="flex items-center justify-between text-[11px] leading-4 text-slate-500 px-0.5">
+                  <span>
+                    Showing{' '}
+                    <strong className="font-mono-num text-slate-900 font-semibold">
+                      {slicedProducts.length}
+                    </strong>{' '}
+                    of{' '}
+                    <strong className="font-mono-num text-slate-900 font-semibold">
+                      {displayedProducts.length}
+                    </strong>{' '}
+                    items
+                  </span>
+                  <span className="font-mono-num text-slate-400">
+                    {Math.round(
+                      (slicedProducts.length / displayedProducts.length) * 100
+                    )}
+                    % loaded
+                  </span>
+                </div>
+
+                <div className="w-full h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
+                  <div
+                    className="h-full bg-[#059669] rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          (slicedProducts.length / displayedProducts.length) * 100
+                        )
+                      )}%`,
+                    }}
+                  />
+                </div>
+
+                {hasMoreProducts ? (
+                  <button
+                    type="button"
+                    disabled={isLoadingMore}
+                    onClick={handleLoadMore}
+                    className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 disabled:opacity-80 text-xs leading-4 font-semibold text-slate-900 flex items-center justify-center gap-2 transition-colors shadow-2xs"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 text-[#059669] animate-spin" />
+                        <span>Loading more items...</span>
+                      </>
+                    ) : (
+                      <span>
+                        Load More Items (
+                        {displayedProducts.length - visibleLimit} remaining)
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <p className="text-center text-[11px] leading-4 text-slate-400 py-1">
+                    All {displayedProducts.length} items loaded
+                  </p>
+                )}
+              </div>
             )}
           </>
         ) : (
