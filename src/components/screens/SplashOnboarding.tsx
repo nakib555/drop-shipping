@@ -891,7 +891,6 @@ export const SplashOnboarding: React.FC = () => {
       : 4;
 
   const [step, setStep] = useState<FlowStep>(initialStep);
-  const [direction, setDirection] = useState<number>(1);
   const pointerStartX = useRef<number | null>(null);
 
   // Auth Form State
@@ -915,7 +914,6 @@ export const SplashOnboarding: React.FC = () => {
 
   const goStep = (next: FlowStep) => {
     if (next === step) return;
-    setDirection(next > step ? 1 : -1);
     setStep(next);
   };
 
@@ -986,23 +984,28 @@ export const SplashOnboarding: React.FC = () => {
   const renderDots = (activeIdx: number, isSplash = false) => (
     <div
       className={`flex justify-center gap-2 ${
-        isSplash ? '' : 'my-3 dm-flow-a'
+        isSplash ? '' : 'my-3'
       }`}
-      style={!isSplash ? ({ '--d': 0.55 } as React.CSSProperties) : undefined}
     >
       {[0, 1, 2].map((k) => {
         const active = k === activeIdx;
         return (
-          <i
+          <button
             key={k}
+            type="button"
+            aria-label={`Go to slide ${k + 1}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              goStep((k + 1) as FlowStep);
+            }}
             className={`block h-[7px] rounded-full transition-all duration-300 ${
               active
                 ? isSplash
                   ? 'w-[22px] bg-white'
                   : 'w-[22px] bg-[#2f8a4d]'
                 : isSplash
-                ? 'w-[7px] bg-white/40'
-                : 'w-[7px] bg-[#d3e3d9]'
+                ? 'w-[7px] bg-white/40 hover:bg-white/60'
+                : 'w-[7px] bg-[#d3e3d9] hover:bg-[#b8cfc0]'
             }`}
           />
         );
@@ -1017,14 +1020,14 @@ export const SplashOnboarding: React.FC = () => {
       className="relative flex-1 w-full h-full overflow-hidden bg-white select-none flex flex-col"
     >
       <AnimatePresence mode="wait" initial={false}>
-        {/* =====================  0: SPLASH SCREEN  ===================== */}
+        {/* =====================  0: SPLASH SCREEN (STATIONARY PAGE SHELL) ===================== */}
         {step === 0 && (
           <motion.section
             key="flow-splash"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.04 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             onClick={() => goStep(1)}
             className="dm-flow-splash relative flex-1 flex flex-col items-center justify-between px-6 pt-8 pb-6 overflow-hidden cursor-pointer"
           >
@@ -1044,7 +1047,7 @@ export const SplashOnboarding: React.FC = () => {
               </button>
             </div>
 
-            {/* Center Brand Identity */}
+            {/* Center Brand Identity (Stationary frame, internal SVG & letter animations) */}
             <div className="relative z-10 flex flex-col items-center mt-2">
               <div className="relative w-24 h-24 flex items-center justify-center">
                 <div className="dm-flow-ring" />
@@ -1087,19 +1090,19 @@ export const SplashOnboarding: React.FC = () => {
           </motion.section>
         )}
 
-        {/* =====================  1–3: ONBOARDING SCREENS  ===================== */}
+        {/* =====================  1–3: ONBOARDING SCREENS (STATIONARY SHELL, IN-PLACE CONTENT) ===================== */}
         {(step === 1 || step === 2 || step === 3) && (
           <motion.section
-            key={`flow-ob-${step}`}
-            initial={{ opacity: 0, x: direction >= 0 ? 48 : -48 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: direction >= 0 ? -36 : 36 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            key="flow-ob-shell"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             className="flex-1 flex flex-col justify-between px-6 pt-8 pb-6 text-center bg-white text-[#1c2a22]"
           >
-            {/* Header Row */}
+            {/* Stationary Top Header + In-Place Animated Copy */}
             <div>
-              <div className="flex items-center justify-between w-full dm-flow-a">
+              <div className="flex items-center justify-between w-full">
                 <button
                   type="button"
                   aria-label="Back"
@@ -1130,42 +1133,60 @@ export const SplashOnboarding: React.FC = () => {
                 </button>
               </div>
 
-              <h2
-                className="dm-flow-a text-[21px] leading-[27px] font-bold text-[#1c2a22] mt-3"
-                style={{ '--d': 0.08 } as React.CSSProperties}
-              >
-                {step === 1 && 'Worldwide Products Delivered to Your Door'}
-                {step === 2 && 'Safe & Secure Shopping'}
-                {step === 3 && 'Fast & Reliable Delivery'}
-              </h2>
+              <div className="min-h-[104px] flex flex-col justify-center mt-3">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={`ob-copy-${step}`}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                  >
+                    <h2 className="text-[21px] leading-[27px] font-bold text-[#1c2a22]">
+                      {step === 1 && 'Worldwide Products Delivered to Your Door'}
+                      {step === 2 && 'Safe & Secure Shopping'}
+                      {step === 3 && 'Fast & Reliable Delivery'}
+                    </h2>
 
-              <p
-                className="dm-flow-a text-[13px] leading-5 text-[#7b8a81] mt-2"
-                style={{ '--d': 0.16 } as React.CSSProperties}
-              >
-                {step === 1 &&
-                  'Discover the best products from global brands with upfront BD customs & VAT.'}
-                {step === 2 &&
-                  'Your bKash, Nagad, card payments and personal data are always protected.'}
-                {step === 3 &&
-                  'Track your order in real-time from our global warehouse to your doorstep.'}
-              </p>
+                    <p className="text-[13px] leading-5 text-[#7b8a81] mt-2">
+                      {step === 1 &&
+                        'Discover the best products from global brands with upfront BD customs & VAT.'}
+                      {step === 2 &&
+                        'Your bKash, Nagad, card payments and personal data are always protected.'}
+                      {step === 3 &&
+                        'Track your order in real-time from our global warehouse to your doorstep.'}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
 
-            {/* Center Animated SVG Illustration */}
+            {/* Stationary Center Illustration Stage with In-Place Artwork Choreography */}
             <div className="flex-1 grid place-items-center min-h-0 my-1">
-              {step === 1 && <GlobeBoxesPlaneArt variant="ob" />}
-              {step === 2 && <SafeSecureArt />}
-              {step === 3 && <FastDeliveryArt />}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={`ob-art-${step}`}
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+                  className="grid place-items-center"
+                >
+                  {step === 1 && <GlobeBoxesPlaneArt variant="ob" />}
+                  {step === 2 && <SafeSecureArt />}
+                  {step === 3 && <FastDeliveryArt />}
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            {/* Bottom Dots + CTA + Skip */}
+            {/* Stationary Bottom Dots + CTA + Skip */}
             <div>
               {renderDots(step - 1, false)}
 
               <RippleButton
                 type="button"
-                delaySec={0.55}
+                delaySec={0}
+                className="!opacity-100 !animate-none"
                 onClick={() =>
                   step === 3 ? goStep(4) : goStep((step + 1) as FlowStep)
                 }
@@ -1177,8 +1198,7 @@ export const SplashOnboarding: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigateTo('home')}
-                  style={{ '--d': 0.65 } as React.CSSProperties}
-                  className="dm-flow-a text-[13px] font-semibold text-[#2f8a4d] hover:underline"
+                  className="text-[13px] font-semibold text-[#2f8a4d] hover:underline"
                 >
                   {step < 3 ? 'Skip to Store' : 'Browse Store as Guest →'}
                 </button>
@@ -1187,14 +1207,14 @@ export const SplashOnboarding: React.FC = () => {
           </motion.section>
         )}
 
-        {/* =====================  4: LOGIN SCREEN  ===================== */}
+        {/* =====================  4: LOGIN SCREEN (STATIONARY PAGE SHELL) ===================== */}
         {step === 4 && (
           <motion.section
             key="flow-login"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -32 }}
-            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
             className="flex-1 flex flex-col justify-between px-6 pt-7 pb-6 text-center bg-white text-[#1c2a22] overflow-y-auto"
           >
             <div>
@@ -1355,14 +1375,14 @@ export const SplashOnboarding: React.FC = () => {
           </motion.section>
         )}
 
-        {/* =====================  5: REGISTER SCREEN  ===================== */}
+        {/* =====================  5: REGISTER SCREEN (STATIONARY PAGE SHELL) ===================== */}
         {step === 5 && (
           <motion.section
             key="flow-register"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -32 }}
-            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
             className="flex-1 flex flex-col justify-between px-6 pt-7 pb-6 text-center bg-white text-[#1c2a22] overflow-y-auto"
           >
             <div>
