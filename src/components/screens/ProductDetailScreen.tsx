@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckCircle2,
   ChevronRight,
@@ -76,8 +77,11 @@ export const ProductDetailScreen: React.FC = () => {
   ].filter((row) => Boolean(row.value));
 
   const relatedProducts = products
-    .filter((p) => p.id !== selectedProduct.id)
-    .slice(0, 2);
+    .filter(
+      (p) =>
+        p.id !== selectedProduct.id && p.category === selectedProduct.category
+    )
+    .slice(0, 4);
 
   const handleReviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,9 +103,13 @@ export const ProductDetailScreen: React.FC = () => {
       <div className="p-4 space-y-5">
         {/* 1. Product Image Showcase + 3-Angle Selector */}
         <div className="space-y-2">
-          <div className="relative w-full aspect-square max-h-64 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center">
+          <div className="relative w-full aspect-square max-h-64 rounded-2xl bg-white border border-slate-200/80 p-4 overflow-hidden flex items-center justify-center">
             {!imgError ? (
-              <img
+              <motion.img
+                key={`${selectedProduct.id}-${activeImageView}`}
+                initial={{ opacity: 0.6, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.16 }}
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
                 referrerPolicy="no-referrer"
@@ -126,7 +134,7 @@ export const ProductDetailScreen: React.FC = () => {
                   key={label}
                   type="button"
                   onClick={() => setActiveImageView(idx as 0 | 1 | 2)}
-                  className={`w-12 h-12 rounded-xl bg-slate-50 border overflow-hidden p-1 transition-all ${
+                  className={`w-12 h-12 rounded-xl bg-white border overflow-hidden p-1.5 transition-all ${
                     isSelected
                       ? 'border-slate-900'
                       : 'border-slate-200 opacity-65 hover:opacity-100'
@@ -136,7 +144,7 @@ export const ProductDetailScreen: React.FC = () => {
                     src={selectedProduct.image}
                     alt={`${selectedProduct.name} ${label}`}
                     referrerPolicy="no-referrer"
-                    className={`w-full h-full object-cover rounded-lg ${
+                    className={`w-full h-full object-contain rounded-lg ${
                       idx === 1 ? 'scale-125' : idx === 2 ? 'scale-110 rotate-3' : ''
                     }`}
                   />
@@ -514,14 +522,24 @@ export const ProductDetailScreen: React.FC = () => {
       </div>
 
       {/* Supplier / Warranty / Review Bottom Sheet Modal */}
-      {activeInfoModal && (
-        <div className="absolute inset-0 z-50 flex items-end justify-center">
-          <div
-            onClick={() => setActiveInfoModal(null)}
-            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
-          />
-          <div className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-3">
-            <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+      <AnimatePresence>
+        {activeInfoModal && (
+          <div className="absolute inset-0 z-50 flex items-end justify-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveInfoModal(null)}
+              className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+              className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-3"
+            >
+              <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
 
             {activeInfoModal === 'review' ? (
               <form onSubmit={handleReviewSubmit} className="space-y-3">
@@ -679,9 +697,10 @@ export const ProductDetailScreen: React.FC = () => {
                 </button>
               </>
             )}
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

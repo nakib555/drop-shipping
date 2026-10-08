@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Link2,
-  Sparkles,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { ProductCard } from '../shared/ProductCard';
@@ -34,58 +33,62 @@ export const VisualScanScreen: React.FC = () => {
     e.preventDefault();
     if (!externalUrl.trim()) return;
     const lower = externalUrl.toLowerCase();
-    if (lower.includes('watch')) {
+    const matched = products.find(
+      (p) =>
+        lower.includes(p.name.toLowerCase().split(' ')[0]) ||
+        lower.includes(p.category.split('_')[0])
+    );
+    if (matched) {
+      triggerScanSimulation(matched.id, matched.name);
+    } else if (lower.includes('watch')) {
       triggerScanSimulation('prod-smartwatch-pro', 'Smart Watch Pro');
     } else if (lower.includes('laptop') || lower.includes('victus')) {
       triggerScanSimulation('prod-hp-victus-laptop', 'HP Victus Gaming Laptop');
-    } else if (lower.includes('earbud') || lower.includes('audio')) {
-      triggerScanSimulation('prod-wireless-earbuds', 'Wireless Earbuds ANC');
     } else {
-      triggerScanSimulation('prod-running-shoes-pro', 'Running Shoes Pro');
+      triggerScanSimulation(products[0].id, products[0].name);
     }
   };
 
   return (
-    <div className="p-4 space-y-4 pb-6">
-      {/* Dark Emerald Visual Scanner Viewport (Matching Image 4 Screen 8) */}
-      <div className="rounded-3xl bg-gradient-to-b from-[#0B3D2E] to-[#07261C] text-white p-4 space-y-4 shadow-lg">
+    <div className="p-4 space-y-4 pb-6 bg-[#F8FAFC]">
+      {/* Dark Slate Visual Scanner Viewport */}
+      <div className="rounded-2xl bg-slate-900 text-white p-4 space-y-4">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-emerald-300 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-[#00C853]" />
-            AI Visual & Link Landed Cost Finder
+          <span className="font-semibold text-white">
+            Visual & Link Landed Cost Finder
           </span>
-          <span className="font-mono-num text-[11px] text-emerald-200/80">
+          <span className="font-mono-num text-[11px] text-emerald-400">
             Instant Match
           </span>
         </div>
 
         {/* Viewfinder Frame */}
-        <div className="relative w-full aspect-square max-h-60 mx-auto rounded-2xl bg-black/30 overflow-hidden flex items-center justify-center border border-white/15">
+        <div className="relative w-full aspect-square max-h-60 mx-auto rounded-xl bg-white overflow-hidden flex items-center justify-center p-4 border border-slate-700">
           <img
             src={targetProduct.image}
             alt={targetProduct.name}
             referrerPolicy="no-referrer"
-            className={`w-full h-full object-cover transition-all duration-200 ${
-              isScanning ? 'scale-105 blur-xs opacity-60' : ' opacity-95'
+            className={`w-full h-full object-contain transition-all duration-200 ${
+              isScanning ? 'scale-105 blur-xs opacity-60' : 'opacity-95'
             }`}
           />
 
-          {/* Continuous Sweeping AI Laser Scan Line */}
-          <div className="absolute top-2 inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-[#00C853] to-transparent shadow-[0_0_12px_2px_rgba(0,200,83,0.85)] animate-scan-laser pointer-events-none" />
+          {/* Continuous Sweeping Laser Scan Line */}
+          <div className="absolute top-2 inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-[#059669] to-transparent shadow-[0_0_12px_2px_rgba(5,150,105,0.85)] animate-scan-laser pointer-events-none" />
 
           {/* Corner Viewfinder Brackets */}
-          <div className="absolute top-4 left-4 w-7 h-7 border-t-3 border-l-3 border-[#00C853] rounded-tl-lg pointer-events-none" />
-          <div className="absolute top-4 right-4 w-7 h-7 border-t-3 border-r-3 border-[#00C853] rounded-tr-lg pointer-events-none" />
-          <div className="absolute bottom-4 left-4 w-7 h-7 border-b-3 border-l-3 border-[#00C853] rounded-bl-lg pointer-events-none" />
-          <div className="absolute bottom-4 right-4 w-7 h-7 border-b-3 border-r-3 border-[#00C853] rounded-br-lg pointer-events-none" />
+          <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl-md pointer-events-none" />
+          <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr-md pointer-events-none" />
+          <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl-md pointer-events-none" />
+          <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br-md pointer-events-none" />
 
           {/* Bottom Match Tag */}
-          <div className="absolute bottom-3 inset-x-3 bg-[#0B3D2E]/90 backdrop-blur-md border border-emerald-400/30 rounded-xl p-2.5 flex items-center justify-between">
+          <div className="absolute bottom-3 inset-x-3 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl p-2.5 flex items-center justify-between">
             <div className="min-w-0">
-              <span className="text-[10px] text-emerald-300 font-semibold block">
+              <span className="text-[10px] text-emerald-400 font-medium block">
                 {isScanning ? 'Scanning global factories...' : 'Matched Verified Item'}
               </span>
-              <span className="text-xs font-extrabold text-white truncate block">
+              <span className="text-xs font-semibold text-white truncate block">
                 {targetProduct.name}
               </span>
             </div>
@@ -94,7 +97,7 @@ export const VisualScanScreen: React.FC = () => {
               onClick={() =>
                 navigateTo('product_detail', { productId: targetProduct.id })
               }
-              className="px-3 py-1.5 rounded-lg bg-[#0EA75F] text-white font-mono-num text-xs font-bold shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-[#059669] text-white font-mono-num text-xs font-semibold shrink-0"
             >
               {formatPrice(targetProduct.totalLandedBdt)}
             </button>
@@ -109,10 +112,10 @@ export const VisualScanScreen: React.FC = () => {
               setScanMode('camera');
               triggerScanSimulation('prod-running-shoes-pro', 'Running Shoes Pro');
             }}
-            className={`py-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs font-semibold border transition-colors ${
+            className={`py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 text-xs font-medium border transition-colors ${
               scanMode === 'camera'
-                ? 'bg-[#0EA75F] text-white border-[#00C853]'
-                : 'bg-white/10 text-emerald-100 border-white/10 hover:bg-white/15'
+                ? 'bg-[#059669] text-white border-[#059669]'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Camera className="w-4 h-4" />
@@ -125,10 +128,10 @@ export const VisualScanScreen: React.FC = () => {
               setScanMode('gallery');
               triggerScanSimulation('prod-smartwatch-pro', 'Smart Watch Pro');
             }}
-            className={`py-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs font-semibold border transition-colors ${
+            className={`py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 text-xs font-medium border transition-colors ${
               scanMode === 'gallery'
-                ? 'bg-[#0EA75F] text-white border-[#00C853]'
-                : 'bg-white/10 text-emerald-100 border-white/10 hover:bg-white/15'
+                ? 'bg-[#059669] text-white border-[#059669]'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}
           >
             <ImageIcon className="w-4 h-4" />
@@ -138,10 +141,10 @@ export const VisualScanScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => setScanMode('link')}
-            className={`py-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs font-semibold border transition-colors ${
+            className={`py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 text-xs font-medium border transition-colors ${
               scanMode === 'link'
-                ? 'bg-[#0EA75F] text-white border-[#00C853]'
-                : 'bg-white/10 text-emerald-100 border-white/10 hover:bg-white/15'
+                ? 'bg-[#059669] text-white border-[#059669]'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Link2 className="w-4 h-4" />
@@ -149,10 +152,10 @@ export const VisualScanScreen: React.FC = () => {
           </button>
         </div>
 
-        {/* Sample Preset Thumbnails to Test Visual Scan */}
+        {/* Sample Preset Thumbnails */}
         <div>
-          <span className="block text-[11px] text-emerald-200/90 mb-1.5">
-            Tap any sample photo below to test instant visual factory matching:
+          <span className="block text-[11px] text-slate-400 mb-1.5">
+            Tap any sample item to test visual factory matching:
           </span>
           <div className="grid grid-cols-4 gap-2">
             {products.slice(0, 4).map((p) => (
@@ -160,10 +163,10 @@ export const VisualScanScreen: React.FC = () => {
                 key={p.id}
                 type="button"
                 onClick={() => triggerScanSimulation(p.id, p.name)}
-                className={`p-1.5 rounded-xl bg-white/10 border text-center transition-all ${
+                className={`p-1.5 rounded-xl bg-slate-800 border text-center transition-all ${
                   p.id === targetProduct.id
-                    ? 'border-[#00C853] ring-2 ring-[#00C853]/40'
-                    : 'border-white/10 opacity-75 hover:opacity-100'
+                    ? 'border-emerald-400'
+                    : 'border-slate-700 opacity-75 hover:opacity-100'
                 }`}
               >
                 <img
@@ -172,7 +175,7 @@ export const VisualScanScreen: React.FC = () => {
                   referrerPolicy="no-referrer"
                   className="w-full aspect-square rounded-lg object-cover mb-1"
                 />
-                <span className="block font-mono-num text-[10px] font-bold text-white truncate">
+                <span className="block font-mono-num text-[10px] font-semibold text-white truncate">
                   {formatPrice(p.totalLandedBdt)}
                 </span>
               </button>
@@ -184,9 +187,9 @@ export const VisualScanScreen: React.FC = () => {
       {/* Paste External Marketplace Link Resolver */}
       <form
         onSubmit={handleLinkLookup}
-        className="bg-white rounded-2xl border border-slate-200/80 p-3.5 space-y-2.5"
+        className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2.5"
       >
-        <label className="block text-xs font-extrabold text-[#0B3D2E]">
+        <label className="block text-xs font-semibold text-slate-900">
           Paste AliExpress, Amazon, or Taobao Product Link
         </label>
         <div className="flex gap-2">
@@ -195,28 +198,28 @@ export const VisualScanScreen: React.FC = () => {
             value={externalUrl}
             onChange={(e) => setExternalUrl(e.target.value)}
             placeholder="https://aliexpress.com/item/smart-watch..."
-            className="flex-1 h-10 px-3 rounded-xl bg-[#F8FAFC] border border-slate-200 text-xs text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+            className="flex-1 h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-900"
           />
           <button
             type="submit"
-            className="h-10 px-3.5 rounded-xl bg-[#0EA75F] text-white text-xs font-bold shrink-0"
+            className="h-10 px-3.5 rounded-xl bg-slate-900 text-white text-xs font-semibold shrink-0"
           >
             Calculate
           </button>
         </div>
-        <p className="text-[11px] text-[#6B7280] flex items-center gap-1">
-          <CheckCircle2 className="w-3.5 h-3.5 text-[#0EA75F]" />
+        <p className="text-[11px] text-slate-500 flex items-center gap-1.5">
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
           <span>Calculates exact Bangladesh customs duty + VAT in 1 click</span>
         </p>
       </form>
 
       {/* Similar Verified Products Grid */}
-      <section>
-        <h3 className="text-sm font-extrabold text-[#0B3D2E] mb-2.5">
-          Similar Verified Products (Landed Cost Included)
+      <section className="space-y-2.5">
+        <h3 className="text-sm font-semibold text-slate-900">
+          Matched Global Catalog (Landed Price)
         </h3>
-        <div className="grid grid-cols-2 gap-2.5">
-          {products.slice(0, 4).map((prod) => (
+        <div className="grid grid-cols-2 gap-3">
+          {products.slice(0, 6).map((prod) => (
             <ProductCard key={prod.id} product={prod} />
           ))}
         </div>

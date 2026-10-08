@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   ArrowRight,
   Camera,
@@ -24,9 +25,15 @@ export const HomeScreen: React.FC = () => {
     formatPrice,
   } = useDeshiMart();
 
+  const [homeCategory, setHomeCategory] = useState<CategoryId>('all');
+  const [visibleLimit, setVisibleLimit] = useState<number>(24);
+
   const heroProduct = products[0];
 
   const filteredProducts = products.filter((p) => {
+    if (homeCategory !== 'all' && p.category !== homeCategory) {
+      return false;
+    }
     if (
       searchQuery.trim() &&
       !p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -44,47 +51,56 @@ export const HomeScreen: React.FC = () => {
     ? [...filteredProducts].sort((a, b) => a.totalLandedBdt - b.totalLandedBdt)
     : filteredProducts;
 
-  // 8pt Grid: p-4 (16px), space-y-6 (24px), pb-6 (24px)
+  const slicedProducts = displayedProducts.slice(0, visibleLimit);
+
   return (
-    <div className="p-4 space-y-6 pb-6 bg-[#F8FAFC]">
-      {/* 1. Search Bar + Visual Scanner Trigger (h-10 = 40px, gap-2 = 8px) */}
+    <div className="p-4 space-y-5 pb-6 bg-[#F8FAFC]">
+      {/* 1. Search Bar + Scan Button */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setVisibleLimit(24);
+            }}
             placeholder={
               language === 'BN'
                 ? 'পণ্য, ব্র্যান্ড বা লিংক খুঁজুন...'
                 : 'Search global products or paste URL...'
             }
-            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200 text-xs leading-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 transition-colors"
+            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200/90 text-xs leading-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 transition-colors"
           />
         </div>
         <button
           type="button"
           aria-label="Visual Search or Paste Link"
           onClick={() => navigateTo('visual_scan')}
-          className="h-10 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:border-slate-300 flex items-center gap-1.5 text-xs leading-4 font-medium shrink-0 transition-colors"
+          className="h-10 px-3.5 rounded-xl bg-white border border-slate-200/90 text-slate-700 hover:text-slate-900 hover:border-slate-300 flex items-center gap-1.5 text-xs leading-4 font-medium shrink-0 transition-colors"
         >
           <Camera className="w-4 h-4 text-[#059669]" />
           <span>{language === 'BN' ? 'স্ক্যান' : 'Scan'}</span>
         </button>
       </div>
 
-      {/* 2. Single Focal Anchor: Editorial Cross-Border Campaign Card */}
-      <section className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-5">
-        <div className="flex items-center justify-between gap-4">
+      {/* 2. Dark Slate Editorial Campaign Card (With Non-Overlapping CTA Buttons) */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="relative overflow-hidden rounded-2xl bg-[#0F172A] text-white p-4"
+      >
+        <div className="flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0 space-y-2">
             <p className="text-[11px] leading-4 text-emerald-400 font-medium">
               {language === 'BN'
-                ? 'কাস্টমস ডিউটি ও ভ্যাট অন্তর্ভুক্ত'
+                ? 'কাস্টমস ডিউটি ও ১৫% ভ্যাট অন্তর্ভুক্ত'
                 : 'Customs Duty & 15% VAT Included'}
             </p>
 
-            <h2 className="text-lg leading-6 font-semibold tracking-tight text-white">
+            <h2 className="text-lg leading-6 font-bold tracking-tight text-white">
               {language === 'BN'
                 ? 'গ্লোবাল ফ্যাক্টরি থেকে সরাসরি আপনার দরজায়'
                 : 'Direct Factory Finds, Delivered to Dhaka'}
@@ -96,18 +112,18 @@ export const HomeScreen: React.FC = () => {
                 : 'Compare 3 shipping routes with zero surprise fees on arrival.'}
             </p>
 
-            <div className="pt-2 flex items-center gap-2">
+            <div className="pt-1.5 flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-                className="h-8 px-3.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs leading-4 transition-colors whitespace-nowrap"
+                className="h-8 px-3 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-semibold text-[11px] leading-4 transition-colors whitespace-nowrap"
               >
                 {language === 'BN' ? 'ক্যাটালগ দেখুন' : 'Explore Catalog'}
               </button>
               <button
                 type="button"
                 onClick={() => navigateTo('seller_compare')}
-                className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 font-medium text-xs leading-4 transition-colors whitespace-nowrap"
+                className="h-8 px-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 font-medium text-[11px] leading-4 transition-colors whitespace-nowrap"
               >
                 {language === 'BN' ? '৩ রুট তুলনা' : 'Compare Routes'}
               </button>
@@ -126,7 +142,7 @@ export const HomeScreen: React.FC = () => {
                   navigateTo('product_detail', { productId: heroProduct.id });
                 }
               }}
-              className="w-24 shrink-0 bg-white/10 border border-white/15 rounded-xl p-2 text-center cursor-pointer hover:bg-white/15 transition-colors"
+              className="w-[92px] shrink-0 bg-white/10 border border-white/15 rounded-xl p-2 text-center cursor-pointer hover:bg-white/15 transition-colors animate-float-soft"
             >
               <div className="w-full aspect-square rounded-lg bg-white overflow-hidden mb-1.5">
                 <img
@@ -136,7 +152,7 @@ export const HomeScreen: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="block font-mono-num text-xs leading-4 font-semibold text-white">
+              <span className="block font-mono-num text-xs leading-4 font-bold text-white">
                 {formatPrice(heroProduct.totalLandedBdt)}
               </span>
               <span className="block text-[10px] leading-3 text-slate-300 mt-0.5">
@@ -145,20 +161,20 @@ export const HomeScreen: React.FC = () => {
             </div>
           )}
         </div>
-      </section>
+      </motion.section>
 
-      {/* 3. Cross-Border Intelligence Bar (Clean 3-Item Utility Strip) */}
-      <section aria-label="Cross-Border Tools" className="grid grid-cols-3 gap-2">
+      {/* 3. Cross-Border Intelligence Bar (3 White Cards) */}
+      <section aria-label="Cross-Border Tools" className="grid grid-cols-3 gap-2.5">
         <button
           type="button"
           onClick={() => navigateTo('price_tracker')}
-          className="p-3 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors"
+          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors"
         >
-          <TrendingDown className="w-4 h-4 text-[#059669] mb-1.5" />
+          <TrendingDown className="w-4 h-4 text-[#059669] mb-2" />
           <span className="block text-xs leading-4 font-semibold text-slate-900">
-            {language === 'BN' ? 'প্রাইস ট্র্যাকার' : 'Price History'}
+            {language === 'BN' ? 'প্রাইস হিস্ট্রি' : 'Price History'}
           </span>
-          <span className="block text-[10px] leading-3 text-slate-500 mt-0.5">
+          <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
             30-day landed lows
           </span>
         </button>
@@ -166,13 +182,13 @@ export const HomeScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('seller_compare')}
-          className="p-3 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors"
+          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors"
         >
-          <Scale className="w-4 h-4 text-[#059669] mb-1.5" />
+          <Scale className="w-4 h-4 text-[#059669] mb-2" />
           <span className="block text-xs leading-4 font-semibold text-slate-900">
             {language === 'BN' ? '৩ রুট তুলনা' : '3-Route Compare'}
           </span>
-          <span className="block text-[10px] leading-3 text-slate-500 mt-0.5">
+          <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
             CN vs. BD vs. Air
           </span>
         </button>
@@ -180,19 +196,19 @@ export const HomeScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('order_tracking', { orderId: 'DM123456' })}
-          className="p-3 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors"
+          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors"
         >
-          <Truck className="w-4 h-4 text-[#059669] mb-1.5" />
+          <Truck className="w-4 h-4 text-[#059669] mb-2" />
           <span className="block text-xs leading-4 font-semibold text-slate-900">
             {language === 'BN' ? 'লাইভ ট্র্যাকিং' : 'Live Tracking'}
           </span>
-          <span className="block text-[10px] leading-3 text-slate-500 mt-0.5">
+          <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
             Customs & courier
           </span>
         </button>
       </section>
 
-      {/* 4. Curated Department Navigation + Smart Filter Feed */}
+      {/* 4. Verified Global Catalog Section */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -208,31 +224,39 @@ export const HomeScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('categories')}
-            className="text-xs leading-4 font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1"
+            className="text-xs leading-4 font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1 shrink-0"
           >
-            <span>{language === 'BN' ? 'ক্যাটাগরি' : 'Departments'}</span>
+            <span>{language === 'BN' ? 'বিভাগসমূহ' : 'Departments'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Clean Department Links */}
+        {/* Row 1: Department Pills (Electronics, Fashion, Home & Living, Beauty & Health, etc.) */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {CATEGORIES.slice(0, 5).map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() =>
-                navigateTo('category_products', { categoryId: cat.id as CategoryId })
-              }
-              className="h-8 px-3 rounded-lg bg-white border border-slate-200/80 hover:border-slate-300 text-xs leading-4 font-medium text-slate-700 whitespace-nowrap shrink-0 transition-colors"
-            >
-              {language === 'BN' ? cat.nameBn : cat.name}
-            </button>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const active = homeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  setHomeCategory(active ? 'all' : cat.id);
+                  setVisibleLimit(24);
+                }}
+                className={`h-8 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
+                  active
+                    ? 'bg-slate-900 text-white border-slate-900'
+                    : 'bg-white border-slate-200/90 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {language === 'BN' ? cat.nameBn : cat.name}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Segmented Filter Control Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+        {/* Row 2: Smart Filter Pills (Under ৳2,000, Arrives this week, Lowest landed price, Verified only) */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() =>
@@ -241,9 +265,9 @@ export const HomeScreen: React.FC = () => {
                 under2000Bdt: !prev.under2000Bdt,
               }))
             }
-            className={`h-7 px-2.5 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.under2000Bdt
-                ? 'bg-slate-900 text-white'
+                ? 'bg-[#059669] text-white'
                 : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -258,9 +282,9 @@ export const HomeScreen: React.FC = () => {
                 arrivesThisWeek: !prev.arrivesThisWeek,
               }))
             }
-            className={`h-7 px-2.5 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.arrivesThisWeek
-                ? 'bg-slate-900 text-white'
+                ? 'bg-[#059669] text-white'
                 : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -275,9 +299,9 @@ export const HomeScreen: React.FC = () => {
                 lowestLandedCost: !prev.lowestLandedCost,
               }))
             }
-            className={`h-7 px-2.5 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.lowestLandedCost
-                ? 'bg-slate-900 text-white'
+                ? 'bg-[#059669] text-white'
                 : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -292,9 +316,9 @@ export const HomeScreen: React.FC = () => {
                 verifiedOnly: !prev.verifiedOnly,
               }))
             }
-            className={`h-7 px-2.5 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.verifiedOnly
-                ? 'bg-slate-900 text-white'
+                ? 'bg-[#059669] text-white'
                 : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -302,13 +326,31 @@ export const HomeScreen: React.FC = () => {
           </button>
         </div>
 
-        {/* 2-Column Mobile Product Grid (gap-3 = 12px) */}
-        {displayedProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            {displayedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+        {/* 2-Column Product Card Grid */}
+        {slicedProducts.length > 0 ? (
+          <>
+            <motion.div
+              key={`${homeCategory}-${searchQuery}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18 }}
+              className="grid grid-cols-2 gap-3 pt-1"
+            >
+              {slicedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </motion.div>
+
+            {displayedProducts.length > visibleLimit && (
+              <button
+                type="button"
+                onClick={() => setVisibleLimit((prev) => prev + 24)}
+                className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs leading-4 font-semibold text-slate-900 transition-colors"
+              >
+                Load More Products ({displayedProducts.length - visibleLimit} remaining)
+              </button>
+            )}
+          </>
         ) : (
           <div className="bg-white rounded-2xl p-6 text-center border border-slate-200/80">
             <p className="text-xs leading-4 font-semibold text-slate-900">
@@ -321,6 +363,7 @@ export const HomeScreen: React.FC = () => {
               type="button"
               onClick={() => {
                 setSearchQuery('');
+                setHomeCategory('all');
                 setSmartFilters((prev) => ({
                   ...prev,
                   under2000Bdt: false,

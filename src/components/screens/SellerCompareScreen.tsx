@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   Check,
   CheckCircle2,
@@ -28,7 +29,7 @@ export const SellerCompareScreen: React.FC = () => {
     'all'
   );
 
-  // Screen Mode A: Compare 2 Products Side-by-Side (Screen 25 in UI Kit 2)
+  // Screen Mode A: Compare 2 Products Side-by-Side
   if (currentScreen === 'spec_compare') {
     const prodA =
       products.find((p) => p.id === compareProductIds[0]) || products[0];
@@ -43,7 +44,7 @@ export const SellerCompareScreen: React.FC = () => {
         highlight: true,
       },
       {
-        label: 'DropScore™',
+        label: 'DropScore',
         valA: `${prodA.dropScore.toFixed(1)} / 10`,
         valB: `${prodB.dropScore.toFixed(1)} / 10`,
       },
@@ -58,31 +59,26 @@ export const SellerCompareScreen: React.FC = () => {
         valB: prodB.specs.battery || 'N/A',
       },
       {
-        label: 'Waterproof',
-        valA: prodA.specs.waterproof || 'No',
-        valB: prodB.specs.waterproof || 'No',
+        label: 'Durability',
+        valA: prodA.specs.waterproof || 'Standard',
+        valB: prodB.specs.waterproof || 'Standard',
       },
       {
-        label: 'Heart Rate',
-        valA: prodA.specs.heartRate || 'No',
-        valB: prodB.specs.heartRate || 'No',
-      },
-      {
-        label: 'GPS / Connectivity',
+        label: 'Connectivity',
         valA: prodA.specs.gps || 'Standard',
         valB: prodB.specs.gps || 'Standard',
       },
       {
-        label: 'Delivery Estimate',
+        label: 'Delivery Window',
         valA: prodA.routes[0]?.deliveryDays || '7–12 days',
         valB: prodB.routes[0]?.deliveryDays || '7–12 days',
       },
     ];
 
     return (
-      <div className="p-4 space-y-4 pb-6">
+      <div className="p-4 space-y-4 pb-6 bg-[#F8FAFC]">
         {/* Product Selectors */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {[prodA, prodB].map((prod, idx) => (
             <div
               key={idx}
@@ -97,7 +93,7 @@ export const SellerCompareScreen: React.FC = () => {
                     idx === 0 ? [newId, prev[1]] : [prev[0], newId]
                   );
                 }}
-                className="w-full mb-2 text-[11px] font-bold text-[#0B3D2E] bg-[#F8FAFC] border border-slate-200 rounded-lg px-2 py-1.5"
+                className="w-full mb-2 text-[11px] font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5"
               >
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -110,12 +106,12 @@ export const SellerCompareScreen: React.FC = () => {
                 src={prod.image}
                 alt={prod.name}
                 referrerPolicy="no-referrer"
-                className="w-20 h-20 rounded-xl object-cover bg-[#F8FAFC] mb-2"
+                className="w-20 h-20 rounded-xl object-contain bg-white p-1.5 border border-slate-100 mb-2"
               />
-              <h3 className="text-xs font-extrabold text-[#0B3D2E] line-clamp-1">
+              <h3 className="text-xs font-semibold text-slate-900 line-clamp-1">
                 {prod.name}
               </h3>
-              <span className="font-mono-num text-sm font-extrabold text-[#0EA75F] mt-0.5">
+              <span className="font-mono-num text-sm font-semibold text-[#059669] mt-0.5">
                 {formatPrice(prod.totalLandedBdt)}
               </span>
             </div>
@@ -126,15 +122,15 @@ export const SellerCompareScreen: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden divide-y divide-slate-100">
           {specRows.map((row) => (
             <div key={row.label} className="p-3 text-xs">
-              <span className="block text-[10px] font-bold text-[#6B7280] text-center mb-1">
+              <span className="block text-[10px] font-medium text-slate-400 text-center mb-1">
                 {row.label}
               </span>
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div
-                  className={`font-semibold ${
+                  className={`font-medium ${
                     row.highlight
-                      ? 'font-mono-num text-[#0EA75F] font-extrabold'
-                      : 'text-[#0B3D2E]'
+                      ? 'font-mono-num text-slate-900 font-semibold'
+                      : 'text-slate-700'
                   }`}
                 >
                   {row.valA === 'No' ? (
@@ -144,10 +140,10 @@ export const SellerCompareScreen: React.FC = () => {
                   )}
                 </div>
                 <div
-                  className={`font-semibold border-l border-slate-100 ${
+                  className={`font-medium border-l border-slate-100 ${
                     row.highlight
-                      ? 'font-mono-num text-[#0EA75F] font-extrabold'
-                      : 'text-[#0B3D2E]'
+                      ? 'font-mono-num text-slate-900 font-semibold'
+                      : 'text-slate-700'
                   }`}
                 >
                   {row.valB === 'No' ? (
@@ -161,12 +157,12 @@ export const SellerCompareScreen: React.FC = () => {
           ))}
         </div>
 
-        {/* Add to Cart Row */}
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* Add to Bag Row */}
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => addToCart(prodA.id, 1)}
-            className="h-11 rounded-xl bg-[#0EA75F] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
+            className="h-11 rounded-xl bg-slate-900 text-white text-xs font-semibold flex items-center justify-center gap-1.5"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodA.name.split(' ')[0]}</span>
@@ -174,7 +170,7 @@ export const SellerCompareScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => addToCart(prodB.id, 1)}
-            className="h-11 rounded-xl bg-[#0B3D2E] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
+            className="h-11 rounded-xl bg-[#059669] text-white text-xs font-semibold flex items-center justify-center gap-1.5"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodB.name.split(' ')[0]}</span>
@@ -184,7 +180,7 @@ export const SellerCompareScreen: React.FC = () => {
     );
   }
 
-  // Screen Mode B: Compare 3 Sellers / Routes (Screen 11 in Image 3 & Screen 12 in Image 4)
+  // Screen Mode B: Compare 3 Sellers / Routes
   const activeRouteId =
     selectedRouteByProduct[selectedProduct.id] || selectedProduct.routes[0]?.id;
 
@@ -196,21 +192,21 @@ export const SellerCompareScreen: React.FC = () => {
   });
 
   return (
-    <div className="p-4 space-y-4 pb-6">
+    <div className="p-4 space-y-4 pb-6 bg-[#F8FAFC]">
       {/* Product Selector Header */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-3 flex items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={selectedProduct.image}
             alt={selectedProduct.name}
             referrerPolicy="no-referrer"
-            className="w-12 h-12 rounded-xl object-cover bg-[#F8FAFC] shrink-0"
+            className="w-12 h-12 rounded-xl object-contain bg-white p-1 border border-slate-100 shrink-0"
           />
           <div className="min-w-0">
-            <h2 className="text-xs font-extrabold text-[#0B3D2E] truncate">
+            <h2 className="text-xs font-semibold text-slate-900 truncate">
               {selectedProduct.name}
             </h2>
-            <p className="text-[11px] text-[#6B7280]">
+            <p className="text-[11px] text-slate-500">
               Select your preferred cross-border route
             </p>
           </div>
@@ -218,13 +214,13 @@ export const SellerCompareScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('spec_compare')}
-          className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[11px] font-bold text-[#0EA75F] shrink-0"
+          className="px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-700 hover:text-slate-900 shrink-0"
         >
           Compare 2 Items
         </button>
       </div>
 
-      {/* Filter Tabs (All / Cheapest / Fastest / Best Rated) */}
+      {/* Filter Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
         {(
           [
@@ -238,10 +234,10 @@ export const SellerCompareScreen: React.FC = () => {
             key={tab.id}
             type="button"
             onClick={() => setRouteFilter(tab.id)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
               routeFilter === tab.id
-                ? 'bg-[#0EA75F] text-white'
-                : 'bg-white text-[#6B7280] border border-slate-200'
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-slate-600 border border-slate-200/80'
             }`}
           >
             {tab.label}
@@ -249,47 +245,48 @@ export const SellerCompareScreen: React.FC = () => {
         ))}
       </div>
 
-      {/* 3-Column Visual Route Cards (Matching Image 4 Screen 12) */}
+      {/* 3-Column Route Comparison Cards */}
       <div className="grid grid-cols-3 gap-2">
         {sortedRoutes.map((rt) => {
           const isSelected = rt.id === activeRouteId;
           return (
-            <button
+            <motion.button
               key={rt.id}
               type="button"
+              whileTap={{ scale: 0.97 }}
               onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
               className={`rounded-2xl p-2.5 border text-center flex flex-col justify-between transition-all ${
                 isSelected
-                  ? 'bg-[#ECFDF5] border-2 border-[#0EA75F] shadow-sm'
-                  : 'bg-white border-slate-200 hover:border-[#0EA75F]/50'
+                  ? 'bg-white border-2 border-[#059669]'
+                  : 'bg-white border-slate-200/80 hover:border-slate-300'
               }`}
             >
               <div>
-                <span className="inline-block text-[10px] font-bold text-[#0EA75F] mb-1">
+                <span className="inline-block text-[10px] font-medium text-[#059669] mb-1">
                   {rt.badge}
                 </span>
-                <h3 className="text-xs font-extrabold text-[#0B3D2E] leading-tight">
+                <h3 className="text-xs font-semibold text-slate-900 leading-tight">
                   {rt.name}
                 </h3>
-                <p className="text-[10px] text-[#6B7280] mt-0.5 truncate">
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate">
                   {rt.originCountry}
                 </p>
               </div>
 
-              <div className="my-3 py-2 border-y border-slate-200/70">
-                <span className="block font-mono-num text-sm font-extrabold text-[#0EA75F]">
+              <div className="my-3 py-2 border-y border-slate-100">
+                <span className="block font-mono-num text-sm font-semibold text-slate-900">
                   {formatPrice(rt.totalLandedBdt)}
                 </span>
-                <span className="block text-[10px] text-[#0B3D2E] font-medium mt-1">
+                <span className="block text-[10px] text-slate-500 mt-1">
                   {rt.deliveryDays}
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-1 text-[11px] font-mono-num font-bold text-[#0B3D2E]">
+              <div className="flex items-center justify-center gap-1 text-[11px] font-mono-num font-medium text-slate-700">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>{rt.rating.toFixed(1)}</span>
               </div>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -309,10 +306,10 @@ export const SellerCompareScreen: React.FC = () => {
                   selectRouteForProduct(selectedProduct.id, rt.id);
                 }
               }}
-              className={`rounded-2xl p-3.5 border transition-colors cursor-pointer ${
+              className={`rounded-2xl p-3.5 border transition-colors cursor-pointer bg-white ${
                 isSelected
-                  ? 'bg-white border-2 border-[#0EA75F]'
-                  : 'bg-white border-slate-200/80'
+                  ? 'border-2 border-[#059669]'
+                  : 'border-slate-200/80'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -320,40 +317,40 @@ export const SellerCompareScreen: React.FC = () => {
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center ${
                       isSelected
-                        ? 'bg-[#0EA75F] text-white'
+                        ? 'bg-[#059669] text-white'
                         : 'border border-slate-300'
                     }`}
                   >
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                   </div>
-                  <span className="text-xs font-extrabold text-[#0B3D2E]">
+                  <span className="text-xs font-semibold text-slate-900">
                     {rt.name}
                   </span>
-                  <span className="text-[11px] text-[#6B7280]">
+                  <span className="text-[11px] text-slate-500">
                     · {rt.originCountry}
                   </span>
                 </div>
-                <span className="font-mono-num text-xs font-bold text-[#0EA75F]">
-                  Score {rt.reliabilityScore.toFixed(1)}/10
+                <span className="font-mono-num text-xs font-medium text-[#059669]">
+                  {rt.reliabilityScore.toFixed(1)}/10
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-[11px] text-[#6B7280] bg-[#F8FAFC] p-2.5 rounded-xl">
+              <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl">
                 <div>
                   <span className="block text-[10px]">Base + Ship</span>
-                  <span className="font-mono-num font-bold text-[#0B3D2E]">
+                  <span className="font-mono-num font-semibold text-slate-900">
                     {formatPrice(rt.basePriceBdt + rt.shippingBdt)}
                   </span>
                 </div>
                 <div>
                   <span className="block text-[10px]">Duty + VAT</span>
-                  <span className="font-mono-num font-bold text-[#0B3D2E]">
+                  <span className="font-mono-num font-semibold text-slate-900">
                     {formatPrice(rt.dutyBdt + rt.vatBdt)}
                   </span>
                 </div>
                 <div>
                   <span className="block text-[10px]">On-Time Rate</span>
-                  <span className="font-mono-num font-bold text-[#0EA75F]">
+                  <span className="font-mono-num font-semibold text-[#059669]">
                     {rt.onTimeRate}
                   </span>
                 </div>
@@ -363,32 +360,31 @@ export const SellerCompareScreen: React.FC = () => {
         })}
       </div>
 
-      {/* Compare By Checklist Card */}
+      {/* Guarantee Summary */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2">
-        <h3 className="text-xs font-extrabold text-[#0B3D2E] mb-1">
-          Guaranteed on All 3 Routes
+        <h3 className="text-xs font-semibold text-slate-900 mb-1">
+          Included on All 3 Routes
         </h3>
-        <div className="flex items-center gap-2 text-xs text-[#0B3D2E]">
-          <CheckCircle2 className="w-4 h-4 text-[#0EA75F]" />
-          <span>Total Landed Cost (Zero extra customs charge on arrival)</span>
+        <div className="flex items-center gap-2 text-xs text-slate-600">
+          <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+          <span>True Landed Price (Zero extra customs charge on arrival)</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#0B3D2E]">
-          <Truck className="w-4 h-4 text-[#0EA75F]" />
-          <span>Guaranteed Delivery Window with live milestone tracking</span>
+        <div className="flex items-center gap-2 text-xs text-slate-600">
+          <Truck className="w-4 h-4 text-[#059669] shrink-0" />
+          <span>Live milestone tracking from export hub to Dhaka</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#0B3D2E]">
-          <ShieldCheck className="w-4 h-4 text-[#0EA75F]" />
-          <span>Verified Supplier Quality Inspection before dispatch</span>
+        <div className="flex items-center gap-2 text-xs text-slate-600">
+          <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0" />
+          <span>Pre-shipment physical quality inspection</span>
         </div>
       </div>
 
-      {/* Confirm Best Option CTA */}
       <button
         type="button"
         onClick={() => navigateTo('product_detail', { productId: selectedProduct.id })}
-        className="w-full h-12 rounded-xl bg-[#0EA75F] hover:bg-[#0B8A4D] text-white font-bold text-xs shadow-md transition-colors"
+        className="w-full h-11 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs transition-colors"
       >
-        Choose Selected Route & Continue
+        Confirm Selected Route
       </button>
     </div>
   );

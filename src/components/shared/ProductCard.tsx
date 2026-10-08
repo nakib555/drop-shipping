@@ -28,7 +28,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
     product.routes.find((r) => r.id === activeRouteId) || product.routes[0];
   const landedBdt = activeRoute ? activeRoute.totalLandedBdt : product.totalLandedBdt;
 
-  // 8pt Grid: p-3 (12px), rounded-2xl (16px), mb-2 (8px), w-8 h-8 (32px) buttons
   return (
     <motion.div
       whileTap={{ scale: 0.985 }}
@@ -44,7 +43,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       }}
       className="group relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between hover:border-slate-300 transition-colors cursor-pointer text-left"
     >
-      {/* Top Wishlist Button (32px = 4*8) */}
+      {/* Top Wishlist Button */}
       <motion.button
         type="button"
         whileTap={{ scale: 1.25 }}
@@ -63,13 +62,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         />
       </motion.button>
 
-      {/* Clean Product Image Slot (Zero Clutter Overlays) */}
+      {/* Clean Product Image Slot */}
       <div>
         <div className="relative w-full aspect-square rounded-xl bg-slate-50 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100">
           {!imgError ? (
             <img
               src={product.image}
               alt={product.name}
+              loading="lazy"
               referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
               className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-200"
@@ -84,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           )}
         </div>
 
-        {/* Clean Unboxed Metadata Line (Zero-Pill Discipline) */}
+        {/* Clean Unboxed Metadata Line */}
         <div className="text-[11px] leading-4 text-slate-500 truncate mb-1 flex items-center gap-1">
           <span className="truncate">{product.originLabel.split(' ')[0]}</span>
           <span aria-hidden="true">·</span>
@@ -100,7 +100,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           )}
         </div>
 
-        {/* Product Title (12px / 16px line-height, Semibold) */}
+        {/* Product Title */}
         <h3 className="text-xs leading-4 font-semibold text-slate-900 truncate">
           {language === 'BN' ? product.nameBn : product.name}
         </h3>

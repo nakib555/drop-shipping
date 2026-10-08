@@ -35,13 +35,13 @@ export const SideDrawer: React.FC = () => {
     { label: 'Home', labelBn: 'হোম', screen: 'home', icon: Home },
     { label: 'My Orders', labelBn: 'আমার অর্ডার', screen: 'orders', icon: Package },
     { label: 'Wishlist', labelBn: 'উইশলিস্ট', screen: 'wishlist', icon: Heart },
-    { label: 'Addresses', labelBn: 'ঠিকানা', screen: 'addresses', icon: MapPin },
+    { label: 'Saved Addresses', labelBn: 'ঠিকানা', screen: 'addresses', icon: MapPin },
     { label: 'Payment Methods', labelBn: 'পেমেন্ট মাধ্যম', screen: 'payment_methods', icon: CreditCard },
     { label: 'Notifications', labelBn: 'নোটিফিকেশন', screen: 'notifications', icon: Bell },
-    { label: 'Shopping Guides & Blog', labelBn: 'শপিং গাইড ও ব্লগ', screen: 'guides', icon: BookOpen },
-    { label: 'Help & Support', labelBn: 'হেল্প ও সাপোর্ট', screen: 'support', icon: HelpCircle },
-    { label: 'Settings & Currency', labelBn: 'সেটিংস ও কারেন্সি', screen: 'settings', icon: Settings },
-    { label: 'Replay Animated Onboarding', labelBn: 'অ্যানিমেটেড অনবোর্ডিং দেখুন', screen: 'splash', icon: Play },
+    { label: 'Buying Guides', labelBn: 'শপিং গাইড ও ব্লগ', screen: 'guides', icon: BookOpen },
+    { label: 'Help & 24/7 Support', labelBn: 'হেল্প ও সাপোর্ট', screen: 'support', icon: HelpCircle },
+    { label: 'Settings & Preferences', labelBn: 'সেটিংস ও কারেন্সি', screen: 'settings', icon: Settings },
+    { label: 'Replay Intro Walkthrough', labelBn: 'অনবোর্ডিং দেখুন', screen: 'splash', icon: Play },
   ];
 
   return (
@@ -53,9 +53,9 @@ export const SideDrawer: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.16 }}
             onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+            className="absolute inset-0 bg-slate-900/45 backdrop-blur-[1px]"
           />
 
           {/* Slide-Out Drawer Content */}
@@ -63,14 +63,14 @@ export const SideDrawer: React.FC = () => {
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
-            transition={{ type: 'spring', stiffness: 360, damping: 32 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 34 }}
             className="relative z-10 w-72 max-w-[82%] bg-white h-full shadow-2xl flex flex-col justify-between p-4 overflow-y-auto"
           >
             <div>
               {/* Top User Header */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-[#0EA75F] text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
                     {user.fullName
                       .split(' ')
                       .map((n) => n[0])
@@ -79,8 +79,8 @@ export const SideDrawer: React.FC = () => {
                       .toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-[#0B3D2E]">{user.fullName}</h2>
-                    <p className="text-xs text-[#6B7280]">{user.email}</p>
+                    <h2 className="text-sm font-bold text-slate-900">{user.fullName}</h2>
+                    <p className="text-xs text-slate-500">{user.email}</p>
                   </div>
                 </div>
                 <button
@@ -95,19 +95,19 @@ export const SideDrawer: React.FC = () => {
 
               {/* Quick Currency & Language Switchers */}
               <div className="my-3 space-y-2">
-                <div className="p-2.5 rounded-xl bg-[#F1F5F9] flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#0B3D2E]">
-                    <Globe className="w-4 h-4 text-[#0EA75F]" />
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
+                    <Globe className="w-4 h-4 text-[#059669]" />
                     <span>{language === 'BN' ? 'কারেন্সি' : 'Currency'}</span>
                   </div>
                   <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
                     <button
                       type="button"
                       onClick={() => setCurrency('BDT')}
-                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                      className={`px-2 py-1 rounded-md text-[11px] font-mono-num font-semibold transition-colors ${
                         currency === 'BDT'
-                          ? 'bg-[#0EA75F] text-white'
-                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                          ? 'bg-slate-900 text-white'
+                          : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
                       ৳ BDT
@@ -115,10 +115,10 @@ export const SideDrawer: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setCurrency('USD')}
-                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                      className={`px-2 py-1 rounded-md text-[11px] font-mono-num font-semibold transition-colors ${
                         currency === 'USD'
-                          ? 'bg-[#0EA75F] text-white'
-                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                          ? 'bg-slate-900 text-white'
+                          : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
                       $ USD
@@ -126,18 +126,18 @@ export const SideDrawer: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-[#F1F5F9] flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#0B3D2E]">
-                    {language === 'BN' ? 'ভাষা (Language)' : 'Language (ভাষা)'}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-700">
+                    {language === 'BN' ? 'ভাষা (Language)' : 'Language'}
                   </span>
                   <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
                     <button
                       type="button"
                       onClick={() => setLanguage('EN')}
-                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                      className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-colors ${
                         language === 'EN'
-                          ? 'bg-[#0EA75F] text-white'
-                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                          ? 'bg-slate-900 text-white'
+                          : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
                       English
@@ -145,10 +145,10 @@ export const SideDrawer: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setLanguage('BN')}
-                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                      className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-colors ${
                         language === 'BN'
-                          ? 'bg-[#0EA75F] text-white'
-                          : 'text-[#6B7280] hover:text-[#0B3D2E]'
+                          ? 'bg-slate-900 text-white'
+                          : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
                       বাংলা
@@ -165,13 +165,13 @@ export const SideDrawer: React.FC = () => {
                     <motion.button
                       key={item.label}
                       type="button"
-                      initial={{ opacity: 0, x: -12 }}
+                      initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.025, duration: 0.16 }}
+                      transition={{ delay: idx * 0.02, duration: 0.15 }}
                       onClick={() => navigateTo(item.screen)}
-                      className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-semibold text-[#0B3D2E] hover:bg-[#ECFDF5] hover:text-[#0EA75F] transition-colors text-left"
+                      className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors text-left"
                     >
-                      <Icon className="w-4 h-4 text-[#0EA75F]" />
+                      <Icon className="w-4 h-4 text-slate-500" />
                       <span className="truncate">
                         {language === 'BN' ? item.labelBn : item.label}
                       </span>
@@ -189,10 +189,10 @@ export const SideDrawer: React.FC = () => {
                 className="w-full h-10 px-3 rounded-xl flex items-center gap-3 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span>{language === 'BN' ? 'লগ আউট' : 'Log Out'}</span>
+                <span>{language === 'BN' ? 'লগ আউট' : 'Sign Out'}</span>
               </button>
-              <p className="mt-2.5 text-[11px] text-[#6B7280] px-3">
-                DeshiMart™ · Global Products → Your Door
+              <p className="mt-2 text-[11px] text-slate-400 px-3">
+                DeshiMart · Landed Cost Included
               </p>
             </div>
           </motion.aside>

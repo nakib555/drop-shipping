@@ -29,16 +29,16 @@ export const SplashOnboarding: React.FC = () => {
   const [password, setPassword] = useState('••••••••••••');
   const [showPass, setShowPass] = useState(false);
 
-  // 1. ANIMATED SPLASH SCREEN (Screen 1 in UI Kits 1–4)
+  // 1. ANIMATED SPLASH SCREEN
   if (currentScreen === 'splash') {
     return (
-      <div className="flex-1 bg-gradient-to-b from-[#0EA75F] via-[#0A7544] to-[#0B3D2E] text-white p-6 flex flex-col justify-between items-center text-center select-none overflow-hidden relative">
+      <div className="flex-1 bg-slate-900 text-white p-6 flex flex-col justify-between items-center text-center select-none overflow-hidden relative">
         {/* Subtle Animated Background Radial Rings */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.2, 0.1] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-emerald-300/20 blur-2xl pointer-events-none"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-[#059669]/25 blur-3xl pointer-events-none"
         />
 
         {/* Top Bar: Language Toggle + Skip to Store */}
@@ -51,7 +51,7 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => setLanguage(language === 'EN' ? 'BN' : 'EN')}
-            className="text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-xs transition-colors"
+            className="text-xs font-semibold text-white px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
           >
             {language === 'EN' ? 'বাংলা' : 'English'}
           </button>
@@ -59,13 +59,13 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="text-xs font-semibold text-emerald-100 hover:text-white px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            className="text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 transition-colors"
           >
             {language === 'BN' ? 'স্টোরে যান →' : 'Skip to Store →'}
           </button>
         </motion.div>
 
-        {/* Center Animated Brand Lockup & 3D-Style Global Logistics Scene */}
+        {/* Center Animated Brand Lockup & Global Logistics Scene */}
         <div className="my-auto flex flex-col items-center relative z-10">
           {/* Spring-Animated DeshiMart Shopping Bag Logo */}
           <motion.div
@@ -74,13 +74,13 @@ export const SplashOnboarding: React.FC = () => {
             transition={{ type: 'spring', stiffness: 260, damping: 18 }}
             className="relative mb-4"
           >
-            <div className="w-20 h-20 rounded-3xl bg-white text-[#0EA75F] flex items-center justify-center shadow-2xl relative">
-              <ShoppingBag className="w-11 h-11 stroke-[2.3]" />
+            <div className="w-20 h-20 rounded-3xl bg-white text-slate-900 flex items-center justify-center shadow-2xl relative">
+              <ShoppingBag className="w-10 h-10 stroke-[2]" />
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.35, type: 'spring', stiffness: 300 }}
-                className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#00C853] text-white flex items-center justify-center border-2 border-[#0B3D2E] shadow-md"
+                className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#059669] text-white flex items-center justify-center border-2 border-slate-900 shadow-md"
               >
                 <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               </motion.span>
@@ -91,20 +91,20 @@ export const SplashOnboarding: React.FC = () => {
             initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.15, duration: 0.4 }}
-            className="text-3xl font-extrabold tracking-tight"
+            className="text-3xl font-bold tracking-tight"
           >
-            DeshiMart™
+            DeshiMart
           </motion.h1>
 
           <motion.p
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.25, duration: 0.4 }}
-            className="text-xs font-semibold text-emerald-100 mt-1"
+            className="text-xs font-medium text-slate-400 mt-1"
           >
             {language === 'BN'
               ? 'গ্লোবাল পণ্য → আপনার দরজায়'
-              : 'Global Products → Your Door'}
+              : 'Global Products · Landed Cost Included'}
           </motion.p>
 
           {/* Animated Orbiting Globe, Cargo Plane & Customs Shield Scene */}
@@ -118,22 +118,22 @@ export const SplashOnboarding: React.FC = () => {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-              className="absolute inset-0 rounded-full border-2 border-dashed border-emerald-200/35"
+              className="absolute inset-0 rounded-full border border-dashed border-slate-700"
             />
 
             {/* Middle Pulsing Glow Sphere */}
             <motion.div
               animate={{ y: [-5, 5, -5] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-44 h-44 rounded-full bg-gradient-to-b from-white/20 to-emerald-950/50 backdrop-blur-xs border border-white/25 flex flex-col items-center justify-center p-4 shadow-2xl relative"
+              className="w-44 h-44 rounded-full bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center p-4 shadow-2xl relative"
             >
-              <Globe className="w-20 h-20 text-emerald-100 stroke-[1.4] mb-1.5" />
-              <div className="flex items-center gap-1.5 text-[11px] font-bold bg-[#0B3D2E]/90 px-3 py-1 rounded-xl border border-emerald-400/30 shadow-md">
-                <Sparkles className="w-3.5 h-3.5 text-[#00C853]" />
+              <Globe className="w-20 h-20 text-emerald-400 stroke-[1.4] mb-1.5" />
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold bg-slate-900 px-3 py-1 rounded-xl border border-slate-700">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                 <span>
                   {language === 'BN'
                     ? 'ল্যান্ডেড প্রাইস অন্তর্ভুক্ত'
-                    : 'Landed Cost Included'}
+                    : 'Zero Hidden Tax'}
                 </span>
               </div>
             </motion.div>
@@ -142,7 +142,7 @@ export const SplashOnboarding: React.FC = () => {
             <motion.div
               animate={{ x: [-4, 6, -4], y: [-6, 4, -6] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-1 right-2 w-11 h-11 rounded-2xl bg-white text-[#0EA75F] shadow-xl flex items-center justify-center border border-emerald-100"
+              className="absolute -top-1 right-2 w-11 h-11 rounded-2xl bg-white text-slate-900 shadow-xl flex items-center justify-center"
             >
               <Plane className="w-5 h-5" />
             </motion.div>
@@ -151,7 +151,7 @@ export const SplashOnboarding: React.FC = () => {
             <motion.div
               animate={{ x: [4, -5, 4], y: [4, -6, 4] }}
               transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-2 left-1 w-11 h-11 rounded-2xl bg-[#00C853] text-white shadow-xl flex items-center justify-center border-2 border-white"
+              className="absolute bottom-2 left-1 w-11 h-11 rounded-2xl bg-[#059669] text-white shadow-xl flex items-center justify-center border-2 border-slate-900"
             >
               <Package className="w-5 h-5" />
             </motion.div>
@@ -160,9 +160,9 @@ export const SplashOnboarding: React.FC = () => {
             <motion.div
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-3 right-1 px-2.5 py-1 rounded-xl bg-white text-[#0B3D2E] shadow-lg text-[10px] font-extrabold flex items-center gap-1"
+              className="absolute bottom-3 right-1 px-2.5 py-1 rounded-xl bg-white text-slate-900 shadow-lg text-[10px] font-bold flex items-center gap-1"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#0EA75F]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
               <span>DropScore 9.1</span>
             </motion.div>
           </motion.div>
@@ -174,12 +174,12 @@ export const SplashOnboarding: React.FC = () => {
             transition={{ delay: 0.45, duration: 0.4 }}
             className="mt-5 space-y-1"
           >
-            <p className="text-base font-extrabold text-white tracking-tight">
+            <p className="text-base font-bold text-white tracking-tight">
               {language === 'BN'
                 ? 'স্মার্ট শপিং। আসল দাম। পূর্ণ আস্থা।'
                 : 'Smarter Shopping. Real Confidence.'}
             </p>
-            <p className="text-xs text-emerald-100/90 max-w-[260px] mx-auto">
+            <p className="text-xs text-slate-400 max-w-[260px] mx-auto">
               {language === 'BN'
                 ? 'কাস্টমস ডিউটি ও ভ্যাটসহ প্রকৃত মূল্য দেখুন এবং নিশ্চিন্তে অর্ডার করুন।'
                 : 'See the real landed cost · Know the supplier · Track every step.'}
@@ -201,7 +201,7 @@ export const SplashOnboarding: React.FC = () => {
               setDirection(1);
               navigateTo('onboarding');
             }}
-            className="w-full h-12 rounded-xl bg-[#00C853] hover:bg-[#0EA75F] text-white font-extrabold text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/20"
+            className="w-full h-12 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <span>{language === 'BN' ? 'শুরু করুন (Get Started)' : 'Get Started'}</span>
           </button>
@@ -212,11 +212,11 @@ export const SplashOnboarding: React.FC = () => {
               setAuthMode('login');
               navigateTo('auth');
             }}
-            className="w-full py-1.5 text-xs font-medium text-emerald-100 hover:text-white"
+            className="w-full py-1.5 text-xs font-medium text-slate-400 hover:text-white"
           >
             {language === 'BN' ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? ' : 'Already have an account? '}
-            <span className="font-bold underline text-white">
-              {language === 'BN' ? 'লগইন করুন' : 'Login'}
+            <span className="font-semibold underline text-white">
+              {language === 'BN' ? 'লগইন করুন' : 'Sign In'}
             </span>
           </button>
         </motion.div>
@@ -224,7 +224,7 @@ export const SplashOnboarding: React.FC = () => {
     );
   }
 
-  // 2. ANIMATED 3-SLIDE ONBOARDING FLOW (Screens 2, 3, 4 in UI Kits)
+  // 2. ANIMATED 3-SLIDE ONBOARDING FLOW
   if (currentScreen === 'onboarding') {
     const slides = [
       {
@@ -319,7 +319,7 @@ export const SplashOnboarding: React.FC = () => {
                 navigateTo('splash');
               }
             }}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-[#0B3D2E] hover:bg-slate-100 transition-colors"
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -328,14 +328,14 @@ export const SplashOnboarding: React.FC = () => {
             <button
               type="button"
               onClick={() => setLanguage(language === 'EN' ? 'BN' : 'EN')}
-              className="text-xs font-bold text-[#0EA75F] px-2.5 py-1 rounded-lg bg-[#ECFDF5]"
+              className="text-xs font-semibold text-slate-700 px-2.5 py-1 rounded-lg bg-slate-100"
             >
               {language === 'EN' ? 'বাংলা' : 'EN'}
             </button>
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="text-xs font-bold text-[#6B7280] hover:text-[#0B3D2E]"
+              className="text-xs font-medium text-slate-500 hover:text-slate-900"
             >
               {language === 'BN' ? 'স্কিপ' : 'Skip'}
             </button>
@@ -355,29 +355,29 @@ export const SplashOnboarding: React.FC = () => {
               className="w-full flex flex-col items-center text-center"
             >
               {/* Slide-Specific Animated Vector Illustration Scene */}
-              <div className="relative w-44 h-44 rounded-full bg-gradient-to-br from-[#ECFDF5] via-[#D1FAE5] to-[#A7F3D0]/50 flex items-center justify-center mb-5 border border-[#0EA75F]/20 shadow-inner">
+              <div className="relative w-44 h-44 rounded-full bg-slate-50 flex items-center justify-center mb-5 border border-slate-200/80">
                 {slideIndex === 0 && (
                   <>
                     <motion.div
                       animate={{ y: [-4, 4, -4] }}
                       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-[#0EA75F] text-white flex items-center justify-center shadow-lg"
+                      className="w-24 h-24 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
                     >
                       <Globe className="w-12 h-12" />
                     </motion.div>
                     <motion.div
                       animate={{ x: [-6, 6, -6], y: [-4, 4, -4] }}
                       transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                      className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white text-[#0EA75F] shadow-md flex items-center justify-center border border-emerald-100"
+                      className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white text-[#059669] shadow-md flex items-center justify-center border border-slate-200"
                     >
                       <Plane className="w-5 h-5" />
                     </motion.div>
                     <motion.div
                       animate={{ scale: [1, 1.08, 1] }}
                       transition={{ duration: 2.4, repeat: Infinity }}
-                      className="absolute bottom-3 left-3 w-10 h-10 rounded-2xl bg-[#0B3D2E] text-white shadow-md flex items-center justify-center"
+                      className="absolute bottom-3 left-3 w-10 h-10 rounded-2xl bg-[#059669] text-white shadow-md flex items-center justify-center"
                     >
-                      <Package className="w-5 h-5 text-[#00C853]" />
+                      <Package className="w-5 h-5" />
                     </motion.div>
                   </>
                 )}
@@ -387,21 +387,21 @@ export const SplashOnboarding: React.FC = () => {
                     <motion.div
                       animate={{ scale: [1, 1.06, 1] }}
                       transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-[#0EA75F] text-white flex items-center justify-center shadow-lg"
+                      className="w-24 h-24 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
                     >
                       <ShieldCheck className="w-12 h-12" />
                     </motion.div>
                     <motion.div
                       animate={{ y: [-4, 4, -4] }}
                       transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-white text-[#0B3D2E] shadow-md text-[10px] font-extrabold border border-emerald-100"
+                      className="absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-white text-slate-900 shadow-md text-[10px] font-bold border border-slate-200"
                     >
                       ৳ Landed
                     </motion.div>
                     <motion.div
                       animate={{ y: [4, -4, 4] }}
                       transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute bottom-3 right-2 px-2.5 py-1 rounded-xl bg-[#0B3D2E] text-white shadow-md text-[10px] font-extrabold"
+                      className="absolute bottom-3 right-2 px-2.5 py-1 rounded-xl bg-[#059669] text-white shadow-md text-[10px] font-bold"
                     >
                       9.1/10 Trust
                     </motion.div>
@@ -413,21 +413,21 @@ export const SplashOnboarding: React.FC = () => {
                     <motion.div
                       animate={{ x: [-4, 5, -4] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-[#0EA75F] text-white flex items-center justify-center shadow-lg"
+                      className="w-24 h-24 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-lg"
                     >
                       <Truck className="w-12 h-12" />
                     </motion.div>
                     <motion.div
                       animate={{ y: [-5, 3, -5] }}
                       transition={{ duration: 2.2, repeat: Infinity }}
-                      className="absolute top-2 right-4 w-10 h-10 rounded-2xl bg-white text-[#0EA75F] shadow-md flex items-center justify-center border border-emerald-100"
+                      className="absolute top-2 right-4 w-10 h-10 rounded-2xl bg-white text-[#059669] shadow-md flex items-center justify-center border border-slate-200"
                     >
                       <MapPin className="w-5 h-5" />
                     </motion.div>
                     <motion.div
                       animate={{ scale: [1, 1.07, 1] }}
                       transition={{ duration: 2.5, repeat: Infinity }}
-                      className="absolute bottom-2 left-3 px-2.5 py-1 rounded-xl bg-[#0B3D2E] text-[#00C853] shadow-md text-[10px] font-mono-num font-bold"
+                      className="absolute bottom-2 left-3 px-2.5 py-1 rounded-xl bg-[#059669] text-white shadow-md text-[10px] font-mono-num font-semibold"
                     >
                       7–12 Days
                     </motion.div>
@@ -435,10 +435,10 @@ export const SplashOnboarding: React.FC = () => {
                 )}
               </div>
 
-              <h2 className="text-xl font-extrabold text-[#0B3D2E] max-w-[290px] leading-snug">
+              <h2 className="text-xl font-bold text-slate-900 max-w-[290px] leading-snug">
                 {activeSlide.title}
               </h2>
-              <p className="text-xs text-[#6B7280] mt-2 max-w-[300px] leading-relaxed">
+              <p className="text-xs text-slate-500 mt-2 max-w-[300px] leading-relaxed">
                 {activeSlide.subtitle}
               </p>
 
@@ -449,16 +449,16 @@ export const SplashOnboarding: React.FC = () => {
                   return (
                     <div
                       key={item.title}
-                      className="p-3 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex items-center gap-3"
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-3"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center shrink-0">
-                        <Icon className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-white border border-slate-200/80 text-slate-700 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-extrabold text-[#0B3D2E]">
+                        <p className="text-xs font-semibold text-slate-900">
                           {item.title}
                         </p>
-                        <p className="text-[11px] text-[#6B7280] truncate">
+                        <p className="text-[11px] text-slate-500 truncate">
                           {item.desc}
                         </p>
                       </div>
@@ -480,7 +480,7 @@ export const SplashOnboarding: React.FC = () => {
                 aria-label={`Slide ${idx + 1}`}
                 onClick={() => goToSlide(idx)}
                 className={`h-2 rounded-full transition-all duration-200 ${
-                  idx === slideIndex ? 'w-7 bg-[#0EA75F]' : 'w-2 bg-slate-200'
+                  idx === slideIndex ? 'w-7 bg-slate-900' : 'w-2 bg-slate-200'
                 }`}
               />
             ))}
@@ -496,7 +496,7 @@ export const SplashOnboarding: React.FC = () => {
                   navigateTo('auth');
                 }
               }}
-              className="w-full h-12 rounded-xl bg-[#0EA75F] hover:bg-[#0B8A4D] text-white font-bold text-sm shadow-md active:scale-[0.99] transition-all"
+              className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm active:scale-[0.99] transition-all"
             >
               {slideIndex < slides.length - 1
                 ? language === 'BN'
@@ -510,7 +510,7 @@ export const SplashOnboarding: React.FC = () => {
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="w-full py-1 text-xs font-semibold text-[#6B7280] hover:text-[#0B3D2E]"
+              className="w-full py-1 text-xs font-medium text-slate-500 hover:text-slate-900"
             >
               {language === 'BN'
                 ? 'সরাসরি স্টোর ব্রাউজ করুন'
@@ -522,7 +522,7 @@ export const SplashOnboarding: React.FC = () => {
     );
   }
 
-  // 3. LOGIN / REGISTER SCREEN (Screens 5 & 6 in UI Kits)
+  // 3. LOGIN / REGISTER SCREEN
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loginUser(emailOrPhone, authMode === 'register' ? fullName : undefined);
@@ -541,24 +541,24 @@ export const SplashOnboarding: React.FC = () => {
             type="button"
             aria-label="Back"
             onClick={() => navigateTo('onboarding')}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-[#0B3D2E] hover:bg-slate-100"
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="text-xs font-bold text-[#0EA75F]"
+            className="text-xs font-semibold text-[#059669]"
           >
             {language === 'BN' ? 'গেস্ট হিসেবে প্রবেশ করুন' : 'Continue as Guest'}
           </button>
         </div>
 
         <div className="flex flex-col items-center text-center mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] text-[#0EA75F] flex items-center justify-center mb-3 border border-[#0EA75F]/20">
+          <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-3">
             <ShoppingBag className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-extrabold text-[#0B3D2E]">
+          <h1 className="text-xl font-bold text-slate-900">
             {authMode === 'login'
               ? language === 'BN'
                 ? 'স্বাগতম (Welcome Back)'
@@ -567,9 +567,9 @@ export const SplashOnboarding: React.FC = () => {
               ? 'নতুন অ্যাকাউন্ট খুলুন'
               : 'Create Your Account'}
           </h1>
-          <p className="text-xs text-[#6B7280] mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {authMode === 'login'
-              ? 'Login to your DeshiMart account'
+              ? 'Sign in to your DeshiMart account'
               : 'Join DeshiMart and start shopping globally'}
           </p>
         </div>
@@ -577,7 +577,7 @@ export const SplashOnboarding: React.FC = () => {
         <form onSubmit={handleAuthSubmit} className="space-y-3">
           {authMode === 'register' && (
             <div>
-              <label className="block text-xs font-semibold text-[#0B3D2E] mb-1">
+              <label className="block text-xs font-medium text-slate-700 mb-1">
                 Full Name
               </label>
               <input
@@ -586,13 +586,13 @@ export const SplashOnboarding: React.FC = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full h-11 px-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-xs text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-[#0B3D2E] mb-1">
+            <label className="block text-xs font-medium text-slate-700 mb-1">
               {authMode === 'login' ? 'Email or Phone' : 'Email Address'}
             </label>
             <input
@@ -601,13 +601,13 @@ export const SplashOnboarding: React.FC = () => {
               value={emailOrPhone}
               onChange={(e) => setEmailOrPhone(e.target.value)}
               placeholder="name@example.com"
-              className="w-full h-11 px-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-xs text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+              className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
             />
           </div>
 
           {authMode === 'register' && (
             <div>
-              <label className="block text-xs font-semibold text-[#0B3D2E] mb-1">
+              <label className="block text-xs font-medium text-slate-700 mb-1">
                 Phone Number (Bangladesh)
               </label>
               <input
@@ -616,19 +616,19 @@ export const SplashOnboarding: React.FC = () => {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="+880 1712 345678"
-                className="w-full h-11 px-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-xs font-mono-num text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+                className="w-full h-11 px-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono-num text-slate-900 focus:outline-none focus:border-slate-400"
               />
             </div>
           )}
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-[#0B3D2E]">Password</label>
+              <label className="text-xs font-medium text-slate-700">Password</label>
               {authMode === 'login' && (
                 <button
                   type="button"
                   onClick={() => loginUser(emailOrPhone)}
-                  className="text-[11px] font-semibold text-[#0EA75F]"
+                  className="text-[11px] font-medium text-[#059669]"
                 >
                   Forgot Password?
                 </button>
@@ -641,7 +641,7 @@ export const SplashOnboarding: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full h-11 pl-3.5 pr-10 rounded-xl bg-[#F8FAFC] border border-slate-200 text-xs text-[#0B3D2E] focus:outline-none focus:border-[#0EA75F]"
+                className="w-full h-11 pl-3.5 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
               />
               <button
                 type="button"
@@ -656,15 +656,15 @@ export const SplashOnboarding: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full h-12 rounded-xl bg-[#0EA75F] hover:bg-[#0B8A4D] text-white font-bold text-sm shadow-md transition-colors mt-2"
+            className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-colors mt-2"
           >
-            {authMode === 'login' ? 'Login' : 'Register'}
+            {authMode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
         <div className="my-4 flex items-center gap-3">
           <div className="h-px bg-slate-200 flex-1" />
-          <span className="text-[11px] text-[#6B7280]">or</span>
+          <span className="text-[11px] text-slate-400">or</span>
           <div className="h-px bg-slate-200 flex-1" />
         </div>
 
@@ -672,9 +672,9 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => loginUser('john@example.com', 'John Doe')}
-            className="w-full h-11 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-semibold text-[#0B3D2E] transition-colors"
+            className="w-full h-11 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-medium text-slate-700 transition-colors"
           >
-            <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#0EA75F] font-bold flex items-center justify-center text-xs">
+            <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-900 font-bold flex items-center justify-center text-xs">
               G
             </span>
             <span>Continue with Google</span>
@@ -682,9 +682,9 @@ export const SplashOnboarding: React.FC = () => {
           <button
             type="button"
             onClick={() => loginUser('john@example.com', 'John Doe')}
-            className="w-full h-11 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-semibold text-[#0B3D2E] transition-colors"
+            className="w-full h-11 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-medium text-slate-700 transition-colors"
           >
-            <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
+            <span className="w-5 h-5 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center text-xs">
               f
             </span>
             <span>Continue with Facebook</span>
@@ -692,14 +692,14 @@ export const SplashOnboarding: React.FC = () => {
         </div>
       </div>
 
-      <p className="text-center text-xs text-[#6B7280] mt-5">
+      <p className="text-center text-xs text-slate-500 mt-5">
         {authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}
         <button
           type="button"
           onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-          className="font-bold text-[#0EA75F] underline"
+          className="font-semibold text-[#059669] underline"
         >
-          {authMode === 'login' ? 'Register' : 'Login'}
+          {authMode === 'login' ? 'Register' : 'Sign In'}
         </button>
       </p>
     </motion.div>

@@ -24,6 +24,8 @@ export const TopAppBar: React.FC = () => {
     toggleWishlist,
     wishlist,
     language,
+    currency,
+    setCurrency,
   } = useDeshiMart();
 
   if (

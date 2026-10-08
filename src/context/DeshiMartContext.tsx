@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   CATALOG_PRODUCTS,
   INITIAL_ADDRESSES,
   INITIAL_NOTIFICATIONS,
   INITIAL_ORDERS,
 } from '../data/catalogData';
+import { fetchGlobalCatalogFromApi } from '../services/productApi';
 import {
   AppNotification,
   CartItem,
@@ -61,6 +62,8 @@ interface DeshiMartContextValue {
 
   // Catalog & Discovery
   products: Product[];
+  isLoadingProducts: boolean;
+  refreshCatalogFromApi: () => Promise<void>;
   selectedProductId: string;
   selectedProduct: Product;
   addProductReview: (productId: string, rating: number, comment: string) => void;
@@ -125,7 +128,7 @@ const DEFAULT_FILTERS: SmartFiltersState = {
   verifiedOnly: false,
   inStockOnly: true,
   dealsOnly: false,
-  maxPriceBdt: 90000,
+  maxPriceBdt: 250000,
   selectedBrand: 'All',
 };
 
@@ -149,10 +152,37 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const [catalogProducts, setCatalogProducts] = useState<Product[]>(CATALOG_PRODUCTS);
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
   const [selectedProductId, setSelectedProductId] = useState<string>(CATALOG_PRODUCTS[0].id);
   const [selectedCategoryId, setSelectedCategoryId] = useState<CategoryId>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [smartFilters, setSmartFilters] = useState<SmartFiltersState>(DEFAULT_FILTERS);
+
+  const loadApiCatalog = useCallback(async (notify = false) => {
+    setIsLoadingProducts(true);
+    try {
+      const apiItems = await fetchGlobalCatalogFromApi(notify);
+      if (apiItems.length > 0) {
+        setCatalogProducts((prev) => {
+          const existingIds = new Set(CATALOG_PRODUCTS.map((p) => p.id));
+          const merged = [
+            ...CATALOG_PRODUCTS,
+            ...apiItems.filter((item) => !existingIds.has(item.id)),
+          ];
+          return merged;
+        });
+        if (notify) {
+          showToast(`Synced ${apiItems.length} global products from API`);
+        }
+      }
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadApiCatalog(false);
+  }, [loadApiCatalog]);
 
   const [selectedRouteByProduct, setSelectedRouteByProduct] = useState<Record<string, string>>({
     'prod-smartwatch-pro': 'route-global-direct',
@@ -333,7 +363,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     size?: string,
     routeId?: string
   ) => {
-    const product = CATALOG_PRODUCTS.find((p) => p.id === productId);
+    const product = catalogProducts.find((p) => p.id === productId);
     if (!product) return;
     const chosenColor = color || product.colors[0]?.name || 'Standard';
     const chosenRoute =
@@ -394,7 +424,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const cartTotals = useMemo(() => {
     const subtotalBdt = cart.reduce((sum, item) => {
-      const prod = CATALOG_PRODUCTS.find((p) => p.id === item.productId);
+      const prod = catalogProducts.find((p) => p.id === item.productId);
       if (!prod) return sum;
       const route = prod.routes.find((r) => r.id === item.selectedRouteId) || prod.routes[0];
       const unitLanded = route ? route.totalLandedBdt : prod.totalLandedBdt;
@@ -409,10 +439,10 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       shippingBdt,
       totalBdt: subtotalBdt + shippingBdt,
     };
-  }, [cart, shippingMethod]);
+  }, [cart, catalogProducts, shippingMethod]);
 
   const toggleWishlist = (productId: string) => {
-    const prod = CATALOG_PRODUCTS.find((p) => p.id === productId);
+    const prod = catalogProducts.find((p) => p.id === productId);
     setWishlist((prev) => {
       const exists = prev.includes(productId);
       showToast(
@@ -457,7 +487,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addresses.find((a) => a.id === selectedAddressId) || addresses[0];
     const newOrderId = `DM${Math.floor(123457 + Math.random() * 800000)}`;
     const orderItems = cart.map((item) => {
-      const prod = CATALOG_PRODUCTS.find((p) => p.id === item.productId) || CATALOG_PRODUCTS[0];
+      const prod = catalogProducts.find((p) => p.id === item.productId) || catalogProducts[0];
       const route = prod.routes.find((r) => r.id === item.selectedRouteId) || prod.routes[0];
       return {
         productId: prod.id,
@@ -572,6 +602,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setDarkMode,
         formatPrice,
         products: catalogProducts,
+        isLoadingProducts,
+        refreshCatalogFromApi: () => loadApiCatalog(true),
         selectedProductId,
         selectedProduct,
         addProductReview,
