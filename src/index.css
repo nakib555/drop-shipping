@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-en: 'Plus Jakarta Sans', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-bn: 'Noto Sans Bengali', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Noto Sans Bengali', monospace;
+
+    /* Strict 8pt Grid Spacing System (8px base unit / 4px half-step) */
+    --grid-half: 4px;
+    --grid-1x: 8px;
+    --grid-1-5x: 12px;
+    --grid-2x: 16px;
+    --grid-3x: 24px;
+    --grid-4x: 32px;
+    --grid-5x: 40px;
+    --grid-6x: 48px;
+    --grid-7x: 56px;
+    --grid-8x: 64px;
+  }
+
+  body {
+    font-family: var(--font-en);
+    font-size: 12px;
+    line-height: 16px; /* 2 * 8px */
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* 8pt Baseline Typography Scale */
+  h1 {
+    line-height: 24px; /* 3 * 8px */
+  }
+
+  h2 {
+    line-height: 20px; /* 2.5 * 8px (4px sub-grid) */
+  }
+
+  h3,
+  h4,
+  p {
+    line-height: 16px; /* 2 * 8px */
+  }
+
+  /* Language-specific typographic optimization for Bangla (বাংলা - Noto Sans Bengali) */
+  [lang="bn"] {
+    font-family: var(--font-bn);
+    letter-spacing: 0em !important;
+    line-height: 20px; /* 20px (4px sub-grid) prevents vowel sign clipping */
+  }
+
+  [lang="bn"] h1 {
+    letter-spacing: 0em !important;
+    line-height: 24px; /* 3 * 8px */
+  }
+
+  [lang="bn"] h2,
+  [lang="bn"] h3,
+  [lang="bn"] h4,
+  [lang="bn"] button,
+  [lang="bn"] .truncate {
+    letter-spacing: 0em !important;
+    line-height: 20px;
+  }
+}
+
+.font-mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbars cleanly inside horizontal mobile carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

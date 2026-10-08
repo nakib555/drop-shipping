@@ -1,0 +1,6 @@
+{
+  "name": "DeshiMart — Global Dropshipping & Landed Price Store",
+  "description": "Mobile-first cross-border dropshipping app with True Landed Price transparency (product + shipping + duty/VAT), DropScore supplier trust ratings, 3-seller route comparison, 30-day price tracker, visual search, and local BDT/COD/bKash checkout.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
