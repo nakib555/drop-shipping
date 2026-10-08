@@ -6,6 +6,7 @@ import {
   FileText,
   MapPin,
   RefreshCcw,
+  ShieldCheck,
   Star,
   Truck,
   X,
@@ -295,6 +296,40 @@ export const OrdersTrackingScreen: React.FC = () => {
               </p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Pre-Shipment Warehouse QC Inspection & NBR Customs Pass */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#059669]" />
+            <h3 className="text-xs font-semibold text-slate-900">
+              Warehouse QC & Customs Certificate
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono-num font-semibold text-[#059669] bg-emerald-50 px-2 py-0.5 rounded-md">
+            QC PASSED
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+            <span className="text-slate-400 block text-[10px]">Net Weight</span>
+            <span className="font-mono-num font-semibold text-slate-900">
+              0.84 kg
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+            <span className="text-slate-400 block text-[10px]">Seal & X-Ray</span>
+            <span className="font-semibold text-[#059669]">Verified</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+            <span className="text-slate-400 block text-[10px]">NBR Bill ID</span>
+            <span className="font-mono-num font-semibold text-slate-900">
+              BOE-{selectedOrder.id.slice(-4)}
+            </span>
+          </div>
         </div>
       </div>
 

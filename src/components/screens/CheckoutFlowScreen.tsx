@@ -571,11 +571,31 @@ export const CheckoutFlowScreen: React.FC = () => {
 
             <div className="pt-2.5 border-t border-slate-100 space-y-1 text-xs">
               <div className="flex justify-between text-slate-500">
-                <span>Landed Items Total (Duty + VAT Included)</span>
+                <span>Factory Price + Air Freight + Duty/VAT</span>
                 <span className="font-mono-num font-medium text-slate-900">
-                  {formatPrice(cartTotals.subtotalBdt)}
+                  {formatPrice(
+                    cartTotals.baseItemsBdt +
+                      cartTotals.freightBdt +
+                      cartTotals.dutyAndVatBdt
+                  )}
                 </span>
               </div>
+              {cartTotals.consolidationSavingsBdt > 0 && (
+                <div className="flex justify-between text-[#059669] font-medium">
+                  <span>Global Hub Consolidation Savings</span>
+                  <span className="font-mono-num">
+                    -{formatPrice(cartTotals.consolidationSavingsBdt)}
+                  </span>
+                </div>
+              )}
+              {cartTotals.promoDiscountBdt > 0 && (
+                <div className="flex justify-between text-[#059669] font-medium">
+                  <span>Promo Voucher Discount</span>
+                  <span className="font-mono-num">
+                    -{formatPrice(cartTotals.promoDiscountBdt)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-slate-500">
                 <span>
                   {shippingMethod === 'express'

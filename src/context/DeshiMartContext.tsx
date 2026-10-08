@@ -90,7 +90,18 @@ interface DeshiMartContextValue {
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
   cartCount: number;
+  consolidateParcel: boolean;
+  setConsolidateParcel: (v: boolean) => void;
+  promoCode: string | null;
+  applyPromoCode: (code: string) => boolean;
+  removePromoCode: () => void;
+  recentlyViewedIds: string[];
   cartTotals: {
+    baseItemsBdt: number;
+    freightBdt: number;
+    dutyAndVatBdt: number;
+    consolidationSavingsBdt: number;
+    promoDiscountBdt: number;
     subtotalBdt: number;
     shippingBdt: number;
     totalBdt: number;
@@ -253,6 +264,13 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [selectedOrderId, setSelectedOrderId] = useState<string>(INITIAL_ORDERS[0].id);
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [consolidateParcel, setConsolidateParcel] = useState<boolean>(true);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([
+    'prod-wireless-earbuds',
+    'prod-smartwatch-pro',
+    'prod-urban-backpack',
+  ]);
 
   useEffect(() => {
     try {
@@ -284,7 +302,14 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     screen: ScreenId,
     options?: { productId?: string; categoryId?: CategoryId; orderId?: string }
   ) => {
-    if (options?.productId) setSelectedProductId(options.productId);
+    if (options?.productId) {
+      const pid = options.productId;
+      setSelectedProductId(pid);
+      setRecentlyViewedIds((prev) => [
+        pid,
+        ...prev.filter((id) => id !== pid),
+      ].slice(0, 10));
+    }
     if (options?.categoryId) setSelectedCategoryId(options.categoryId);
     if (options?.orderId) setSelectedOrderId(options.orderId);
     setDrawerOpen(false);
@@ -422,24 +447,84 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [cart]
   );
 
-  const cartTotals = useMemo(() => {
-    const subtotalBdt = cart.reduce((sum, item) => {
-      const prod = catalogProducts.find((p) => p.id === item.productId);
-      if (!prod) return sum;
-      const route = prod.routes.find((r) => r.id === item.selectedRouteId) || prod.routes[0];
-      const unitLanded = route ? route.totalLandedBdt : prod.totalLandedBdt;
-      return sum + unitLanded * item.quantity;
-    }, 0);
+  const applyPromoCode = (rawCode: string): boolean => {
+    const normalized = rawCode.trim().toUpperCase();
+    if (!normalized) return false;
+    if (
+      normalized === 'DESHI10' ||
+      normalized === 'FIRST500' ||
+      normalized === 'BKASHCB'
+    ) {
+      setPromoCode(normalized);
+      showToast(`Promo code ${normalized} applied!`);
+      return true;
+    }
+    showToast('Invalid code. Try DESHI10, FIRST500, or BKASHCB', 'info');
+    return false;
+  };
 
+  const removePromoCode = () => {
+    setPromoCode(null);
+    showToast('Promo code removed', 'info');
+  };
+
+  const cartTotals = useMemo(() => {
+    let baseItemsBdt = 0;
+    let freightBdt = 0;
+    let dutyAndVatBdt = 0;
+    let rawLandedBdt = 0;
+
+    for (const item of cart) {
+      const prod = catalogProducts.find((p) => p.id === item.productId);
+      if (!prod) continue;
+      const route =
+        prod.routes.find((r) => r.id === item.selectedRouteId) || prod.routes[0];
+      const unitBase = route ? route.basePriceBdt : prod.productPriceBdt;
+      const unitFreight = route ? route.shippingBdt : prod.shippingBdt;
+      const unitDutyVat = route
+        ? route.dutyBdt + route.vatBdt
+        : prod.importDutyBdt + prod.vatBdt;
+      const unitLanded = route ? route.totalLandedBdt : prod.totalLandedBdt;
+
+      baseItemsBdt += unitBase * item.quantity;
+      freightBdt += unitFreight * item.quantity;
+      dutyAndVatBdt += unitDutyVat * item.quantity;
+      rawLandedBdt += unitLanded * item.quantity;
+    }
+
+    const totalQty = cart.reduce((acc, item) => acc + item.quantity, 0);
+    const consolidationSavingsBdt =
+      consolidateParcel && totalQty >= 2 ? Math.round(freightBdt * 0.25) : 0;
+
+    const afterConsolidationBdt = Math.max(
+      0,
+      rawLandedBdt - consolidationSavingsBdt
+    );
+
+    let promoDiscountBdt = 0;
+    if (promoCode === 'DESHI10') {
+      promoDiscountBdt = Math.min(1500, Math.round(afterConsolidationBdt * 0.1));
+    } else if (promoCode === 'FIRST500') {
+      promoDiscountBdt = afterConsolidationBdt >= 2500 ? 500 : 250;
+    } else if (promoCode === 'BKASHCB') {
+      promoDiscountBdt = Math.min(1000, Math.round(afterConsolidationBdt * 0.05));
+    }
+
+    const subtotalBdt = Math.max(0, afterConsolidationBdt - promoDiscountBdt);
     const shippingBdt =
-      cart.length === 0 ? 0 : shippingMethod === 'express' ? 800 : 0; // Standard landed already includes route shipping; Express adds priority surcharge
+      cart.length === 0 ? 0 : shippingMethod === 'express' ? 800 : 0;
 
     return {
+      baseItemsBdt,
+      freightBdt,
+      dutyAndVatBdt,
+      consolidationSavingsBdt,
+      promoDiscountBdt,
       subtotalBdt,
       shippingBdt,
       totalBdt: subtotalBdt + shippingBdt,
     };
-  }, [cart, catalogProducts, shippingMethod]);
+  }, [cart, catalogProducts, consolidateParcel, promoCode, shippingMethod]);
 
   const toggleWishlist = (productId: string) => {
     const prod = catalogProducts.find((p) => p.id === productId);
@@ -626,6 +711,12 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         removeFromCart,
         clearCart,
         cartCount,
+        consolidateParcel,
+        setConsolidateParcel,
+        promoCode,
+        applyPromoCode,
+        removePromoCode,
+        recentlyViewedIds,
         cartTotals,
         wishlist,
         toggleWishlist,

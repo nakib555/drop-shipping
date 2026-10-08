@@ -8,6 +8,7 @@ import {
   Package,
   Plus,
   RefreshCcw,
+  Share2,
   ShieldCheck,
   ShoppingCart,
   Star,
@@ -161,7 +162,21 @@ export const ProductDetailScreen: React.FC = () => {
               <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
               {selectedProduct.originLabel}
             </span>
-            <span>{activeRoute?.deliveryDays || '7–12 days'} delivery</span>
+            <div className="flex items-center gap-2.5">
+              <span>{activeRoute?.deliveryDays || '7–12 days'} delivery</span>
+              <button
+                type="button"
+                aria-label="Share product link"
+                onClick={() => {
+                  navigator.clipboard?.writeText(window.location.href);
+                  showToast(`Copied verified link for ${selectedProduct.name}`);
+                }}
+                className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium"
+              >
+                <Share2 className="w-3.5 h-3.5 text-[#059669]" />
+                <span>Share</span>
+              </button>
+            </div>
           </div>
 
           <div>
@@ -289,6 +304,23 @@ export const ProductDetailScreen: React.FC = () => {
               <span className="font-mono-num text-sm leading-5 text-[#059669]">
                 {formatPrice(totalLandedBdt)}
               </span>
+            </div>
+
+            {/* Official Bangladesh NBR Customs HS-Code Tariff Classification */}
+            <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between text-[11px] leading-4 text-slate-600">
+              <span>
+                NBR Customs HS-Code:{' '}
+                <strong className="font-mono-num text-slate-900 font-semibold">
+                  {selectedProduct.category === 'electronics'
+                    ? '8517.62.00'
+                    : selectedProduct.category === 'fashion'
+                    ? '6203.42.00'
+                    : selectedProduct.category === 'home_living'
+                    ? '9405.42.00'
+                    : '3304.99.00'}
+                </strong>
+              </span>
+              <span className="text-[#059669] font-medium">Pre-Cleared CIF</span>
             </div>
           </div>
         </section>

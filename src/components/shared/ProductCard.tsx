@@ -9,6 +9,52 @@ interface ProductCardProps {
   compact?: boolean;
 }
 
+/**
+ * 1:1 Structural Ghost Element for Lazy-Loading Product Grids (Zero Layout Shift)
+ */
+export const ProductCardGhost: React.FC = () => {
+  return (
+    <div
+      aria-hidden="true"
+      className="relative bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between select-none overflow-hidden"
+    >
+      {/* Top-Right Wishlist Circle Ghost */}
+      <div className="absolute top-5 right-5 z-10 w-7 h-7 rounded-full bg-slate-200/70 animate-pulse" />
+
+      <div>
+        {/* Square Image Slot Ghost */}
+        <div className="w-full aspect-square rounded-xl bg-slate-100 mb-2.5 border border-slate-100 animate-pulse flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-slate-200/70" />
+        </div>
+
+        {/* Unboxed Metadata Line Ghost (Origin · Delivery · Rating) */}
+        <div className="flex items-center gap-1.5 mb-1.5 h-3.5">
+          <div className="h-2.5 w-12 rounded-md bg-slate-200/80 animate-pulse" />
+          <div className="h-2.5 w-8 rounded-md bg-slate-100 animate-pulse" />
+          <div className="h-2.5 w-7 rounded-md bg-slate-200/70 animate-pulse" />
+        </div>
+
+        {/* Product Title Ghost */}
+        <div className="h-3.5 w-4/5 rounded-md bg-slate-200/90 animate-pulse" />
+      </div>
+
+      {/* Price + Quick-Add Button Footer Ghost */}
+      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+        <div className="space-y-1.5 flex-1">
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-16 rounded-md bg-slate-200/90 animate-pulse" />
+            <div className="h-3 w-10 rounded-md bg-slate-100 animate-pulse" />
+          </div>
+          <div className="h-2.5 w-14 rounded-md bg-slate-100 animate-pulse" />
+        </div>
+
+        {/* Quick-Add Button Ghost */}
+        <div className="w-8 h-8 rounded-lg bg-slate-200/80 animate-pulse shrink-0" />
+      </div>
+    </div>
+  );
+};
+
 export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
   const {
     navigateTo,
@@ -20,6 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
     selectedRouteByProduct,
   } = useDeshiMart();
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
   const isWishlisted = wishlist.includes(product.id);
@@ -62,18 +109,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         />
       </motion.button>
 
-      {/* Clean Product Image Slot */}
+      {/* Clean Product Image Slot with Per-Image Ghost Placeholder */}
       <div>
         <div className="relative w-full aspect-square rounded-xl bg-slate-50 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100">
           {!imgError ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={() => setImgError(true)}
-              className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-200"
-            />
+            <>
+              {!imgLoaded && (
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-slate-200/70" />
+                </div>
+              )}
+              <img
+                src={product.image}
+                alt={product.name}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onLoad={() => setImgLoaded(true)}
+                onError={() => setImgError(true)}
+                className={`w-full h-full object-cover group-hover:scale-103 transition-all duration-200 ${
+                  imgLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center p-4 text-center bg-slate-50 w-full h-full">
               <Package className="w-7 h-7 text-slate-400 mb-1.5" />

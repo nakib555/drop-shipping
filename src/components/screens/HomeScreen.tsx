@@ -5,7 +5,6 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   Plus,
   Scale,
   Search,
@@ -16,7 +15,7 @@ import {
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { CATEGORIES } from '../../data/catalogData';
 import { CategoryId } from '../../types/deshimart';
-import { ProductCard } from '../shared/ProductCard';
+import { ProductCard, ProductCardGhost } from '../shared/ProductCard';
 
 const PAGE_SIZE = 16;
 
@@ -24,6 +23,7 @@ export const HomeScreen: React.FC = () => {
   const {
     products,
     isLoadingProducts,
+    recentlyViewedIds,
     navigateTo,
     addToCart,
     searchQuery,
@@ -37,8 +37,10 @@ export const HomeScreen: React.FC = () => {
   const [homeCategory, setHomeCategory] = useState<CategoryId>('all');
   const [visibleLimit, setVisibleLimit] = useState<number>(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [isFilteringItems, setIsFilteringItems] = useState<boolean>(false);
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
   const loadingTimerRef = useRef<number | null>(null);
+  const filterTimerRef = useRef<number | null>(null);
 
   // 1. Interactive 3-Slide Hero Banner Carousel State
   const [heroIndex, setHeroIndex] = useState(0);
@@ -162,6 +164,9 @@ export const HomeScreen: React.FC = () => {
 
   const slicedProducts = displayedProducts.slice(0, visibleLimit);
   const hasMoreProducts = displayedProducts.length > visibleLimit;
+  const recentlyViewedProducts = recentlyViewedIds
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const handleLoadMore = useCallback(() => {
     if (isLoadingMore || !hasMoreProducts) return;
@@ -178,6 +183,13 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
     setVisibleLimit(PAGE_SIZE);
     setIsLoadingMore(false);
+    setIsFilteringItems(true);
+    if (filterTimerRef.current) {
+      window.clearTimeout(filterTimerRef.current);
+    }
+    filterTimerRef.current = window.setTimeout(() => {
+      setIsFilteringItems(false);
+    }, 220);
   }, [
     homeCategory,
     searchQuery,
@@ -208,6 +220,9 @@ export const HomeScreen: React.FC = () => {
     return () => {
       if (loadingTimerRef.current) {
         window.clearTimeout(loadingTimerRef.current);
+      }
+      if (filterTimerRef.current) {
+        window.clearTimeout(filterTimerRef.current);
       }
     };
   }, []);
@@ -638,157 +653,176 @@ export const HomeScreen: React.FC = () => {
           </button>
         </div>
 
-        {/* 2-Column Product Card Grid */}
-        {isLoadingProducts && slicedProducts.length === 0 ? (
-          <div
-            role="status"
-            aria-live="polite"
-            className="space-y-3 pt-1"
-          >
-            <div className="flex items-center justify-center gap-2 py-2 text-xs leading-4 font-medium text-slate-600">
-              <Loader2 className="w-4 h-4 text-[#059669] animate-spin" />
-              <span>Loading global catalog items...</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white rounded-2xl border border-slate-200/80 p-3 space-y-2.5 animate-pulse"
-                >
-                  <div className="aspect-square rounded-xl bg-slate-100" />
-                  <div className="h-3 bg-slate-100 rounded w-4/5" />
-                  <div className="h-3 bg-slate-100 rounded w-1/2" />
-                  <div className="h-6 bg-slate-100 rounded-lg w-full mt-2" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : slicedProducts.length > 0 ? (
-          <>
-            <motion.div
-              key={`${homeCategory}-${searchQuery}`}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.18 }}
-              className="grid grid-cols-2 gap-3 pt-1"
-            >
-              {slicedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-
-              {/* Batch Skeleton Placeholders when loading more items */}
-              {isLoadingMore &&
-                Array.from({ length: 2 }).map((_, idx) => (
-                  <div
-                    key={`skeleton-more-${idx}`}
-                    className="bg-white rounded-2xl border border-slate-200/80 p-3 space-y-2.5 animate-pulse"
-                  >
-                    <div className="aspect-square rounded-xl bg-slate-100" />
-                    <div className="h-3 bg-slate-100 rounded w-4/5" />
-                    <div className="h-3 bg-slate-100 rounded w-3/5" />
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="h-4 bg-slate-100 rounded w-16" />
-                      <div className="w-8 h-8 rounded-lg bg-slate-100" />
-                    </div>
-                  </div>
+        {/* Scoped Items Area (Uses 1:1 Ghost Card Elements for Lazy Loading; rest of page stays static) */}
+        <div
+          id="home-items-area"
+          aria-busy={isLoadingProducts || isFilteringItems || isLoadingMore}
+          className="relative min-h-[280px] pt-1"
+        >
+          {isLoadingProducts || isFilteringItems ? (
+            <div role="status" aria-live="polite">
+              <span className="sr-only">Loading products...</span>
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <ProductCardGhost key={`home-filter-ghost-${idx}`} />
                 ))}
-            </motion.div>
-
-            {/* Progressive List Loader & Item Count Progress Footer */}
-            {displayedProducts.length > PAGE_SIZE && (
-              <div
-                ref={loadMoreTriggerRef}
-                role="status"
-                aria-live="polite"
-                className="pt-2 space-y-2.5"
-              >
-                <div className="flex items-center justify-between text-[11px] leading-4 text-slate-500 px-0.5">
-                  <span>
-                    Showing{' '}
-                    <strong className="font-mono-num text-slate-900 font-semibold">
-                      {slicedProducts.length}
-                    </strong>{' '}
-                    of{' '}
-                    <strong className="font-mono-num text-slate-900 font-semibold">
-                      {displayedProducts.length}
-                    </strong>{' '}
-                    items
-                  </span>
-                  <span className="font-mono-num text-slate-400">
-                    {Math.round(
-                      (slicedProducts.length / displayedProducts.length) * 100
-                    )}
-                    % loaded
-                  </span>
-                </div>
-
-                <div className="w-full h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
-                  <div
-                    className="h-full bg-[#059669] rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        Math.round(
-                          (slicedProducts.length / displayedProducts.length) * 100
-                        )
-                      )}%`,
-                    }}
-                  />
-                </div>
-
-                {hasMoreProducts ? (
-                  <button
-                    type="button"
-                    disabled={isLoadingMore}
-                    onClick={handleLoadMore}
-                    className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 disabled:opacity-80 text-xs leading-4 font-semibold text-slate-900 flex items-center justify-center gap-2 transition-colors shadow-2xs"
-                  >
-                    {isLoadingMore ? (
-                      <>
-                        <Loader2 className="w-4 h-4 text-[#059669] animate-spin" />
-                        <span>Loading more items...</span>
-                      </>
-                    ) : (
-                      <span>
-                        Load More Items (
-                        {displayedProducts.length - visibleLimit} remaining)
-                      </span>
-                    )}
-                  </button>
-                ) : (
-                  <p className="text-center text-[11px] leading-4 text-slate-400 py-1">
-                    All {displayedProducts.length} items loaded
-                  </p>
-                )}
               </div>
-            )}
-          </>
-        ) : (
-          <div className="bg-white rounded-2xl p-6 text-center border border-slate-200/80">
-            <p className="text-xs leading-4 font-semibold text-slate-900">
-              No matching global products found
-            </p>
-            <p className="text-[11px] leading-4 text-slate-500 mt-1">
-              Try clearing your search or Under {formatPrice(2000)} filter.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setHomeCategory('all');
-                setSmartFilters((prev) => ({
-                  ...prev,
-                  under2000Bdt: false,
-                  arrivesThisWeek: false,
-                }));
-              }}
-              className="mt-3 h-9 px-4 rounded-lg bg-slate-900 text-white text-xs leading-4 font-medium"
-            >
-              Reset Filters
-            </button>
-          </div>
-        )}
+            </div>
+          ) : slicedProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                {slicedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+
+                {/* 1:1 Ghost Elements appended when lazy-loading next batch */}
+                {isLoadingMore &&
+                  Array.from({ length: 4 }).map((_, idx) => (
+                    <ProductCardGhost key={`home-more-ghost-${idx}`} />
+                  ))}
+              </div>
+
+              {/* Lazy-Load Sentinel & Item Count Progress Footer inside Items Area */}
+              {displayedProducts.length > PAGE_SIZE && (
+                <div
+                  ref={loadMoreTriggerRef}
+                  role="status"
+                  aria-live="polite"
+                  className="pt-3 space-y-2.5"
+                >
+                  <div className="flex items-center justify-between text-[11px] leading-4 text-slate-500 px-0.5">
+                    <span>
+                      Showing{' '}
+                      <strong className="font-mono-num text-slate-900 font-semibold">
+                        {slicedProducts.length}
+                      </strong>{' '}
+                      of{' '}
+                      <strong className="font-mono-num text-slate-900 font-semibold">
+                        {displayedProducts.length}
+                      </strong>{' '}
+                      items
+                    </span>
+                    <span className="font-mono-num text-slate-400">
+                      {Math.round(
+                        (slicedProducts.length / displayedProducts.length) * 100
+                      )}
+                      % loaded
+                    </span>
+                  </div>
+
+                  <div className="w-full h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
+                    <div
+                      className="h-full bg-[#059669] rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.round(
+                            (slicedProducts.length / displayedProducts.length) * 100
+                          )
+                        )}%`,
+                      }}
+                    />
+                  </div>
+
+                  {hasMoreProducts ? (
+                    !isLoadingMore && (
+                      <button
+                        type="button"
+                        onClick={handleLoadMore}
+                        className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs leading-4 font-semibold text-slate-900 flex items-center justify-center gap-2 transition-colors shadow-2xs"
+                      >
+                        <span>
+                          Load More Items (
+                          {displayedProducts.length - visibleLimit} remaining)
+                        </span>
+                      </button>
+                    )
+                  ) : (
+                    <p className="text-center text-[11px] leading-4 text-slate-400 py-1">
+                      All {displayedProducts.length} items loaded
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl p-6 text-center border border-slate-200/80">
+              <p className="text-xs leading-4 font-semibold text-slate-900">
+                No matching global products found
+              </p>
+              <p className="text-[11px] leading-4 text-slate-500 mt-1">
+                Try clearing your search or Under {formatPrice(2000)} filter.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setHomeCategory('all');
+                  setSmartFilters((prev) => ({
+                    ...prev,
+                    under2000Bdt: false,
+                    arrivesThisWeek: false,
+                  }));
+                }}
+                className="mt-3 h-9 px-4 rounded-lg bg-slate-900 text-white text-xs leading-4 font-medium"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+        </div>
       </section>
+
+      {/* 5. Recently Viewed Products Horizontal Rail */}
+      {recentlyViewedProducts.length > 0 && (
+        <section
+          aria-label="Recently Viewed Products"
+          className="space-y-2.5 pt-1 border-t border-slate-200/70"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs leading-4 font-semibold text-slate-900">
+              {language === 'BN' ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed'}
+            </h2>
+            <span className="text-[11px] leading-4 text-slate-400 font-mono-num">
+              {recentlyViewedProducts.length} items
+            </span>
+          </div>
+
+          <div className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
+            {recentlyViewedProducts.map((item) => (
+              <div
+                key={`recent-${item.id}`}
+                onClick={() =>
+                  navigateTo('product_detail', { productId: item.id })
+                }
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    navigateTo('product_detail', { productId: item.id });
+                  }
+                }}
+                className="w-40 shrink-0 snap-start bg-white rounded-2xl border border-slate-200/80 p-2.5 flex items-center gap-2.5 hover:border-slate-300 transition-colors cursor-pointer"
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  referrerPolicy="no-referrer"
+                  className="w-11 h-11 rounded-xl object-contain bg-white p-1 border border-slate-100 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] leading-3.5 font-semibold text-slate-900 truncate">
+                    {language === 'BN' ? item.nameBn : item.name}
+                  </p>
+                  <p className="font-mono-num text-xs leading-4 font-bold text-[#059669] mt-0.5">
+                    {formatPrice(item.totalLandedBdt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
