@@ -101,13 +101,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           }}
           className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors ${
             isWishlisted
-              ? 'bg-promo-subtle border-promo-border text-promo-accent'
-              : 'bg-white/90 border-app-border text-content-secondary hover:text-promo-accent'
+              ? 'bg-brand-subtle border-brand-border text-brand-primary'
+              : 'bg-white/90 border-app-border text-content-secondary hover:text-brand-primary'
           }`}
         >
           <Heart
             className={`w-4 h-4 transition-transform duration-150 ${
-              isWishlisted ? 'fill-promo-accent text-promo-accent' : ''
+              isWishlisted ? 'fill-brand-primary text-brand-primary' : ''
             }`}
           />
         </motion.button>
@@ -148,12 +148,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <div className="p-3 flex-1 flex flex-col justify-between">
         <div>
           {/* Quiet Unboxed Origin & Delivery Metadata */}
-          <p className="text-[11px] text-content-secondary truncate">
-            {originMeta} · {language === 'BN' ? 'ডিউটিসহ' : 'Duty Paid'}
+          <p className="text-[11px] leading-4 text-content-secondary truncate">
+            {originMeta} ·{' '}
+            <span className="text-brand-primary font-medium">
+              {language === 'BN' ? 'ডিউটিসহ' : 'Duty Paid'}
+            </span>
           </p>
 
           {/* Product Title */}
-          <h3 className="line-clamp-2 text-content-primary text-xs font-semibold leading-4 mt-1">
+          <h3 className="line-clamp-2 text-content-primary text-[13px] font-semibold leading-[1.35] tracking-[-0.01em] mt-1 min-h-[35px]">
             {language === 'BN' ? product.nameBn : product.name}
           </h3>
         </div>
@@ -161,11 +164,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Clean Price & Quick-Add Row */}
         <div className="mt-2.5 pt-2 border-t border-app-border flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <span className="block font-mono-num text-content-primary font-bold text-sm leading-5">
+            <span className="block tabular-nums text-content-primary font-bold text-[15px] leading-5 tracking-tight">
               {formatPrice(landedBdt)}
             </span>
             {product.discountPercent > 0 && (
-              <span className="block font-mono-num text-content-muted text-[11px] leading-3.5 line-through truncate">
+              <span className="block tabular-nums text-content-muted text-[11px] leading-3.5 line-through truncate">
                 {formatPrice(product.originalLandedBdt)}
               </span>
             )}

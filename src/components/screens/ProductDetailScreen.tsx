@@ -1,29 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  CheckCircle2,
-  ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Clock,
   MessageSquare,
-  Package,
-  Plus,
   RefreshCcw,
-  Share2,
   ShieldCheck,
-  ShoppingCart,
   Star,
   Store,
+  X,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
-import { ProductCard } from '../shared/ProductCard';
+import { CATEGORIES } from '../../data/catalogData';
+import {
+  PdpAccordionId,
+  PdpAccordionSections,
+  PdpCoreInfoBlock,
+  PdpImageGallery,
+  PdpRelatedCarousel,
+  PdpReviewsSection,
+  PdpSelectiveBentoModule,
+  PdpStickyPurchaseBar,
+  PdpVariantSelector,
+} from '../pdp/HybridBentoPdpModules';
 
 export const ProductDetailScreen: React.FC = () => {
   const {
     products,
     selectedProduct,
     selectedRouteByProduct,
+    recentlyViewedIds,
+    wishlist,
+    toggleWishlist,
     addToCart,
     addProductReview,
     navigateTo,
@@ -33,26 +43,44 @@ export const ProductDetailScreen: React.FC = () => {
   } = useDeshiMart();
 
   const [selectedColor, setSelectedColor] = useState(
-    selectedProduct.colors[0]?.name || 'Obsidian Black'
+    selectedProduct.colors[0]?.name || 'Standard Edition'
   );
   const [selectedSize, setSelectedSize] = useState(
-    selectedProduct.sizes?.[2] || selectedProduct.sizes?.[0] || ''
+    selectedProduct.sizes?.[1] || selectedProduct.sizes?.[0] || ''
   );
-  const [activeImageView, setActiveImageView] = useState<0 | 1 | 2>(0);
-  const [imgError, setImgError] = useState(false);
+  const [selectedEdition, setSelectedEdition] = useState(
+    selectedProduct.category === 'electronics'
+      ? 'Standard Global (220V)'
+      : 'Standard Export Pack'
+  );
+  const [quantity, setQuantity] = useState<number>(1);
+  const [activeImageView, setActiveImageView] = useState<number>(0);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [addingState, setAddingState] = useState<'idle' | 'loading' | 'added'>('idle');
+  const [openDescSection, setOpenDescSection] = useState<PdpAccordionId>('overview');
+
+  const reviewsSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    setSelectedColor(selectedProduct.colors[0]?.name || 'Standard');
-    setSelectedSize(selectedProduct.sizes?.[2] || selectedProduct.sizes?.[0] || '');
+    setSelectedColor(selectedProduct.colors[0]?.name || 'Standard Edition');
+    setSelectedSize(selectedProduct.sizes?.[1] || selectedProduct.sizes?.[0] || '');
+    setSelectedEdition(
+      selectedProduct.category === 'electronics'
+        ? 'Standard Global (220V)'
+        : 'Standard Export Pack'
+    );
+    setQuantity(1);
     setActiveImageView(0);
-    setImgError(false);
+    setAddingState('idle');
   }, [selectedProduct]);
 
   const [activeInfoModal, setActiveInfoModal] = useState<
-    null | 'supplier' | 'warranty' | 'review'
+    null | 'supplier' | 'warranty' | 'review' | 'size_guide' | 'all_reviews'
   >(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+
+  const isWishlisted = wishlist.includes(selectedProduct.id);
 
   const activeRouteId =
     selectedRouteByProduct[selectedProduct.id] || selectedProduct.routes[0]?.id;
@@ -68,22 +96,54 @@ export const ProductDetailScreen: React.FC = () => {
     ? activeRoute.totalLandedBdt
     : selectedProduct.totalLandedBdt;
 
+  const categoryMeta = useMemo(
+    () => CATEGORIES.find((c) => c.id === selectedProduct.category),
+    [selectedProduct.category]
+  );
+
+  // Representative Electronics, Fashion & Home products to demonstrate component reusability (Section 8.6)
+  const demoCategoryProducts = useMemo(() => {
+    const elec =
+      products.find((p) => p.category === 'electronics') || products[0];
+    const fash =
+      products.find((p) => p.category === 'fashion' && p.sizes && p.sizes.length > 0) ||
+      products.find((p) => p.category === 'fashion') ||
+      products[1];
+    const home =
+      products.find((p) => p.category === 'home_living') || products[2];
+    return { elec, fash, home };
+  }, [products]);
+
   const specRows = [
-    { label: 'Display / Build', value: selectedProduct.specs.display },
-    { label: 'Battery / Power', value: selectedProduct.specs.battery },
-    { label: 'Durability', value: selectedProduct.specs.waterproof },
-    { label: 'Sensors / Tech', value: selectedProduct.specs.heartRate },
-    { label: 'Connectivity', value: selectedProduct.specs.gps },
-    { label: 'Net Weight', value: selectedProduct.specs.weight },
-    { label: 'Warranty', value: selectedProduct.specs.warranty },
+    { label: 'Build / Display', value: selectedProduct.specs.display },
+    { label: 'Power / Battery', value: selectedProduct.specs.battery },
+    { label: 'Protection / Finish', value: selectedProduct.specs.waterproof },
+    { label: 'Core Technology', value: selectedProduct.specs.heartRate },
+    { label: 'Connectivity / Tracking', value: selectedProduct.specs.gps },
+    { label: 'Parcel Net Weight', value: selectedProduct.specs.weight },
+    { label: 'Warranty Coverage', value: selectedProduct.specs.warranty },
   ].filter((row) => Boolean(row.value));
 
-  const relatedProducts = products
-    .filter(
-      (p) =>
-        p.id !== selectedProduct.id && p.category === selectedProduct.category
-    )
-    .slice(0, 4);
+  const similarProducts = useMemo(
+    () =>
+      products
+        .filter(
+          (p) =>
+            p.id !== selectedProduct.id && p.category === selectedProduct.category
+        )
+        .slice(0, 8),
+    [products, selectedProduct.category, selectedProduct.id]
+  );
+
+  const recentlyViewedProducts = useMemo(
+    () =>
+      recentlyViewedIds
+        .filter((id) => id !== selectedProduct.id)
+        .map((id) => products.find((p) => p.id === id))
+        .filter((p): p is NonNullable<typeof p> => Boolean(p))
+        .slice(0, 6),
+    [products, recentlyViewedIds, selectedProduct.id]
+  );
 
   const handleReviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,19 +153,18 @@ export const ProductDetailScreen: React.FC = () => {
     setActiveInfoModal(null);
   };
 
-  const galleryImages =
-    selectedProduct.gallery && selectedProduct.gallery.length > 0
-      ? selectedProduct.gallery
-      : [selectedProduct.image];
+  const galleryImages = useMemo(() => {
+    const raw =
+      selectedProduct.gallery && selectedProduct.gallery.length > 0
+        ? selectedProduct.gallery
+        : [selectedProduct.image];
+    return raw.length >= 3
+      ? raw.slice(0, 4)
+      : [raw[0], raw[1] || raw[0], raw[2] || raw[0]];
+  }, [selectedProduct.gallery, selectedProduct.image]);
 
-  const activeImageSrc =
-    galleryImages[activeImageView] || selectedProduct.image;
-
-  const hasDistinctGalleryImages = galleryImages.length > 1;
-
-  const viewTransformClasses = hasDistinctGalleryImages
-    ? ['scale-100 rotate-0', 'scale-100 rotate-0', 'scale-100 rotate-0']
-    : ['scale-100 rotate-0', 'scale-110 -rotate-2', 'scale-105 rotate-2'];
+  const hasDistinctGalleryImages = new Set(galleryImages).size > 1;
+  const activeImageSrc = galleryImages[activeImageView] || selectedProduct.image;
 
   const resolvedHsCode =
     selectedProduct.hsCode ||
@@ -123,465 +182,254 @@ export const ProductDetailScreen: React.FC = () => {
       ? '9503.00.00'
       : '8525.89.00');
 
+  const unavailableSize =
+    selectedProduct.sizes && selectedProduct.sizes.length >= 5
+      ? selectedProduct.sizes[selectedProduct.sizes.length - 1]
+      : null;
+
+  const ratingDistribution = useMemo(() => {
+    const base = selectedProduct.rating;
+    const fiveStar = Math.min(88, Math.max(62, Math.round((base - 3.5) * 52)));
+    const fourStar = Math.max(8, Math.min(26, 94 - fiveStar));
+    const threeStar = Math.max(2, 98 - fiveStar - fourStar);
+    const twoStar = 1;
+    const oneStar = 1;
+    return [
+      { stars: 5, pct: fiveStar },
+      { stars: 4, pct: fourStar },
+      { stars: 3, pct: threeStar },
+      { stars: 2, pct: twoStar },
+      { stars: 1, pct: oneStar },
+    ];
+  }, [selectedProduct.rating]);
+
+  const handleAddToCartClick = () => {
+    if (!selectedProduct.inStock || addingState !== 'idle') return;
+    setAddingState('loading');
+    setTimeout(() => {
+      addToCart(
+        selectedProduct.id,
+        quantity,
+        selectedColor,
+        selectedSize || selectedEdition,
+        activeRoute?.id
+      );
+      setAddingState('added');
+      setTimeout(() => {
+        setAddingState('idle');
+      }, 1100);
+    }, 180);
+  };
+
+  const handleBuyNowClick = () => {
+    if (!selectedProduct.inStock) return;
+    addToCart(
+      selectedProduct.id,
+      quantity,
+      selectedColor,
+      selectedSize || selectedEdition,
+      activeRoute?.id
+    );
+    navigateTo('checkout_shipping');
+  };
+
   return (
     <div className="flex-1 bg-white flex flex-col justify-between">
-      <div className="p-4 space-y-6">
-        {/* 1. Product Image Showcase + 3-Angle Selector */}
-        <div className="space-y-2.5">
-          <div className="relative w-full aspect-square max-h-64 rounded-xl bg-slate-50 border border-app-border p-4 overflow-hidden flex items-center justify-center">
-            {!imgError ? (
-              <motion.img
-                key={`${selectedProduct.id}-${activeImageView}`}
-                initial={{ opacity: 0.6, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.16 }}
-                src={activeImageSrc}
-                alt={selectedProduct.name}
-                referrerPolicy="no-referrer"
-                onError={() => setImgError(true)}
-                className={`w-full h-full object-contain transition-transform duration-200 ${viewTransformClasses[activeImageView]}`}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center p-6 text-center">
-                <Package className="w-10 h-10 text-content-muted mb-2" />
-                <span className="text-xs leading-4 font-medium text-content-secondary">
+      <div>
+        {/* B. PRODUCT IMAGE GALLERY (Full-bleed visual anchor outside nested cards) */}
+        <PdpImageGallery
+          product={selectedProduct}
+          galleryImages={galleryImages}
+          activeImageView={activeImageView}
+          onSelectImageView={setActiveImageView}
+          hasDistinctGalleryImages={hasDistinctGalleryImages}
+          isWishlisted={isWishlisted}
+          onToggleWishlist={() => toggleWishlist(selectedProduct.id)}
+          onOpenZoom={() => setZoomOpen(true)}
+        />
+
+        {/* 16px Padded Vertical Product-First Flow + 10–20% Selective Bento Grid */}
+        <div className="px-4 pt-4 pb-6 space-y-6">
+          {/* C. CORE PRODUCT INFORMATION (Unboxed Vertical Hierarchy) */}
+          <PdpCoreInfoBlock
+            product={selectedProduct}
+            categoryLabel={
+              language === 'BN'
+                ? categoryMeta?.nameBn || 'ক্যাটালগ'
+                : categoryMeta?.name || 'Global Catalog'
+            }
+            language={language}
+            totalLandedBdt={totalLandedBdt}
+            formatPrice={formatPrice}
+            onCategoryClick={() =>
+              navigateTo('category_products', {
+                categoryId: selectedProduct.category,
+              })
+            }
+            onScrollToReviews={() =>
+              reviewsSectionRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              })
+            }
+            onOpenPriceHistory={() => navigateTo('price_tracker')}
+            demoElectronicsProduct={demoCategoryProducts.elec}
+            demoFashionProduct={demoCategoryProducts.fash}
+            demoHomeProduct={demoCategoryProducts.home}
+            onSwitchDemoProduct={(productId) =>
+              navigateTo('product_detail', { productId })
+            }
+          />
+
+          {/* D. PRODUCT VARIANT SELECTION (Unboxed Compact Chips & Swatches) */}
+          <PdpVariantSelector
+            product={selectedProduct}
+            language={language}
+            selectedColor={selectedColor}
+            onSelectColor={setSelectedColor}
+            selectedSize={selectedSize}
+            onSelectSize={setSelectedSize}
+            unavailableSize={unavailableSize}
+            selectedEdition={selectedEdition}
+            onSelectEdition={setSelectedEdition}
+            quantity={quantity}
+            onChangeQuantity={setQuantity}
+            totalLandedBdt={totalLandedBdt}
+            formatPrice={formatPrice}
+            onOpenSizeGuide={() => setActiveInfoModal('size_guide')}
+          />
+
+          {/* E. SELECTIVE BENTO INFORMATION MODULE (10–20% Restrained 2x2 Grid) */}
+          <PdpSelectiveBentoModule
+            product={selectedProduct}
+            activeRoute={activeRoute}
+            shippingBdt={shippingBdt}
+            dutyAndVatBdt={dutyBdt + vatBdt}
+            resolvedHsCode={resolvedHsCode}
+            formatPrice={formatPrice}
+            onCompareRoutes={() => navigateTo('seller_compare')}
+            onOpenLandedBreakdown={() => setOpenDescSection('landed')}
+            onOpenWarrantyModal={() => setActiveInfoModal('warranty')}
+            onOpenSupplierStore={() => navigateTo('supplier_store')}
+          />
+
+          {/* F. PRODUCT DESCRIPTION, SPECIFICATIONS & CARE ACCORDIONS */}
+          <PdpAccordionSections
+            product={selectedProduct}
+            activeRoute={activeRoute}
+            openSection={openDescSection}
+            onToggleSection={setOpenDescSection}
+            specRows={specRows}
+            baseBdt={baseBdt}
+            shippingBdt={shippingBdt}
+            dutyBdt={dutyBdt}
+            vatBdt={vatBdt}
+            totalLandedBdt={totalLandedBdt}
+            resolvedHsCode={resolvedHsCode}
+            formatPrice={formatPrice}
+            onCompareSpecs={() => navigateTo('spec_compare')}
+          />
+
+          {/* G. REVIEWS AND RATINGS */}
+          <PdpReviewsSection
+            product={selectedProduct}
+            ratingDistribution={ratingDistribution}
+            sectionRef={reviewsSectionRef}
+            onWriteReview={() => setActiveInfoModal('review')}
+            onViewAllReviews={() => setActiveInfoModal('all_reviews')}
+          />
+
+          {/* H. RELATED PRODUCTS CAROUSEL */}
+          <PdpRelatedCarousel
+            similarProducts={similarProducts}
+            recentlyViewedProducts={recentlyViewedProducts}
+            onSeeAllCategory={() =>
+              navigateTo('category_products', {
+                categoryId: selectedProduct.category,
+              })
+            }
+          />
+        </div>
+      </div>
+
+      {/* I. STICKY BOTTOM PURCHASE BAR */}
+      <PdpStickyPurchaseBar
+        inStock={selectedProduct.inStock}
+        quantity={quantity}
+        totalLandedBdt={totalLandedBdt}
+        addingState={addingState}
+        formatPrice={formatPrice}
+        onAddToCart={handleAddToCartClick}
+        onBuyNow={handleBuyNowClick}
+      />
+
+      {/* Image Zoom Lightbox Modal */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {zoomOpen && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Product Image Zoom"
+                className="pointer-events-auto absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-xs flex flex-col justify-between p-4"
+              >
+                <div className="flex items-center justify-between text-white">
+                  <span className="text-xs font-medium tabular-nums">
+                    {activeImageView + 1} / {galleryImages.length}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Close zoom view"
+                    onClick={() => setZoomOpen(false)}
+                    className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center relative overflow-hidden my-4">
+                  <img
+                    src={activeImageSrc}
+                    alt={selectedProduct.name}
+                    referrerPolicy="no-referrer"
+                    className="max-w-full max-h-full object-contain scale-110"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Previous image"
+                    onClick={() =>
+                      setActiveImageView(
+                        (prev) =>
+                          (prev - 1 + galleryImages.length) % galleryImages.length
+                      )
+                    }
+                    className="absolute left-1 w-9 h-9 rounded-full bg-white/15 text-white flex items-center justify-center"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next image"
+                    onClick={() =>
+                      setActiveImageView((prev) => (prev + 1) % galleryImages.length)
+                    }
+                    className="absolute right-1 w-9 h-9 rounded-full bg-white/15 text-white flex items-center justify-center"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <p className="text-center text-xs text-slate-300 truncate">
                   {selectedProduct.name}
-                </span>
+                </p>
               </div>
             )}
-          </div>
+          </AnimatePresence>,
+          document.getElementById('mobile-sheet-root') || document.body
+        )}
 
-          <div className="flex items-center justify-center gap-2">
-            {(['Studio', 'Detail', 'Profile'] as const).map((label, idx) => {
-              const isSelected = activeImageView === idx;
-              const thumbSrc = galleryImages[idx] || selectedProduct.image;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setActiveImageView(idx as 0 | 1 | 2)}
-                  className={`w-12 h-12 rounded-lg bg-slate-50 border overflow-hidden p-1.5 transition-all ${
-                    isSelected
-                      ? 'border-content-primary ring-1 ring-content-primary/10'
-                      : 'border-app-border opacity-65 hover:opacity-100'
-                  }`}
-                >
-                  <img
-                    src={thumbSrc}
-                    alt={`${selectedProduct.name} ${label}`}
-                    referrerPolicy="no-referrer"
-                    className={`w-full h-full object-contain rounded ${
-                      !hasDistinctGalleryImages && idx === 1
-                        ? 'scale-125'
-                        : !hasDistinctGalleryImages && idx === 2
-                        ? 'scale-110 rotate-3'
-                        : ''
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 2. Product Title, Hero Price Container & Single Trust Banner */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs leading-4 text-content-secondary">
-            <span className="flex items-center gap-1.5 text-content-primary font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
-              {selectedProduct.originLabel}
-            </span>
-            <div className="flex items-center gap-2.5">
-              <span>{activeRoute?.deliveryDays || '7–12 days'}</span>
-              <button
-                type="button"
-                aria-label="Share product link"
-                onClick={() => {
-                  navigator.clipboard?.writeText(window.location.href);
-                  showToast(`Copied verified link for ${selectedProduct.name}`);
-                }}
-                className="inline-flex items-center gap-1 text-content-secondary hover:text-content-primary font-medium"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>Share</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <h1 className="text-lg leading-6 font-semibold text-content-primary">
-              {language === 'BN' ? selectedProduct.nameBn : selectedProduct.name}
-            </h1>
-            <p className="text-xs leading-4 text-content-secondary mt-1">
-              {selectedProduct.subtitle}
-            </p>
-          </div>
-
-          {/* Unboxed Rating & Price History Link */}
-          <div className="flex items-center justify-between text-xs leading-4 text-content-secondary">
-            <div className="flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span className="tabular-nums font-semibold text-content-primary">
-                {selectedProduct.rating.toFixed(1)}
-              </span>
-              <span>·</span>
-              <span>{selectedProduct.reviewCount.toLocaleString()} reviews</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigateTo('price_tracker')}
-              className="text-xs leading-4 font-semibold text-brand-primary hover:underline"
-            >
-              {language === 'BN' ? 'প্রাইস হিস্ট্রি →' : '30-Day Price History →'}
-            </button>
-          </div>
-
-          {/* Hero Price Container per DESIGN_SYSTEM_SPEC.md Section 5.2 */}
-          <div className="pt-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold tabular-nums text-content-primary">
-                {formatPrice(totalLandedBdt)}
-              </span>
-              {selectedProduct.discountPercent > 0 && (
-                <>
-                  <span className="text-xs text-content-muted line-through tabular-nums">
-                    {formatPrice(selectedProduct.originalLandedBdt)}
-                  </span>
-                  <span className="bg-promo-subtle text-promo-accent text-[11px] font-bold px-1.5 py-0.5 rounded tabular-nums">
-                    -{selectedProduct.discountPercent}%
-                  </span>
-                </>
-              )}
-            </div>
-            <p className="text-xs text-content-secondary mt-1">
-              {language === 'BN'
-                ? 'আপনার দরজায় পৌঁছানো পর্যন্ত সব খরচ অন্তর্ভুক্ত (ল্যান্ডেড প্রাইস)'
-                : 'All-inclusive landed price at your doorstep'}
-            </p>
-          </div>
-
-          {/* Single Trust Banner per DESIGN_SYSTEM_SPEC.md Section 5.2 */}
-          <div className="flex items-center gap-3 p-3 bg-brand-subtle border border-brand-border rounded-xl">
-            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-brand-primary">
-                {language === 'BN'
-                  ? '১০০% গ্যারান্টিযুক্ত ল্যান্ডেড প্রাইস'
-                  : '100% Guaranteed Landed Price'}
-              </p>
-              <p className="text-[11px] text-content-secondary leading-relaxed">
-                {language === 'BN'
-                  ? 'কাস্টমস, ভ্যাট এবং লোকাল কুরিয়ার চার্জ প্রি-ক্লিয়ারড। ডেলিভারির সময় কোনো অতিরিক্ত চার্জ নেই।'
-                  : 'Customs, NBR duty, and domestic transit pre-cleared. No surprise fees on delivery.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Unboxed Feature Highlights */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs leading-4 text-content-secondary">
-            {selectedProduct.highlights.map((hl, idx) => (
-              <React.Fragment key={hl}>
-                <span>{hl}</span>
-                {idx < selectedProduct.highlights.length - 1 && (
-                  <span aria-hidden="true" className="text-content-muted">·</span>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-
-        {/* 3. Variant Selection (Color & Size) */}
-        <section className="pt-4 border-t border-app-border space-y-3">
-          <div>
-            <span className="block text-xs leading-4 font-medium text-content-secondary mb-2">
-              {language === 'BN' ? 'রঙ: ' : 'Color: '}
-              <strong className="text-content-primary font-semibold">{selectedColor}</strong>
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {selectedProduct.colors.map((c) => {
-                const active = selectedColor === c.name;
-                return (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => setSelectedColor(c.name)}
-                    className={`min-h-[40px] px-3 rounded-lg border flex items-center gap-2 text-xs leading-4 font-medium transition-colors ${
-                      active
-                        ? 'border-content-primary bg-content-primary text-white'
-                        : 'border-app-border bg-white text-content-primary hover:border-app-borderStrong'
-                    }`}
-                  >
-                    <span
-                      className="w-3 h-3 rounded-full border border-white/20"
-                      style={{ backgroundColor: c.hex }}
-                    />
-                    <span>{c.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
-            <div className="pt-1">
-              <span className="block text-xs leading-4 font-medium text-content-secondary mb-2">
-                Size (EU): <strong className="text-content-primary font-semibold">{selectedSize}</strong>
-              </span>
-              <div className="flex items-center gap-2">
-                {selectedProduct.sizes.map((sz) => (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={() => setSelectedSize(sz)}
-                    className={`w-11 h-11 rounded-lg tabular-nums text-xs leading-4 font-semibold border transition-colors ${
-                      selectedSize === sz
-                        ? 'bg-content-primary text-white border-content-primary'
-                        : 'bg-white text-content-primary border-app-border hover:border-app-borderStrong'
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* 4. Secondary Disclosure Accordion for Landed Cost & Customs Details (Anti-Jargon Rule) */}
-        <section className="pt-4 border-t border-app-border">
-          <details className="group">
-            <summary className="list-none cursor-pointer flex items-center justify-between py-1 text-sm font-medium text-content-primary">
-              <div>
-                <span>
-                  {language === 'BN'
-                    ? 'ল্যান্ডেড প্রাইস ও কাস্টমস ডিউটি ব্রেকডাউন'
-                    : 'Landed Cost & Customs Duty Breakdown'}
-                </span>
-                <p className="text-xs font-normal text-content-secondary mt-0.5">
-                  {activeRoute?.name} · {activeRoute?.originCountry}
-                </p>
-              </div>
-              <ChevronDown className="w-4 h-4 text-content-secondary transition-transform group-open:rotate-180" />
-            </summary>
-
-            <div className="pt-3 mt-2 border-t border-app-border space-y-2 text-xs leading-4">
-              <div className="flex justify-between text-content-secondary">
-                <span>{language === 'BN' ? 'পণ্যের মূল দাম' : 'Factory Item Price'}</span>
-                <span className="tabular-nums text-content-primary font-medium">
-                  {formatPrice(baseBdt)}
-                </span>
-              </div>
-              <div className="flex justify-between text-content-secondary">
-                <span>
-                  {language === 'BN'
-                    ? `আন্তর্জাতিক শিপিং (${activeRoute?.deliveryDays})`
-                    : `International Freight (${activeRoute?.deliveryDays})`}
-                </span>
-                <span className="tabular-nums text-content-primary font-medium">
-                  {formatPrice(shippingBdt)}
-                </span>
-              </div>
-              <div className="flex justify-between text-content-secondary">
-                <span>
-                  {language === 'BN'
-                    ? 'কাস্টমস ডিউটি ও ভ্যাট (প্রি-পেইড)'
-                    : 'Pre-paid Customs Duty & VAT'}
-                </span>
-                <span className="tabular-nums text-content-primary font-medium">
-                  {formatPrice(dutyBdt + vatBdt)}
-                </span>
-              </div>
-              <div className="flex justify-between text-content-secondary">
-                <span>Customs Classification</span>
-                <span className="tabular-nums text-content-secondary">
-                  HS {resolvedHsCode}
-                </span>
-              </div>
-              <div className="pt-2 border-t border-app-border flex justify-between items-center font-semibold text-content-primary">
-                <span>Total Landed Price</span>
-                <span className="tabular-nums text-sm font-bold text-content-primary">
-                  {formatPrice(totalLandedBdt)}
-                </span>
-              </div>
-              <div className="pt-1 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => navigateTo('seller_compare')}
-                  className="text-xs font-semibold text-brand-primary hover:underline"
-                >
-                  {language === 'BN' ? '৩টি রুট তুলনা করুন →' : 'Compare 3 Shipping Routes →'}
-                </button>
-              </div>
-            </div>
-          </details>
-        </section>
-
-        {/* 5. Technical Specifications List */}
-        <section className="pt-4 border-t border-app-border space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-content-primary">
-              {language === 'BN' ? 'স্পেসিফিকেশন' : 'Specifications'}
-            </h3>
-            <button
-              type="button"
-              onClick={() => navigateTo('spec_compare')}
-              className="text-xs leading-4 font-semibold text-brand-primary hover:underline"
-            >
-              {language === 'BN' ? 'তুলনা করুন →' : 'Compare Specs →'}
-            </button>
-          </div>
-          <div className="divide-y divide-app-border text-xs leading-4">
-            {specRows.map((row) => (
-              <div key={row.label} className="py-2.5 flex items-center justify-between gap-4">
-                <span className="text-content-secondary">{row.label}</span>
-                <span className="font-medium text-content-primary text-right">
-                  {row.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 6. Verified Supplier & Warranty Row */}
-        <section className="pt-4 border-t border-app-border space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-app-subtle text-content-primary flex items-center justify-center">
-                <Store className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-content-primary">
-                  {selectedProduct.supplierName}
-                </h3>
-                <p className="text-xs text-content-secondary">
-                  On-time {activeRoute?.onTimeRate || '98%'} · Return{' '}
-                  {activeRoute?.returnRate || '2%'}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigateTo('supplier_store')}
-              className="text-xs leading-4 font-semibold text-brand-primary hover:underline"
-            >
-              {language === 'BN' ? 'স্টোর দেখুন →' : 'Storefront →'}
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveInfoModal('warranty')}
-            className="w-full pt-2.5 border-t border-app-border flex items-center justify-between text-xs leading-4 font-medium text-content-secondary hover:text-content-primary"
-          >
-            <span>{selectedProduct.specs.warranty}</span>
-            <ChevronRight className="w-4 h-4 text-content-muted" />
-          </button>
-        </section>
-
-        {/* 7. Verified Buyer Reviews */}
-        <section className="pt-4 border-t border-app-border space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-content-primary">
-              {language === 'BN'
-                ? `ক্রেতা রিভিউ (${selectedProduct.reviewCount})`
-                : `Buyer Reviews (${selectedProduct.reviewCount})`}
-            </h3>
-            <button
-              type="button"
-              onClick={() => setActiveInfoModal('review')}
-              className="text-xs leading-4 font-semibold text-brand-primary flex items-center gap-1 hover:underline"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{language === 'BN' ? 'রিভিউ লিখুন' : 'Write Review'}</span>
-            </button>
-          </div>
-
-          {selectedProduct.reviews.length > 0 ? (
-            <div className="divide-y divide-app-border">
-              {selectedProduct.reviews.map((rev) => (
-                <div key={rev.id} className="py-2.5 space-y-1">
-                  <div className="flex items-center justify-between text-xs leading-4">
-                    <span className="font-semibold text-content-primary">
-                      {rev.author} <span className="text-brand-primary font-medium">· Verified</span>
-                    </span>
-                    <span className="text-xs text-content-muted">{rev.date}</span>
-                  </div>
-                  <p className="text-xs leading-4 text-content-secondary">{rev.comment}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs leading-4 text-content-secondary">
-              98% positive feedback from verified Bangladesh cross-border buyers.
-            </p>
-          )}
-        </section>
-
-        {/* 8. Related Global Products */}
-        <section className="pt-4 border-t border-app-border space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-content-primary">
-              {language === 'BN' ? 'সম্পর্কিত পণ্য' : 'Related Products'}
-            </h3>
-            <button
-              type="button"
-              onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-              className="text-xs leading-4 font-semibold text-brand-primary hover:underline"
-            >
-              {language === 'BN' ? 'সব দেখুন' : 'View All'}
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {relatedProducts.map((item) => (
-              <ProductCard key={item.id} product={item} compact />
-            ))}
-          </div>
-        </section>
-      </div>
-
-      {/* Sticky Bottom CTA per DESIGN_SYSTEM_SPEC.md Section 5.2 */}
-      <div className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur border-t border-app-border p-3 flex gap-3">
-        <button
-          type="button"
-          onClick={() =>
-            addToCart(
-              selectedProduct.id,
-              1,
-              selectedColor,
-              selectedSize || undefined,
-              activeRoute?.id
-            )
-          }
-          className="h-12 px-4 rounded-lg border border-app-borderStrong bg-white text-content-primary hover:bg-app-subtle font-semibold text-xs leading-4 flex items-center justify-center gap-1.5 transition-colors shrink-0"
-        >
-          <ShoppingCart className="w-4 h-4 text-content-primary" />
-          <span>{language === 'BN' ? 'ব্যাগে দিন' : 'Add to Bag'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            addToCart(
-              selectedProduct.id,
-              1,
-              selectedColor,
-              selectedSize || undefined,
-              activeRoute?.id
-            );
-            navigateTo('checkout_shipping');
-          }}
-          className="bg-brand-primary hover:bg-brand-hover text-white font-semibold rounded-lg h-12 flex-1 text-sm flex items-center justify-center gap-2 transition-colors"
-        >
-          <span>
-            {language === 'BN' ? 'এখনই কিনুন' : 'Buy Now'} ·{' '}
-            <span className="tabular-nums">{formatPrice(totalLandedBdt)}</span>
-          </span>
-        </button>
-      </div>
-
-      {/* Viewport-Docked Supplier / Warranty / Review Bottom Sheet Modal (Docked above BottomTabBar via #mobile-sheet-root) */}
+      {/* Viewport-Docked Secondary Modals (Size Guide, All Reviews, Write Review, Warranty, Supplier) */}
       {typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
@@ -596,21 +444,110 @@ export const ProductDetailScreen: React.FC = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setActiveInfoModal(null)}
-                  className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
+                  className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
                 />
                 <motion.div
                   initial={{ y: '100%' }}
                   animate={{ y: 0 }}
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
+                  className="relative z-10 w-full max-h-[82%] overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
                 >
                   <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
 
-                  {activeInfoModal === 'review' ? (
+                  {activeInfoModal === 'size_guide' ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-content-primary">
+                          Size & Regional Compatibility Guide
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="border border-app-border rounded-xl overflow-hidden text-xs">
+                        <div className="grid grid-cols-3 bg-app-subtle p-2 font-semibold text-content-primary">
+                          <span>EU Size</span>
+                          <span>UK / BD</span>
+                          <span>Foot Length</span>
+                        </div>
+                        {[
+                          { eu: '39', uk: '6', cm: '24.5 cm' },
+                          { eu: '40', uk: '6.5', cm: '25.0 cm' },
+                          { eu: '41', uk: '7.5', cm: '26.0 cm' },
+                          { eu: '42', uk: '8', cm: '26.5 cm' },
+                          { eu: '43', uk: '9', cm: '27.5 cm' },
+                        ].map((r) => (
+                          <div
+                            key={r.eu}
+                            className="grid grid-cols-3 p-2 border-t border-app-border tabular-nums text-content-secondary"
+                          >
+                            <span className="font-semibold text-content-primary">
+                              {r.eu}
+                            </span>
+                            <span>{r.uk}</span>
+                            <span>{r.cm}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveInfoModal(null)}
+                        className="w-full h-11 rounded-xl bg-brand-primary text-white text-xs font-semibold"
+                      >
+                        Got It
+                      </button>
+                    </div>
+                  ) : activeInfoModal === 'all_reviews' ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-app-border pb-2.5">
+                        <h3 className="text-sm font-semibold text-content-primary">
+                          All Verified Reviews ({selectedProduct.reviewCount})
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="divide-y divide-app-border max-h-64 overflow-y-auto">
+                        {selectedProduct.reviews.map((rev) => (
+                          <div key={rev.id} className="py-2.5 space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-content-primary">
+                                {rev.author}{' '}
+                                <span className="text-brand-primary font-medium">
+                                  · Verified
+                                </span>
+                              </span>
+                              <span className="text-content-muted">{rev.date}</span>
+                            </div>
+                            <p className="text-xs text-content-secondary">
+                              {rev.comment}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveInfoModal('review')}
+                        className="w-full h-11 rounded-xl bg-brand-primary text-white text-xs font-semibold"
+                      >
+                        Write a Review
+                      </button>
+                    </div>
+                  ) : activeInfoModal === 'review' ? (
                     <form onSubmit={handleReviewSubmit} className="space-y-3">
                       <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                        {language === 'BN' ? 'আপনার রিভিউ দিন' : 'Write a Verified Review'}
+                        {language === 'BN'
+                          ? 'আপনার রিভিউ দিন'
+                          : 'Write a Verified Review'}
                       </h3>
                       <div>
                         <span className="block text-xs leading-4 font-medium text-content-secondary mb-1">
@@ -645,20 +582,20 @@ export const ProductDetailScreen: React.FC = () => {
                           value={reviewComment}
                           onChange={(e) => setReviewComment(e.target.value)}
                           placeholder="Share your experience with product quality and landed delivery..."
-                          className="w-full p-3 rounded-lg bg-app-subtle border border-app-border text-xs leading-4 text-content-primary focus:outline-none focus:border-brand-primary"
+                          className="w-full p-3 rounded-xl bg-app-bg border border-app-border text-xs leading-4 text-content-primary focus:outline-none focus:border-brand-primary"
                         />
                       </div>
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => setActiveInfoModal(null)}
-                          className="flex-1 h-11 rounded-lg border border-app-border text-xs leading-4 font-semibold text-content-secondary"
+                          className="flex-1 h-11 rounded-xl border border-app-border text-xs leading-4 font-semibold text-content-secondary"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="flex-1 h-11 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
+                          className="flex-1 h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
                         >
                           Submit Review
                         </button>
@@ -667,7 +604,7 @@ export const ProductDetailScreen: React.FC = () => {
                   ) : activeInfoModal === 'supplier' ? (
                     <>
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-app-subtle text-content-primary flex items-center justify-center">
+                        <div className="w-11 h-11 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
                           <Store className="w-5 h-5" />
                         </div>
                         <div>
@@ -694,7 +631,8 @@ export const ProductDetailScreen: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-xs leading-4 text-content-secondary">
-                        All shipments from {selectedProduct.supplierName} undergo physical QC verification before boarding air freight.
+                        All shipments from {selectedProduct.supplierName} undergo
+                        physical QC verification before boarding air freight.
                       </p>
                       <button
                         type="button"
@@ -702,7 +640,7 @@ export const ProductDetailScreen: React.FC = () => {
                           setActiveInfoModal(null);
                           navigateTo('supplier_store');
                         }}
-                        className="w-full h-11 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
+                        className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
                       >
                         Open Supplier Storefront
                       </button>
@@ -723,28 +661,36 @@ export const ProductDetailScreen: React.FC = () => {
                         </div>
                       </div>
                       <div className="divide-y divide-app-border text-xs leading-4 text-content-primary">
-                        <div className="py-2 flex items-start gap-2.5">
-                          <RefreshCcw className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
+                        <div className="py-2.5 flex items-start gap-2.5">
+                          <RefreshCcw className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold block">Easy Local Return Process</span>
+                            <span className="font-semibold block">
+                              Easy Local Return Process
+                            </span>
                             <span className="text-content-secondary">
-                              Drop off at our Dhaka hub or schedule free eCourier pickup within 30 days.
+                              Drop off at our Dhaka hub or schedule free eCourier
+                              pickup within 30 days.
                             </span>
                           </div>
                         </div>
-                        <div className="py-2 flex items-start gap-2.5">
-                          <Clock className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
+                        <div className="py-2.5 flex items-start gap-2.5">
+                          <Clock className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold block">24-Hour bKash / Card Refund</span>
+                            <span className="font-semibold block">
+                              24-Hour bKash / Card Refund
+                            </span>
                             <span className="text-content-secondary">
-                              Refunds are processed within 24 hours of return inspection.
+                              Refunds are processed within 24 hours of return
+                              inspection.
                             </span>
                           </div>
                         </div>
-                        <div className="py-2 flex items-start gap-2.5">
-                          <MessageSquare className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
+                        <div className="py-2.5 flex items-start gap-2.5">
+                          <MessageSquare className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold block">24/7 Claims Support</span>
+                            <span className="font-semibold block">
+                              24/7 Claims Support
+                            </span>
                             <span className="text-content-secondary">
                               Dedicated Bengali & English warranty support team.
                             </span>
@@ -755,9 +701,12 @@ export const ProductDetailScreen: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setActiveInfoModal(null);
-                          showToast('Verified guarantee active on your order', 'info');
+                          showToast(
+                            'Verified guarantee active on your order',
+                            'info'
+                          );
                         }}
-                        className="w-full h-11 rounded-lg bg-content-primary text-white text-xs leading-4 font-semibold"
+                        className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold transition-colors"
                       >
                         Close
                       </button>

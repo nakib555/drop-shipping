@@ -88,31 +88,33 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Strict 8pt Baseline Typography Scale */
-  h1 {
-    line-height: 24px; /* 3 * 8px */
-  }
-
+  /* Clean Typographic Hierarchy & Natural Line Heights */
+  h1,
   h2 {
-    line-height: 24px; /* 3 * 8px */
+    letter-spacing: -0.02em;
+    line-height: 1.3;
   }
 
   h3,
-  h4,
+  h4 {
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+
   p {
-    line-height: 16px; /* 2 * 8px */
+    line-height: 1.5;
   }
 
   /* Language-specific typographic optimization for Bangla (বাংলা - Noto Sans Bengali) */
   [lang="bn"] {
     font-family: var(--font-bn);
     letter-spacing: 0em !important;
-    line-height: 20px; /* 20px (4px sub-grid) prevents vowel sign clipping */
+    line-height: 1.5;
   }
 
   [lang="bn"] h1 {
     letter-spacing: 0em !important;
-    line-height: 24px; /* 3 * 8px */
+    line-height: 1.35;
   }
 
   [lang="bn"] h2,
@@ -121,11 +123,18 @@
   [lang="bn"] button,
   [lang="bn"] .truncate {
     letter-spacing: 0em !important;
-    line-height: 20px;
+    line-height: 1.4;
   }
 }
 
 .font-mono-num {
+  font-family: var(--font-en);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1;
+  letter-spacing: -0.015em;
+}
+
+.font-code {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
@@ -133,6 +142,7 @@
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Hide scrollbars cleanly inside horizontal mobile carousels */

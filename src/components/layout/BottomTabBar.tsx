@@ -63,7 +63,6 @@ export const BottomTabBar: React.FC = () => {
       labelBn: 'অর্ডার',
       icon: Package,
       matchScreens: ['orders', 'order_tracking'],
-      badge: orders.length > 0 ? orders.length : undefined,
     },
     {
       id: 'cart',
@@ -140,14 +139,14 @@ export const BottomTabBar: React.FC = () => {
                 }`}
               />
 
-              {/* Crimson Badge per DESIGN_SYSTEM_SPEC.md Section 5.5 */}
+              {/* Emerald Brand Badge */}
               {typeof tab.badge === 'number' && tab.badge > 0 && (
                 <motion.span
                   key={tab.badge}
                   initial={{ scale: 0.6 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1 -right-2.5 bg-promo-accent text-white text-[10px] font-bold tabular-nums h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white"
+                  className="absolute -top-1 -right-2.5 bg-brand-primary text-white text-[10px] font-bold font-mono-num h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white"
                 >
                   {tab.badge}
                 </motion.span>
@@ -155,7 +154,7 @@ export const BottomTabBar: React.FC = () => {
 
               {/* Subtle Unread Dot on Account Tab */}
               {tab.hasDot && (
-                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-promo-accent ring-2 ring-white" />
+                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-brand-primary ring-2 ring-white" />
               )}
             </div>
 

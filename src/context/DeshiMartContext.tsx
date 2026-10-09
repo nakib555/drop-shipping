@@ -1,11 +1,15 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CATALOG_PRODUCTS,
   INITIAL_ADDRESSES,
   INITIAL_NOTIFICATIONS,
   INITIAL_ORDERS,
 } from '../data/catalogData';
-import { fetchGlobalCatalogFromApi } from '../services/productApi';
+import {
+  fetchContinuousProductBatch,
+  fetchGlobalCatalogFromApi,
+  searchFreeProductApis,
+} from '../services/productApi';
 import {
   AppNotification,
   CartItem,
@@ -116,6 +120,7 @@ interface DeshiMartContextValue {
   products: Product[];
   isLoadingProducts: boolean;
   refreshCatalogFromApi: () => Promise<void>;
+  fetchMoreFromApi: () => Promise<number>;
   selectedProductId: string;
   selectedProduct: Product;
   addProductReview: (productId: string, rating: number, comment: string) => void;
@@ -285,32 +290,88 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [selectedCategoryId, setSelectedCategoryId] = useState<CategoryId>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [smartFilters, setSmartFilters] = useState<SmartFiltersState>(DEFAULT_FILTERS);
+  const batchCursorRef = useRef<number>(1);
+  const isFetchingBatchRef = useRef<boolean>(false);
 
-  const loadApiCatalog = useCallback(async (notify = false) => {
-    setIsLoadingProducts(true);
-    try {
-      const apiItems = await fetchGlobalCatalogFromApi(notify);
-      if (apiItems.length > 0) {
-        setCatalogProducts((prev) => {
-          const existingIds = new Set(CATALOG_PRODUCTS.map((p) => p.id));
-          const merged = [
-            ...CATALOG_PRODUCTS,
-            ...apiItems.filter((item) => !existingIds.has(item.id)),
-          ];
-          return merged;
-        });
-        if (notify) {
-          showToast(`Synced ${apiItems.length} global products from API`);
+  const mergeProductsIntoCatalog = useCallback((incoming: Product[]) => {
+    if (!incoming || incoming.length === 0) return;
+    setCatalogProducts((prev) => {
+      const map = new Map<string, Product>();
+      prev.forEach((p) => map.set(p.id, p));
+      incoming.forEach((item) => {
+        if (!map.has(item.id)) {
+          map.set(item.id, item);
         }
-      }
-    } finally {
-      setIsLoadingProducts(false);
-    }
+      });
+      return Array.from(map.values());
+    });
   }, []);
 
+  const loadApiCatalog = useCallback(
+    async (notify = false) => {
+      setIsLoadingProducts(true);
+      try {
+        const apiItems = await fetchGlobalCatalogFromApi(notify);
+        if (apiItems.length > 0) {
+          mergeProductsIntoCatalog(apiItems);
+          if (notify) {
+            showToast(`Synced ${apiItems.length} global products from free APIs`);
+          }
+        }
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    },
+    [mergeProductsIntoCatalog]
+  );
+
+  const fetchMoreFromApi = useCallback(async (): Promise<number> => {
+    if (isFetchingBatchRef.current) return 0;
+    isFetchingBatchRef.current = true;
+    try {
+      const nextCursor = batchCursorRef.current;
+      batchCursorRef.current += 1;
+      const batch = await fetchContinuousProductBatch(nextCursor);
+      if (batch.length > 0) {
+        mergeProductsIntoCatalog(batch);
+      }
+      return batch.length;
+    } finally {
+      isFetchingBatchRef.current = false;
+    }
+  }, [mergeProductsIntoCatalog]);
+
+  // Initial multi-source free API fetch on mount
   useEffect(() => {
     loadApiCatalog(false);
   }, [loadApiCatalog]);
+
+  // Continuous background polling from free APIs every 45 seconds while tab is visible
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+      void fetchMoreFromApi();
+    }, 45000);
+
+    return () => window.clearInterval(intervalId);
+  }, [fetchMoreFromApi]);
+
+  // Live remote search supplementation when user types a search query
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) return;
+
+    const timer = window.setTimeout(async () => {
+      const remoteMatches = await searchFreeProductApis(q);
+      if (remoteMatches.length > 0) {
+        mergeProductsIntoCatalog(remoteMatches);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchQuery, mergeProductsIntoCatalog]);
 
   const [selectedRouteByProduct, setSelectedRouteByProduct] = useState<Record<string, string>>({
     'prod-smartwatch-pro': 'route-global-direct',
@@ -1276,6 +1337,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         products: catalogProducts,
         isLoadingProducts,
         refreshCatalogFromApi: () => loadApiCatalog(true),
+        fetchMoreFromApi,
         selectedProductId,
         selectedProduct,
         addProductReview,

@@ -66,9 +66,9 @@ export const PriceTrackerScreen: React.FC = () => {
               setActivePointIndex(null);
               navigateTo('price_tracker', { productId: prod.id });
             }}
-            className={`h-10 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap border transition-colors ${
+            className={`h-9 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap border transition-colors ${
               prod.id === selectedProduct.id
-                ? 'bg-content-primary text-white border-content-primary'
+                ? 'bg-brand-primary text-white border-brand-primary font-semibold'
                 : 'bg-white text-content-secondary border-app-border hover:border-app-borderStrong'
             }`}
           >
@@ -98,15 +98,15 @@ export const PriceTrackerScreen: React.FC = () => {
                 {formatPrice(selectedProduct.originalLandedBdt)}
               </span>
             </div>
-            <span className="text-[11px] leading-4 text-promo-accent font-semibold">
-              -{selectedProduct.discountPercent}% vs 90-day average
+            <span className="text-[11px] leading-4 text-brand-primary font-medium">
+              {selectedProduct.discountPercent}% below 90-day average
             </span>
           </div>
         </div>
 
-        <div className="px-3 py-2 rounded-lg bg-promo-subtle border border-promo-border text-promo-accent text-[11px] leading-4 font-semibold shrink-0 text-center">
-          <TrendingDown className="w-4 h-4 mx-auto mb-1" />
-          <span>Price Drop</span>
+        <div className="px-3 py-2 rounded-xl bg-brand-subtle border border-brand-border text-brand-primary text-[11px] leading-4 font-semibold shrink-0 text-center">
+          <TrendingDown className="w-4 h-4 mx-auto mb-0.5" />
+          <span>Low Price</span>
         </div>
       </div>
 
@@ -163,8 +163,8 @@ export const PriceTrackerScreen: React.FC = () => {
           >
             <defs>
               <linearGradient id="priceAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0F172A" stopOpacity="0.14" />
-                <stop offset="100%" stopColor="#0F172A" stopOpacity="0.0" />
+                <stop offset="0%" stopColor="#065F46" stopOpacity="0.16" />
+                <stop offset="100%" stopColor="#065F46" stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
@@ -192,7 +192,7 @@ export const PriceTrackerScreen: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.25 }}
               fill="none"
-              stroke="#0F172A"
+              stroke="#065F46"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -216,7 +216,7 @@ export const PriceTrackerScreen: React.FC = () => {
                     cy={pt.y}
                     r={isSelected ? 5 : 3.5}
                     fill={isSelected ? '#065F46' : '#FFFFFF'}
-                    stroke="#0F172A"
+                    stroke="#065F46"
                     strokeWidth="2.5"
                   />
                   <text
@@ -274,13 +274,13 @@ export const PriceTrackerScreen: React.FC = () => {
           aria-checked={isAlertEnabled}
           aria-label="Toggle Price Drop Alert"
           onClick={() => togglePriceAlert(selectedProduct.id)}
-          className={`w-12 h-6 rounded-full p-1 transition-colors ${
-            isAlertEnabled ? 'bg-content-primary' : 'bg-slate-300'
+          className={`w-11 h-6 rounded-full p-1 transition-colors ${
+            isAlertEnabled ? 'bg-brand-primary' : 'bg-slate-300'
           }`}
         >
           <div
             className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform ${
-              isAlertEnabled ? 'translate-x-6' : 'translate-x-0'
+              isAlertEnabled ? 'translate-x-5' : 'translate-x-0'
             }`}
           />
         </button>

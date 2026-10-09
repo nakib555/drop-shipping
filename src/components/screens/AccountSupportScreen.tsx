@@ -266,7 +266,7 @@ export const AccountSupportScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowAddAddress(!showAddAddress)}
-            className="text-xs font-semibold text-content-primary hover:underline flex items-center gap-1"
+            className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{language === 'BN' ? 'নতুন ঠিকানা' : 'Add Address'}</span>
@@ -349,7 +349,7 @@ export const AccountSupportScreen: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="w-full h-10 rounded-lg bg-content-primary text-white text-xs font-semibold"
+              className="w-full h-10 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
             >
               {language === 'BN' ? 'ঠিকানা সেভ করুন' : 'Save Address'}
             </button>
@@ -363,12 +363,18 @@ export const AccountSupportScreen: React.FC = () => {
               <div
                 key={addr.id}
                 className={`p-3.5 rounded-xl border bg-white space-y-2 ${
-                  isDefault ? 'border-content-primary bg-app-subtle' : 'border-app-border'
+                  isDefault
+                    ? 'border-brand-primary bg-brand-subtle/40'
+                    : 'border-app-border'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-content-secondary" />
+                    <MapPin
+                      className={`w-4 h-4 ${
+                        isDefault ? 'text-brand-primary' : 'text-content-secondary'
+                      }`}
+                    />
                     <span className="text-sm font-medium text-content-primary">
                       {addr.fullName}
                     </span>
@@ -398,7 +404,9 @@ export const AccountSupportScreen: React.FC = () => {
                       showToast('Default delivery address updated');
                     }}
                     className={`text-xs font-semibold ${
-                      isDefault ? 'text-content-primary' : 'text-content-secondary hover:text-content-primary'
+                      isDefault
+                        ? 'text-brand-primary'
+                        : 'text-content-secondary hover:text-content-primary'
                     }`}
                   >
                     {isDefault
@@ -482,15 +490,15 @@ export const AccountSupportScreen: React.FC = () => {
                 }}
                 className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all ${
                   active
-                    ? 'bg-app-subtle border-content-primary'
+                    ? 'bg-brand-subtle/40 border-brand-primary'
                     : 'bg-white border-app-border hover:border-app-borderStrong'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                       active
-                        ? 'bg-content-primary text-white'
+                        ? 'bg-brand-primary text-white'
                         : 'bg-app-subtle text-content-primary'
                     }`}
                   >
@@ -503,7 +511,11 @@ export const AccountSupportScreen: React.FC = () => {
                     <p className="text-xs text-content-secondary truncate">{m.detail}</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-semibold text-content-primary shrink-0 ml-2">
+                <span
+                  className={`text-[11px] font-semibold shrink-0 ml-2 ${
+                    active ? 'text-brand-primary' : 'text-content-secondary'
+                  }`}
+                >
                   {active ? '✓ Active' : m.status}
                 </span>
               </button>
@@ -527,7 +539,7 @@ export const AccountSupportScreen: React.FC = () => {
         <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-app-subtle text-content-primary flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
                 <Store className="w-6 h-6" />
               </div>
               <div>
@@ -535,7 +547,7 @@ export const AccountSupportScreen: React.FC = () => {
                   <h2 className="text-sm font-bold text-content-primary">
                     {supplierName}
                   </h2>
-                  <CheckCircle2 className="w-4 h-4 text-status-success" />
+                  <CheckCircle2 className="w-4 h-4 text-brand-primary" />
                 </div>
                 <p className="text-xs text-content-secondary">
                   {selectedProduct.originLabel} · Tier-1 Direct Exporter
@@ -556,8 +568,8 @@ export const AccountSupportScreen: React.FC = () => {
               }}
               className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors ${
                 isFollowingSupplier
-                  ? 'bg-app-subtle text-content-primary border border-app-borderStrong'
-                  : 'bg-content-primary text-white'
+                  ? 'bg-brand-subtle text-brand-primary border border-brand-border'
+                  : 'bg-brand-primary hover:bg-brand-hover text-white'
               }`}
             >
               {isFollowingSupplier ? 'Following ✓' : '+ Follow'}
@@ -621,21 +633,27 @@ export const AccountSupportScreen: React.FC = () => {
         case 'arrival':
           return {
             Icon: Truck,
-            bg: read ? 'bg-app-subtle text-content-secondary' : 'bg-blue-50 text-status-transit',
+            bg: read
+              ? 'bg-app-subtle text-content-secondary'
+              : 'bg-brand-subtle text-brand-primary',
             categoryLabel: isBn ? 'শিপমেন্ট ট্র্যাকিং' : 'Shipment Update',
             ctaLabel: isBn ? 'পার্সেল ট্র্যাক করুন' : 'Track Live Parcel',
           };
         case 'price_drop':
           return {
             Icon: TrendingDown,
-            bg: read ? 'bg-app-subtle text-content-secondary' : 'bg-promo-subtle text-promo-accent',
+            bg: read
+              ? 'bg-app-subtle text-content-secondary'
+              : 'bg-brand-subtle text-brand-primary',
             categoryLabel: isBn ? 'প্রাইস ড্রপ অ্যালার্ট' : 'Landed Price Drop',
             ctaLabel: isBn ? 'মূল্য চার্ট দেখুন' : 'View Price Radar',
           };
         default:
           return {
             Icon: Sparkles,
-            bg: read ? 'bg-app-subtle text-content-secondary' : 'bg-amber-50 text-status-warning',
+            bg: read
+              ? 'bg-app-subtle text-content-secondary'
+              : 'bg-brand-subtle text-brand-primary',
             categoryLabel: isBn ? 'কাস্টমস ডিল' : 'Curated Offer',
             ctaLabel: isBn ? 'ক্যাটালগ দেখুন' : 'Explore Deal',
           };
@@ -863,12 +881,12 @@ export const AccountSupportScreen: React.FC = () => {
   if (currentScreen === 'guides') {
     return (
       <div className="p-4 space-y-4 pb-6 bg-app-bg">
-        <div className="bg-slate-900 text-white rounded-xl p-4 border border-slate-800">
-          <h2 className="text-sm font-bold">
-            Smarter Cross-Border Shopping Guides
+        <div className="bg-brand-primary text-white rounded-2xl p-4">
+          <h2 className="text-sm font-semibold">
+            Cross-Border Shopping Guides
           </h2>
-          <p className="text-xs text-slate-300 mt-1">
-            Learn how DeshiMart eliminates customs surprises and verifies factories.
+          <p className="text-xs text-emerald-50/90 mt-1">
+            Learn how DeshiMart pre-clears customs duty and verifies factory exporters.
           </p>
         </div>
 
@@ -879,7 +897,7 @@ export const AccountSupportScreen: React.FC = () => {
               className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
             >
               <div className="flex items-center gap-2 text-[11px] text-content-secondary">
-                <span className="font-semibold text-content-primary">{guide.category}</span>
+                <span className="font-semibold text-brand-primary">{guide.category}</span>
                 <span>·</span>
                 <span>{guide.date}</span>
                 <span>·</span>
@@ -897,7 +915,7 @@ export const AccountSupportScreen: React.FC = () => {
                     key={i}
                     className="text-xs text-content-secondary flex items-start gap-2"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-1.5 shrink-0" />
                     <span>{bp}</span>
                   </li>
                 ))}
@@ -925,16 +943,16 @@ export const AccountSupportScreen: React.FC = () => {
                 setCurrency('BDT');
                 showToast('Currency set to BDT (৳) Bangladeshi Taka');
               }}
-              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
+              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 currency === 'BDT'
-                  ? 'bg-app-subtle border-content-primary'
+                  ? 'bg-brand-subtle/60 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
               <span className="text-xs font-semibold text-content-primary">
                 BDT (৳) — Bangladeshi Taka
               </span>
-              <span className="text-xs tabular-nums font-semibold text-content-primary">
+              <span className="text-xs tabular-nums font-semibold text-brand-primary">
                 Bangladesh
               </span>
             </button>
@@ -945,9 +963,9 @@ export const AccountSupportScreen: React.FC = () => {
                 setCurrency('USD');
                 showToast('Currency set to USD ($) US Dollar');
               }}
-              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
+              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 currency === 'USD'
-                  ? 'bg-app-subtle border-content-primary'
+                  ? 'bg-brand-subtle/60 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
@@ -971,9 +989,9 @@ export const AccountSupportScreen: React.FC = () => {
                 setLanguage('EN');
                 showToast('Language set to English');
               }}
-              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
+              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 language === 'EN'
-                  ? 'bg-app-subtle border-content-primary'
+                  ? 'bg-brand-subtle/60 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
@@ -989,9 +1007,9 @@ export const AccountSupportScreen: React.FC = () => {
                 setLanguage('BN');
                 showToast('ভাষা বাংলায় পরিবর্তন করা হয়েছে (Noto Sans Bengali)');
               }}
-              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
+              className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 language === 'BN'
-                  ? 'bg-app-subtle border-content-primary'
+                  ? 'bg-brand-subtle/60 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
@@ -1016,7 +1034,7 @@ export const AccountSupportScreen: React.FC = () => {
               type="checkbox"
               checked={darkMode}
               onChange={(e) => setDarkMode(e.target.checked)}
-              className="w-4 h-4 accent-slate-900"
+              className="w-4 h-4 accent-emerald-700"
             />
           </label>
         </div>
@@ -1024,7 +1042,7 @@ export const AccountSupportScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('home')}
-          className="w-full h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm transition-colors"
+          className="w-full h-12 rounded-xl bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm transition-colors"
         >
           Save Changes
         </button>
@@ -1044,13 +1062,13 @@ export const AccountSupportScreen: React.FC = () => {
             <button
               type="button"
               onClick={() => setChatOpen(true)}
-              className="p-3 rounded-xl bg-slate-900 text-white flex flex-col items-center text-center gap-1"
+              className="p-3.5 rounded-xl bg-brand-primary hover:bg-brand-hover text-white flex flex-col items-center text-center gap-1 transition-colors"
             >
-              <MessageCircle className="w-5 h-5 text-emerald-400" />
+              <MessageCircle className="w-5 h-5 text-emerald-100" />
               <span className="text-xs font-semibold">
                 24/7 Live Chat
               </span>
-              <span className="text-[10px] text-slate-300">Replies in &lt; 2m</span>
+              <span className="text-[10px] text-emerald-100/90">Replies in &lt; 2m</span>
             </button>
 
             <button
@@ -1058,9 +1076,9 @@ export const AccountSupportScreen: React.FC = () => {
               onClick={() =>
                 showToast('Calling DeshiMart Dhaka Support: +880 1712 345678')
               }
-              className="p-3 rounded-xl bg-app-subtle border border-app-border flex flex-col items-center text-center gap-1"
+              className="p-3.5 rounded-xl bg-brand-subtle border border-brand-border flex flex-col items-center text-center gap-1"
             >
-              <PhoneCall className="w-5 h-5 text-content-primary" />
+              <PhoneCall className="w-5 h-5 text-brand-primary" />
               <span className="text-xs font-semibold text-content-primary">
                 Call Support
               </span>
@@ -1143,7 +1161,7 @@ export const AccountSupportScreen: React.FC = () => {
                           key={idx}
                           className={`max-w-[82%] p-3 rounded-xl text-xs leading-relaxed ${
                             m.sender === 'user'
-                              ? 'ml-auto bg-content-primary text-white'
+                              ? 'ml-auto bg-brand-primary text-white'
                               : 'bg-app-subtle border border-app-border text-content-primary'
                           }`}
                         >

@@ -47,10 +47,10 @@ export const OrdersTrackingScreen: React.FC = () => {
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`h-9 px-3.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`h-9 px-3.5 rounded-lg text-xs font-medium transition-colors border ${
                 statusFilter === st
-                  ? 'bg-content-primary text-white'
-                  : 'bg-white text-content-secondary border border-app-border hover:border-app-borderStrong'
+                  ? 'bg-brand-primary text-white border-brand-primary font-semibold'
+                  : 'bg-white text-content-secondary border-app-border hover:border-app-borderStrong'
               }`}
             >
               {st}
@@ -207,8 +207,8 @@ export const OrdersTrackingScreen: React.FC = () => {
                         ? isDelivered
                           ? 'bg-brand-primary border-brand-primary text-white'
                           : isCurrent
-                          ? 'bg-status-transit border-status-transit text-white ring-4 ring-blue-100'
-                          : 'bg-content-primary border-content-primary text-white'
+                          ? 'bg-brand-primary border-brand-primary text-white ring-4 ring-emerald-100'
+                          : 'bg-brand-primary border-brand-primary text-white'
                         : 'bg-white border-app-borderStrong text-content-muted'
                     }`}
                   >
@@ -367,7 +367,7 @@ export const OrdersTrackingScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => setInvoiceOpen(true)}
-          className="min-h-[44px] rounded-lg bg-content-primary hover:bg-slate-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+          className="min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
         >
           <FileText className="w-3.5 h-3.5" />
           <span>Invoice</span>
@@ -448,7 +448,7 @@ export const OrdersTrackingScreen: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setInvoiceOpen(false)}
-                    className="w-full min-h-[44px] rounded-lg bg-content-primary text-white text-xs font-semibold"
+                    className="w-full min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
                   >
                     Close Invoice
                   </button>

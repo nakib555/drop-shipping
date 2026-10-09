@@ -5,6 +5,7 @@ import {
   CheckCheck,
   Heart,
   MapPin,
+  Search,
   Settings,
   Share2,
   ShoppingBag,
@@ -215,11 +216,11 @@ export const TopAppBar: React.FC = () => {
           <>
             <button
               type="button"
-              aria-label={isBn ? 'শেয়ার করুন' : 'Share product'}
-              onClick={handleShareProduct}
+              aria-label={isBn ? 'খুঁজুন' : 'Search products'}
+              onClick={() => navigateTo('categories')}
               className="w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <Share2 className="w-4 h-4 stroke-[2]" />
+              <Search className="w-4 h-4 stroke-[2]" />
             </button>
 
             <button
@@ -231,10 +232,37 @@ export const TopAppBar: React.FC = () => {
               <Heart
                 className={`w-4 h-4 transition-colors ${
                   isProductLiked
-                    ? 'fill-promo-accent text-promo-accent'
+                    ? 'fill-brand-primary text-brand-primary'
                     : 'text-content-primary stroke-[2]'
                 }`}
               />
+            </button>
+
+            <button
+              type="button"
+              aria-label={isBn ? 'শেয়ার করুন' : 'Share product'}
+              onClick={handleShareProduct}
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              <Share2 className="w-4 h-4 stroke-[2]" />
+            </button>
+
+            <button
+              type="button"
+              aria-label={
+                cartCount > 0
+                  ? `Shopping bag with ${cartCount} items`
+                  : 'Shopping bag'
+              }
+              onClick={() => navigateTo('cart')}
+              className="relative w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              <ShoppingBag className="w-4 h-4 stroke-[2]" />
+              {cartCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-brand-primary text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </button>
           </>
         )}
@@ -259,7 +287,7 @@ export const TopAppBar: React.FC = () => {
           >
             <Settings className="w-4 h-4 stroke-[2]" />
           </button>
-        ) : (
+        ) : currentScreen !== 'product_detail' ? (
           <button
             type="button"
             aria-label={
@@ -277,7 +305,7 @@ export const TopAppBar: React.FC = () => {
               </span>
             )}
           </button>
-        )}
+        ) : null}
       </div>
     </header>
   );

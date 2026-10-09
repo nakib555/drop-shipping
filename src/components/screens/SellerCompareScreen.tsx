@@ -234,10 +234,10 @@ export const SellerCompareScreen: React.FC = () => {
             key={tab.id}
             type="button"
             onClick={() => setRouteFilter(tab.id)}
-            className={`h-10 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap transition-colors ${
+            className={`h-9 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap transition-colors border ${
               routeFilter === tab.id
-                ? 'bg-content-primary text-white'
-                : 'bg-white text-content-secondary border border-app-border hover:border-app-borderStrong'
+                ? 'bg-brand-primary text-white border-brand-primary font-semibold'
+                : 'bg-white text-content-secondary border-app-border hover:border-app-borderStrong'
             }`}
           >
             {tab.label}
@@ -257,12 +257,16 @@ export const SellerCompareScreen: React.FC = () => {
               onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
               className={`rounded-xl p-3 border text-center flex flex-col justify-between transition-all ${
                 isSelected
-                  ? 'bg-app-subtle border-2 border-content-primary'
+                  ? 'bg-brand-subtle/60 border-brand-primary'
                   : 'bg-white border-app-border hover:border-app-borderStrong'
               }`}
             >
               <div>
-                <span className="inline-block text-[10px] leading-4 font-semibold uppercase tracking-wide text-content-secondary mb-1">
+                <span
+                  className={`inline-block text-[10px] leading-4 font-semibold uppercase tracking-wide mb-1 ${
+                    isSelected ? 'text-brand-primary' : 'text-content-secondary'
+                  }`}
+                >
                   {rt.badge}
                 </span>
                 <h3 className="text-xs leading-4 font-semibold text-content-primary">
@@ -308,7 +312,7 @@ export const SellerCompareScreen: React.FC = () => {
               }}
               className={`rounded-xl p-4 border transition-colors cursor-pointer bg-white ${
                 isSelected
-                  ? 'border-2 border-content-primary'
+                  ? 'border-brand-primary bg-brand-subtle/20'
                   : 'border-app-border'
               }`}
             >
@@ -317,7 +321,7 @@ export const SellerCompareScreen: React.FC = () => {
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center ${
                       isSelected
-                        ? 'bg-content-primary text-white'
+                        ? 'bg-brand-primary text-white'
                         : 'border border-slate-300'
                     }`}
                   >

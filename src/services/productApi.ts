@@ -39,7 +39,19 @@ interface FakeStoreProduct {
   };
 }
 
-const SESSION_CACHE_KEY = 'deshimart_api_catalog_v3';
+interface EscuelaProduct {
+  id: number;
+  title: string;
+  price: number;
+  description: string;
+  images?: string[];
+  category?: {
+    id?: number;
+    name?: string;
+  };
+}
+
+const SESSION_CACHE_KEY = 'deshimart_api_catalog_v4';
 
 const CATEGORY_HS_CODES: Record<CategoryId, string> = {
   all: '8517.62.00',
@@ -52,6 +64,27 @@ const CATEGORY_HS_CODES: Record<CategoryId, string> = {
   automotive: '8525.89.00',
 };
 
+function sanitizeImageUrl(rawUrl?: string): string | null {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  const cleaned = rawUrl
+    .trim()
+    .replace(/^\[?"?/, '')
+    .replace(/"?\]?$/, '')
+    .trim();
+  if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
+    return null;
+  }
+  if (
+    cleaned.includes('placeimg.com') ||
+    cleaned.includes('via.placeholder.com') ||
+    cleaned.includes('example.com') ||
+    cleaned.endsWith('.svg')
+  ) {
+    return null;
+  }
+  return cleaned;
+}
+
 function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
   const cat = rawCategory.toLowerCase();
   const t = title.toLowerCase();
@@ -61,7 +94,12 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
     cat.includes('laptops') ||
     cat.includes('tablets') ||
     cat.includes('mobile-accessories') ||
-    cat.includes('electronics')
+    cat.includes('electronics') ||
+    t.includes('headphone') ||
+    t.includes('earbud') ||
+    t.includes('keyboard') ||
+    t.includes('mouse') ||
+    t.includes('monitor')
   ) {
     return 'electronics';
   }
@@ -76,7 +114,12 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
     cat.includes('jewelry') ||
     cat.includes('sunglasses') ||
     cat.includes('tops') ||
-    cat.includes('clothing')
+    cat.includes('clothes') ||
+    cat.includes('clothing') ||
+    t.includes('hoodie') ||
+    t.includes('jacket') ||
+    t.includes('sneaker') ||
+    t.includes('cap')
   ) {
     return 'fashion';
   }
@@ -84,7 +127,11 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
   if (
     cat.includes('furniture') ||
     cat.includes('home-decoration') ||
-    cat.includes('kitchen')
+    cat.includes('kitchen') ||
+    t.includes('chair') ||
+    t.includes('table') ||
+    t.includes('sofa') ||
+    t.includes('lamp')
   ) {
     return 'home_living';
   }
@@ -92,12 +139,20 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
   if (
     cat.includes('beauty') ||
     cat.includes('fragrances') ||
-    cat.includes('skin-care')
+    cat.includes('skin-care') ||
+    t.includes('serum') ||
+    t.includes('perfume')
   ) {
     return 'beauty_health';
   }
 
-  if (cat.includes('sports')) {
+  if (
+    cat.includes('sports') ||
+    t.includes('gym') ||
+    t.includes('fitness') ||
+    t.includes('yoga') ||
+    t.includes('cycling')
+  ) {
     if (
       t.includes('ball') ||
       t.includes('cricket') ||
@@ -110,7 +165,13 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
     return 'sports_outdoor';
   }
 
-  if (cat.includes('motorcycle') || cat.includes('vehicle') || cat.includes('automotive')) {
+  if (
+    cat.includes('motorcycle') ||
+    cat.includes('vehicle') ||
+    cat.includes('automotive') ||
+    t.includes('car ') ||
+    t.includes('helmet')
+  ) {
     return 'automotive';
   }
 
@@ -118,12 +179,51 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
 }
 
 const ORIGIN_HUBS = [
-  { originLabel: 'China · Verified Factory', corridorTag: 'Shenzhen Air', warehouse: 'Shenzhen Export Hub', supplier: 'Shenzhen Direct Co.' },
-  { originLabel: 'South Korea · Official Hub', corridorTag: 'Seoul Direct', warehouse: 'Incheon Air Hub', supplier: 'Seoul Global Trade' },
-  { originLabel: 'Singapore · Regional Hub', corridorTag: 'Singapore Hub', warehouse: 'Changi Logistics Hub', supplier: 'SingaPort Direct' },
-  { originLabel: 'Japan · Inspected Exporter', corridorTag: 'Tokyo Air', warehouse: 'Tokyo Narita Hub', supplier: 'Nihon Craft Exports' },
-  { originLabel: 'Malaysia · Direct Hub', corridorTag: 'KL Express', warehouse: 'Kuala Lumpur Air Hub', supplier: 'Malay Global Hub' },
+  {
+    originLabel: 'China · Verified Factory',
+    corridorTag: 'Shenzhen Air',
+    warehouse: 'Shenzhen Export Hub',
+    supplier: 'Shenzhen Direct Co.',
+  },
+  {
+    originLabel: 'South Korea · Official Hub',
+    corridorTag: 'Seoul Direct',
+    warehouse: 'Incheon Air Hub',
+    supplier: 'Seoul Global Trade',
+  },
+  {
+    originLabel: 'Singapore · Regional Hub',
+    corridorTag: 'Singapore Hub',
+    warehouse: 'Changi Logistics Hub',
+    supplier: 'SingaPort Direct',
+  },
+  {
+    originLabel: 'Japan · Inspected Exporter',
+    corridorTag: 'Tokyo Air',
+    warehouse: 'Tokyo Narita Hub',
+    supplier: 'Nihon Craft Exports',
+  },
+  {
+    originLabel: 'Malaysia · Direct Hub',
+    corridorTag: 'KL Express',
+    warehouse: 'Kuala Lumpur Air Hub',
+    supplier: 'Malay Global Hub',
+  },
 ];
+
+async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 6500): Promise<T | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function buildNormalizedProduct(params: {
   id: string;
@@ -366,6 +466,111 @@ function buildNormalizedProduct(params: {
   };
 }
 
+function normalizeDummyJsonItem(item: DummyJsonProduct, seedIndex: number): Product | null {
+  if (!item || !item.title) return null;
+  if ((item.category || '').toLowerCase().includes('groceries')) {
+    return null;
+  }
+  const primaryImage =
+    sanitizeImageUrl(item.thumbnail) ||
+    (Array.isArray(item.images)
+      ? item.images.map(sanitizeImageUrl).find((u): u is string => Boolean(u)) || null
+      : null);
+
+  if (!primaryImage) return null;
+
+  const rawGallery = Array.isArray(item.images)
+    ? Array.from(
+        new Set(
+          [primaryImage, ...item.images.map(sanitizeImageUrl)].filter(
+            (u): u is string => Boolean(u)
+          )
+        )
+      ).slice(0, 4)
+    : [primaryImage];
+
+  const category = mapExternalCategory(item.category || '', item.title || '');
+  const reviews = Array.isArray(item.reviews)
+    ? item.reviews.slice(0, 3).map((rv) => ({
+        author: rv.reviewerName || 'Verified Buyer',
+        rating: rv.rating || 5,
+        comment:
+          rv.comment ||
+          'Fast delivery to Bangladesh with exact landed cost as shown.',
+        date: 'Verified Purchase',
+      }))
+    : [];
+
+  return buildNormalizedProduct({
+    id: `api-dj-${item.id}`,
+    title: item.title,
+    description: item.description || 'Verified cross-border export product.',
+    category,
+    usdPrice: Number(item.price) || 19.99,
+    discountPercent: Number(item.discountPercentage) || 12,
+    rating: Number(item.rating) || 4.6,
+    reviewCount: 45 + ((item.id * 17) % 420),
+    image: primaryImage,
+    gallery: rawGallery,
+    brand: item.brand || 'Global Direct',
+    weightGrams: Math.max(120, Math.round((item.weight || 4) * 110)),
+    warranty:
+      item.warrantyInformation ||
+      'Up to 30 days return · 1 year local warranty',
+    tags: Array.isArray(item.tags) ? item.tags : [item.category],
+    rawReviews: reviews,
+    seedIndex,
+  });
+}
+
+function normalizeEscuelaItem(item: EscuelaProduct, seedIndex: number): Product | null {
+  if (!item || !item.title || item.title.length < 4) return null;
+  const lowerTitle = item.title.toLowerCase();
+  if (
+    lowerTitle.includes('test') ||
+    lowerTitle.includes('new product') ||
+    lowerTitle.includes('string') ||
+    lowerTitle.includes('untitled') ||
+    lowerTitle.includes('sample') ||
+    lowerTitle.includes('asdf')
+  ) {
+    return null;
+  }
+
+  const validImages = Array.isArray(item.images)
+    ? item.images
+        .map((img) => sanitizeImageUrl(img))
+        .filter((u): u is string => Boolean(u))
+    : [];
+
+  if (validImages.length === 0) return null;
+
+  const categoryName = item.category?.name || '';
+  const category = mapExternalCategory(categoryName, item.title);
+
+  return buildNormalizedProduct({
+    id: `api-esc-${item.id}`,
+    title: item.title.trim(),
+    description:
+      item.description && item.description.length > 12
+        ? item.description
+        : 'Verified cross-border factory export with customs pre-clearance.',
+    category,
+    usdPrice: Number(item.price) || 29.0,
+    discountPercent: 10 + (item.id % 18),
+    rating: Number((4.4 + ((item.id % 6) * 0.1)).toFixed(1)),
+    reviewCount: 32 + ((item.id * 13) % 240),
+    image: validImages[0],
+    gallery: validImages.slice(0, 4),
+    brand: categoryName ? `${categoryName} Direct` : 'Global Direct',
+    weightGrams: 280 + ((item.id * 25) % 650),
+    warranty: 'Up to 30 days return · 1 year local warranty',
+    tags: [categoryName || 'Export Direct', 'Customs Pre-Cleared'],
+    rawReviews: [],
+    seedIndex,
+  });
+}
+
 export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<Product[]> {
   if (!forceRefresh) {
     try {
@@ -381,68 +586,33 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
     }
   }
 
-  // Fetch all 194 products from DummyJSON + 20 products from FakeStoreAPI concurrently
-  const [dummyResult, fakeStoreResult] = await Promise.allSettled([
-    fetch('https://dummyjson.com/products?limit=0').then((r) =>
-      r.ok ? (r.json() as Promise<{ products?: DummyJsonProduct[] }>) : null
+  // Fetch concurrently from 3 free public no-key product APIs:
+  // 1. DummyJSON (all 194 products)
+  // 2. FakeStoreAPI (20 products)
+  // 3. Platzi Fake Store API (first 36 products)
+  const [dummyData, fakeStoreData, escuelaData] = await Promise.all([
+    fetchJsonWithTimeout<{ products?: DummyJsonProduct[] }>(
+      'https://dummyjson.com/products?limit=0'
     ),
-    fetch('https://fakestoreapi.com/products').then((r) =>
-      r.ok ? (r.json() as Promise<FakeStoreProduct[]>) : null
+    fetchJsonWithTimeout<FakeStoreProduct[]>('https://fakestoreapi.com/products'),
+    fetchJsonWithTimeout<EscuelaProduct[]>(
+      'https://api.escuelajs.co/api/v1/products?offset=0&limit=36'
     ),
   ]);
 
   const combinedProducts: Product[] = [];
 
-  if (dummyResult.status === 'fulfilled' && dummyResult.value?.products) {
-    dummyResult.value.products.forEach((item, idx) => {
-      if ((item.category || '').toLowerCase().includes('groceries')) {
-        return;
-      }
-      const category = mapExternalCategory(item.category || '', item.title || '');
-      const primaryImage =
-        item.thumbnail || (Array.isArray(item.images) && item.images[0]) || '';
-      const rawGallery = Array.isArray(item.images)
-        ? Array.from(new Set([primaryImage, ...item.images].filter(Boolean))).slice(0, 4)
-        : [primaryImage];
-
-      const reviews = Array.isArray(item.reviews)
-        ? item.reviews.slice(0, 3).map((rv) => ({
-            author: rv.reviewerName || 'Verified Buyer',
-            rating: rv.rating || 5,
-            comment:
-              rv.comment ||
-              'Fast delivery to Bangladesh with exact landed cost as shown.',
-            date: 'Verified Purchase',
-          }))
-        : [];
-
-      combinedProducts.push(
-        buildNormalizedProduct({
-          id: `api-dj-${item.id}`,
-          title: item.title,
-          description: item.description || 'Verified cross-border export product.',
-          category,
-          usdPrice: Number(item.price) || 19.99,
-          discountPercent: Number(item.discountPercentage) || 12,
-          rating: Number(item.rating) || 4.6,
-          reviewCount: 45 + ((item.id * 17) % 420),
-          image: primaryImage,
-          gallery: rawGallery,
-          brand: item.brand || 'Global Direct',
-          weightGrams: Math.max(120, Math.round((item.weight || 4) * 110)),
-          warranty:
-            item.warrantyInformation ||
-            'Up to 30 days return · 1 year local warranty',
-          tags: Array.isArray(item.tags) ? item.tags : [item.category],
-          rawReviews: reviews,
-          seedIndex: idx,
-        })
-      );
+  if (dummyData?.products && Array.isArray(dummyData.products)) {
+    dummyData.products.forEach((item, idx) => {
+      const normalized = normalizeDummyJsonItem(item, idx);
+      if (normalized) combinedProducts.push(normalized);
     });
   }
 
-  if (fakeStoreResult.status === 'fulfilled' && Array.isArray(fakeStoreResult.value)) {
-    fakeStoreResult.value.forEach((item, idx) => {
+  if (Array.isArray(fakeStoreData)) {
+    fakeStoreData.forEach((item, idx) => {
+      const cleanImg = sanitizeImageUrl(item.image);
+      if (!cleanImg || !item.title) return;
       const category = mapExternalCategory(item.category || '', item.title || '');
       combinedProducts.push(
         buildNormalizedProduct({
@@ -454,7 +624,7 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
           discountPercent: 15,
           rating: Number(item.rating?.rate) || 4.6,
           reviewCount: Number(item.rating?.count) || 120,
-          image: item.image,
+          image: cleanImg,
           brand: 'Global Direct',
           weightGrams: 380,
           warranty: 'Up to 30 days return · 1 year local warranty',
@@ -463,6 +633,13 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
           seedIndex: 200 + idx,
         })
       );
+    });
+  }
+
+  if (Array.isArray(escuelaData)) {
+    escuelaData.forEach((item, idx) => {
+      const normalized = normalizeEscuelaItem(item, 300 + idx);
+      if (normalized) combinedProducts.push(normalized);
     });
   }
 
@@ -475,4 +652,76 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
   }
 
   return combinedProducts;
+}
+
+/**
+ * Fetches incremental live batches from free APIs for continuous background polling
+ * and infinite scroll pagination.
+ */
+export async function fetchContinuousProductBatch(batchCursor: number): Promise<Product[]> {
+  const dummySkip = (batchCursor * 24) % 160;
+  const escuelaOffset = ((batchCursor + 1) * 20) % 120;
+
+  const [dummyBatch, escuelaBatch] = await Promise.all([
+    fetchJsonWithTimeout<{ products?: DummyJsonProduct[] }>(
+      `https://dummyjson.com/products?limit=24&skip=${dummySkip}`
+    ),
+    fetchJsonWithTimeout<EscuelaProduct[]>(
+      `https://api.escuelajs.co/api/v1/products?offset=${escuelaOffset}&limit=20`
+    ),
+  ]);
+
+  const batchProducts: Product[] = [];
+
+  if (dummyBatch?.products && Array.isArray(dummyBatch.products)) {
+    dummyBatch.products.forEach((item, idx) => {
+      const normalized = normalizeDummyJsonItem(item, dummySkip + idx);
+      if (normalized) batchProducts.push(normalized);
+    });
+  }
+
+  if (Array.isArray(escuelaBatch)) {
+    escuelaBatch.forEach((item, idx) => {
+      const normalized = normalizeEscuelaItem(item, 400 + escuelaOffset + idx);
+      if (normalized) batchProducts.push(normalized);
+    });
+  }
+
+  return batchProducts;
+}
+
+/**
+ * Live search against free public product APIs when the user types a search query.
+ */
+export async function searchFreeProductApis(query: string): Promise<Product[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+
+  const encoded = encodeURIComponent(trimmed);
+  const [dummySearch, escuelaSearch] = await Promise.all([
+    fetchJsonWithTimeout<{ products?: DummyJsonProduct[] }>(
+      `https://dummyjson.com/products/search?q=${encoded}&limit=24`
+    ),
+    fetchJsonWithTimeout<EscuelaProduct[]>(
+      `https://api.escuelajs.co/api/v1/products/?title=${encoded}`
+    ),
+  ]);
+
+  const results: Product[] = [];
+
+  if (dummySearch?.products && Array.isArray(dummySearch.products)) {
+    dummySearch.products.forEach((item, idx) => {
+      const normalized = normalizeDummyJsonItem(item, 500 + idx);
+      if (normalized) results.push(normalized);
+    });
+  }
+
+  if (Array.isArray(escuelaSearch)) {
+    escuelaSearch.slice(0, 16).forEach((item, idx) => {
+      const normalized = normalizeEscuelaItem(item, 600 + idx);
+      if (normalized) results.push(normalized);
+    });
+  }
+
+  return results;
 }

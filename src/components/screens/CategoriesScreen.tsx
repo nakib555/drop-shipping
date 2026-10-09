@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { CATEGORIES } from '../../data/catalogData';
+import { searchFreeProductApis } from '../../services/productApi';
 import { ProductCard, ProductCardGhost } from '../shared/ProductCard';
 
 const PAGE_SIZE = 16;
@@ -26,6 +27,7 @@ export const CategoriesScreen: React.FC = () => {
     navigateTo,
     products,
     isLoadingProducts,
+    fetchMoreFromApi,
     selectedCategoryId,
     setSelectedCategoryId,
     smartFilters,
@@ -93,6 +95,9 @@ export const CategoriesScreen: React.FC = () => {
   const handleLoadMore = useCallback(() => {
     if (isLoadingMore || !hasMoreProducts) return;
     setIsLoadingMore(true);
+    if (visibleLimit + PAGE_SIZE * 2 >= filtered.length) {
+      void fetchMoreFromApi();
+    }
     if (loadingTimerRef.current) {
       window.clearTimeout(loadingTimerRef.current);
     }
@@ -100,7 +105,22 @@ export const CategoriesScreen: React.FC = () => {
       setVisibleLimit((prev) => prev + PAGE_SIZE);
       setIsLoadingMore(false);
     }, 360);
-  }, [hasMoreProducts, isLoadingMore]);
+  }, [
+    fetchMoreFromApi,
+    filtered.length,
+    hasMoreProducts,
+    isLoadingMore,
+    visibleLimit,
+  ]);
+
+  useEffect(() => {
+    const q = catSearch.trim();
+    if (q.length < 2) return;
+    const timer = window.setTimeout(() => {
+      void searchFreeProductApis(q).then(() => fetchMoreFromApi());
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [catSearch, fetchMoreFromApi]);
 
   useEffect(() => {
     setVisibleLimit(PAGE_SIZE);

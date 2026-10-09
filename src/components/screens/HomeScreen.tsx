@@ -22,6 +22,7 @@ export const HomeScreen: React.FC = () => {
   const {
     products,
     isLoadingProducts,
+    fetchMoreFromApi,
     recentlyViewedIds,
     navigateTo,
     addToCart,
@@ -165,6 +166,9 @@ export const HomeScreen: React.FC = () => {
   const handleLoadMore = useCallback(() => {
     if (isLoadingMore || !hasMoreProducts) return;
     setIsLoadingMore(true);
+    if (visibleLimit + PAGE_SIZE * 2 >= displayedProducts.length) {
+      void fetchMoreFromApi();
+    }
     if (loadingTimerRef.current) {
       window.clearTimeout(loadingTimerRef.current);
     }
@@ -172,7 +176,13 @@ export const HomeScreen: React.FC = () => {
       setVisibleLimit((prev) => prev + PAGE_SIZE);
       setIsLoadingMore(false);
     }, 360);
-  }, [hasMoreProducts, isLoadingMore]);
+  }, [
+    displayedProducts.length,
+    fetchMoreFromApi,
+    hasMoreProducts,
+    isLoadingMore,
+    visibleLimit,
+  ]);
 
   useEffect(() => {
     setVisibleLimit(PAGE_SIZE);
