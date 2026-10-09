@@ -42,8 +42,6 @@ interface DeshiMartContextValue {
   currentScreen: ScreenId;
   navigateTo: (screen: ScreenId, options?: { productId?: string; categoryId?: CategoryId; orderId?: string }) => void;
   goBack: () => void;
-  drawerOpen: boolean;
-  setDrawerOpen: (open: boolean) => void;
 
   // User & Auth
   user: { fullName: string; email: string; phone: string; isLoggedIn: boolean };
@@ -157,7 +155,6 @@ export function formatLandedPrice(amount: number): string {
 
 export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [screenHistory, setScreenHistory] = useState<ScreenId[]>(['splash']);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [user, setUser] = useState(() => ({
     fullName: 'Tanvir Ahmed',
@@ -320,7 +317,6 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     if (options?.categoryId) setSelectedCategoryId(options.categoryId);
     if (options?.orderId) setSelectedOrderId(options.orderId);
-    setDrawerOpen(false);
     setScreenHistory((prev) => {
       if (prev[prev.length - 1] === screen) return prev;
       return [...prev, screen];
@@ -722,8 +718,6 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         currentScreen,
         navigateTo,
         goBack,
-        drawerOpen,
-        setDrawerOpen,
         user,
         loginUser,
         updateUserProfile,

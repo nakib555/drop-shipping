@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckCircle2,
@@ -580,186 +581,194 @@ export const ProductDetailScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Supplier / Warranty / Review Bottom Sheet Modal */}
-      <AnimatePresence>
-        {activeInfoModal && (
-          <div className="absolute inset-0 z-50 flex items-end justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setActiveInfoModal(null)}
-              className="absolute inset-0 bg-[#0F1D17]/55 backdrop-blur-xs"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-              className="relative z-10 w-full bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
-            >
-              <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+      {/* Viewport-Docked Supplier / Warranty / Review Bottom Sheet Modal (Docked above BottomTabBar via #mobile-sheet-root) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {activeInfoModal && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
+              >
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setActiveInfoModal(null)}
+                  className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
+                />
+                <motion.div
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
+                >
+                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
 
-            {activeInfoModal === 'review' ? (
-              <form onSubmit={handleReviewSubmit} className="space-y-3">
-                <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                  {language === 'BN' ? 'আপনার রিভিউ দিন' : 'Write a Verified Review'}
-                </h3>
-                <div>
-                  <span className="block text-xs leading-4 font-medium text-content-secondary mb-1">
-                    Rating
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setReviewRating(star)}
-                        className="p-1"
-                      >
-                        <Star
-                          className={`w-6 h-6 ${
-                            star <= reviewRating
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-slate-300'
-                          }`}
+                  {activeInfoModal === 'review' ? (
+                    <form onSubmit={handleReviewSubmit} className="space-y-3">
+                      <h3 className="text-sm leading-5 font-semibold text-content-primary">
+                        {language === 'BN' ? 'আপনার রিভিউ দিন' : 'Write a Verified Review'}
+                      </h3>
+                      <div>
+                        <span className="block text-xs leading-4 font-medium text-content-secondary mb-1">
+                          Rating
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setReviewRating(star)}
+                              className="p-1"
+                            >
+                              <Star
+                                className={`w-6 h-6 ${
+                                  star <= reviewRating
+                                    ? 'fill-amber-400 text-amber-400'
+                                    : 'text-slate-300'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs leading-4 font-medium text-content-secondary mb-1">
+                          Your Experience
+                        </label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={reviewComment}
+                          onChange={(e) => setReviewComment(e.target.value)}
+                          placeholder="Share your experience with product quality and landed delivery..."
+                          className="w-full p-3 rounded-lg bg-app-subtle border border-app-border text-xs leading-4 text-content-primary focus:outline-none focus:border-brand-primary"
                         />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="flex-1 h-11 rounded-lg border border-app-border text-xs leading-4 font-semibold text-content-secondary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 h-11 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
+                        >
+                          Submit Review
+                        </button>
+                      </div>
+                    </form>
+                  ) : activeInfoModal === 'supplier' ? (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-app-subtle text-content-primary flex items-center justify-center">
+                          <Store className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm leading-5 font-semibold text-content-primary">
+                            {selectedProduct.supplierName}
+                          </h3>
+                          <p className="text-xs leading-4 text-brand-primary font-medium">
+                            Verified Tier-1 Global Exporter
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-y border-app-border text-xs leading-4">
+                        <span className="text-content-secondary">
+                          Catalog:{' '}
+                          <strong className="tabular-nums text-content-primary">
+                            {selectedProduct.supplierProductsCount}
+                          </strong>
+                        </span>
+                        <span className="text-content-secondary">
+                          Followers:{' '}
+                          <strong className="tabular-nums text-content-primary">
+                            {selectedProduct.supplierFollowers}
+                          </strong>
+                        </span>
+                      </div>
+                      <p className="text-xs leading-4 text-content-secondary">
+                        All shipments from {selectedProduct.supplierName} undergo physical QC verification before boarding air freight.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveInfoModal(null);
+                          navigateTo('supplier_store');
+                        }}
+                        className="w-full h-11 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
+                      >
+                        Open Supplier Storefront
                       </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs leading-4 font-medium text-content-secondary mb-1">
-                    Your Experience
-                  </label>
-                  <textarea
-                    rows={3}
-                    required
-                    value={reviewComment}
-                    onChange={(e) => setReviewComment(e.target.value)}
-                    placeholder="Share your experience with product quality and landed delivery..."
-                    className="w-full p-3 rounded-lg bg-app-subtle border border-app-border text-xs leading-4 text-content-primary focus:outline-none focus:border-brand-primary"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveInfoModal(null)}
-                    className="flex-1 h-11 rounded-lg border border-app-border text-xs leading-4 font-semibold text-content-secondary"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 h-11 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
-                  >
-                    Submit Review
-                  </button>
-                </div>
-              </form>
-            ) : activeInfoModal === 'supplier' ? (
-              <>
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-app-subtle text-content-primary flex items-center justify-center">
-                    <Store className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                      {selectedProduct.supplierName}
-                    </h3>
-                    <p className="text-xs leading-4 text-brand-primary font-medium">
-                      Verified Tier-1 Global Exporter
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between py-2 border-y border-app-border text-xs leading-4">
-                  <span className="text-content-secondary">
-                    Catalog:{' '}
-                    <strong className="tabular-nums text-content-primary">
-                      {selectedProduct.supplierProductsCount}
-                    </strong>
-                  </span>
-                  <span className="text-content-secondary">
-                    Followers:{' '}
-                    <strong className="tabular-nums text-content-primary">
-                      {selectedProduct.supplierFollowers}
-                    </strong>
-                  </span>
-                </div>
-                <p className="text-xs leading-4 text-content-secondary">
-                  All shipments from {selectedProduct.supplierName} undergo physical QC verification before boarding air freight.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveInfoModal(null);
-                    navigateTo('supplier_store');
-                  }}
-                  className="w-full h-11 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
-                >
-                  Open Supplier Storefront
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                      Warranty & Return Protection
-                    </h3>
-                    <p className="text-xs leading-4 text-content-secondary">
-                      Up to 30 days return · 1 year local warranty
-                    </p>
-                  </div>
-                </div>
-                <div className="divide-y divide-app-border text-xs leading-4 text-content-primary">
-                  <div className="py-2 flex items-start gap-2.5">
-                    <RefreshCcw className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold block">Easy Local Return Process</span>
-                      <span className="text-content-secondary">
-                        Drop off at our Dhaka hub or schedule free eCourier pickup within 30 days.
-                      </span>
-                    </div>
-                  </div>
-                  <div className="py-2 flex items-start gap-2.5">
-                    <Clock className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold block">24-Hour bKash / Card Refund</span>
-                      <span className="text-content-secondary">
-                        Refunds are processed within 24 hours of return inspection.
-                      </span>
-                    </div>
-                  </div>
-                  <div className="py-2 flex items-start gap-2.5">
-                    <MessageSquare className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold block">24/7 Claims Support</span>
-                      <span className="text-content-secondary">
-                        Dedicated Bengali & English warranty support team.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveInfoModal(null);
-                    showToast('Verified guarantee active on your order', 'info');
-                  }}
-                  className="w-full h-11 rounded-lg bg-content-primary text-white text-xs leading-4 font-semibold"
-                >
-                  Close
-                </button>
-              </>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm leading-5 font-semibold text-content-primary">
+                            Warranty & Return Protection
+                          </h3>
+                          <p className="text-xs leading-4 text-content-secondary">
+                            Up to 30 days return · 1 year local warranty
+                          </p>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-app-border text-xs leading-4 text-content-primary">
+                        <div className="py-2 flex items-start gap-2.5">
+                          <RefreshCcw className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-semibold block">Easy Local Return Process</span>
+                            <span className="text-content-secondary">
+                              Drop off at our Dhaka hub or schedule free eCourier pickup within 30 days.
+                            </span>
+                          </div>
+                        </div>
+                        <div className="py-2 flex items-start gap-2.5">
+                          <Clock className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-semibold block">24-Hour bKash / Card Refund</span>
+                            <span className="text-content-secondary">
+                              Refunds are processed within 24 hours of return inspection.
+                            </span>
+                          </div>
+                        </div>
+                        <div className="py-2 flex items-start gap-2.5">
+                          <MessageSquare className="w-4 h-4 text-content-secondary shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-semibold block">24/7 Claims Support</span>
+                            <span className="text-content-secondary">
+                              Dedicated Bengali & English warranty support team.
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveInfoModal(null);
+                          showToast('Verified guarantee active on your order', 'info');
+                        }}
+                        className="w-full h-11 rounded-lg bg-content-primary text-white text-xs leading-4 font-semibold"
+                      >
+                        Close
+                      </button>
+                    </>
+                  )}
+                </motion.div>
+              </div>
             )}
-            </motion.div>
-          </div>
+          </AnimatePresence>,
+          document.getElementById('mobile-sheet-root') || document.body
         )}
-      </AnimatePresence>
     </div>
   );
 };

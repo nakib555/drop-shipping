@@ -5,7 +5,6 @@ import {
   CheckCheck,
   Heart,
   MapPin,
-  Menu,
   Search,
   Settings,
   Share2,
@@ -21,7 +20,6 @@ export const TopAppBar: React.FC = () => {
     currentScreen,
     goBack,
     navigateTo,
-    setDrawerOpen,
     cartCount,
     unreadNotificationCount,
     markAllNotificationsRead,
@@ -214,50 +212,39 @@ export const TopAppBar: React.FC = () => {
   return (
     <header
       role="banner"
-      className="sticky top-0 z-30 h-14 px-3 bg-white/95 backdrop-blur border-b border-app-border flex items-center justify-between gap-2 shrink-0 select-none"
+      className="sticky top-0 z-30 h-14 px-4 bg-white/95 backdrop-blur border-b border-app-border flex items-center justify-between gap-2 shrink-0 select-none"
     >
-      {/* Left Zone: Ergonomic 44x44 Menu/Back Trigger + Brand / Screen Context */}
-      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      {/* Left Zone: Brand / Delivery Context on Home, or 44x44 Back Trigger + Screen Context */}
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         {isHome ? (
-          <>
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
-              aria-label={isBn ? 'নেভিগেশন মেনু খুলুন' : 'Open navigation menu'}
-              onClick={() => setDrawerOpen(true)}
-              className="relative w-11 h-11 -ml-1 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              onClick={() => navigateTo('home')}
+              className="w-9 h-9 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <Menu className="w-5 h-5 stroke-[2]" />
+              <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
             </button>
 
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="min-w-0 flex flex-col justify-center">
               <button
                 type="button"
                 onClick={() => navigateTo('home')}
-                className="w-8 h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                className="text-base leading-5 font-semibold tracking-tight text-content-primary truncate text-left focus-visible:outline-none"
               >
-                <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
+                {isBn ? 'দেশিমার্ট' : 'DeshiMart'}
               </button>
 
-              <div className="min-w-0 flex flex-col justify-center">
-                <button
-                  type="button"
-                  onClick={() => navigateTo('home')}
-                  className="text-base leading-5 font-semibold tracking-tight text-content-primary truncate text-left focus-visible:outline-none"
-                >
-                  {isBn ? 'দেশিমার্ট' : 'DeshiMart'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => navigateTo('addresses')}
-                  className="flex items-center gap-1 text-xs leading-4 text-content-secondary hover:text-content-primary transition-colors truncate text-left"
-                >
-                  <MapPin className="w-3 h-3 text-content-secondary shrink-0" />
-                  <span className="truncate">{deliveryLocationLabel}</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => navigateTo('addresses')}
+                className="flex items-center gap-1 text-xs leading-4 text-content-secondary hover:text-content-primary transition-colors truncate text-left"
+              >
+                <MapPin className="w-3 h-3 text-content-secondary shrink-0" />
+                <span className="truncate">{deliveryLocationLabel}</span>
+              </button>
             </div>
-          </>
+          </div>
         ) : (
           <>
             <button

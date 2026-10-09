@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   Banknote,
@@ -1088,77 +1089,87 @@ export const AccountSupportScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Live Chat Drawer */}
-        <AnimatePresence>
-          {chatOpen && (
-            <div className="absolute inset-0 z-50 flex items-end justify-center">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setChatOpen(false)}
-                className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]"
-              />
-              <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                className="relative z-10 w-full bg-white rounded-t-2xl p-4 shadow-2xl flex flex-col h-[420px] border-t border-app-border"
-              >
-                <div className="flex items-center justify-between pb-3 border-b border-app-border">
-                  <div>
-                    <h3 className="text-xs font-bold text-content-primary">
-                      DeshiMart Live Support (Dhaka Hub)
-                    </h3>
-                    <span className="text-[10px] text-status-success font-medium">
-                      Online · Customs & Order Specialist
-                    </span>
-                  </div>
-                  <button
-                    type="button"
+        {/* Viewport-Docked Live Chat Drawer (Docked above BottomTabBar via #mobile-sheet-root) */}
+        {typeof document !== 'undefined' &&
+          createPortal(
+            <AnimatePresence>
+              {chatOpen && (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="DeshiMart Live Support"
+                  className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
+                >
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     onClick={() => setChatOpen(false)}
-                    className="text-xs font-semibold text-content-muted px-2 py-1"
-                  >
-                    Close
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto py-3 space-y-2.5">
-                  {chatMessages.map((m, idx) => (
-                    <div
-                      key={idx}
-                      className={`max-w-[82%] p-3 rounded-xl text-xs leading-relaxed ${
-                        m.sender === 'user'
-                          ? 'ml-auto bg-content-primary text-white'
-                          : 'bg-app-subtle border border-app-border text-content-primary'
-                      }`}
-                    >
-                      {m.text}
-                    </div>
-                  ))}
-                </div>
-
-                <form onSubmit={handleSendChat} className="pt-2 flex gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Ask about your order or customs duty..."
-                    className="flex-1 h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                    className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
                   />
-                  <button
-                    type="submit"
-                    aria-label="Send message"
-                    className="w-10 h-10 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0"
+                  <motion.div
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    exit={{ y: '100%' }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    className="relative z-10 w-full max-h-full bg-white rounded-t-2xl p-4 shadow-2xl flex flex-col h-[420px] border-t border-app-border"
                   >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
-              </motion.div>
-            </div>
+                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-2 shrink-0" />
+                    <div className="flex items-center justify-between pb-3 border-b border-app-border shrink-0">
+                      <div>
+                        <h3 className="text-xs font-bold text-content-primary">
+                          DeshiMart Live Support (Dhaka Hub)
+                        </h3>
+                        <span className="text-[10px] text-status-success font-medium">
+                          Online · Customs & Order Specialist
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setChatOpen(false)}
+                        className="text-xs font-semibold text-content-muted px-2 py-1"
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto py-3 space-y-2.5">
+                      {chatMessages.map((m, idx) => (
+                        <div
+                          key={idx}
+                          className={`max-w-[82%] p-3 rounded-xl text-xs leading-relaxed ${
+                            m.sender === 'user'
+                              ? 'ml-auto bg-content-primary text-white'
+                              : 'bg-app-subtle border border-app-border text-content-primary'
+                          }`}
+                        >
+                          {m.text}
+                        </div>
+                      ))}
+                    </div>
+
+                    <form onSubmit={handleSendChat} className="pt-2 flex gap-2 shrink-0">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ask about your order or customs duty..."
+                        className="flex-1 h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                      />
+                      <button
+                        type="submit"
+                        aria-label="Send message"
+                        className="w-10 h-10 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </form>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>,
+            document.getElementById('mobile-sheet-root') || document.body
           )}
-        </AnimatePresence>
       </div>
     );
   }
@@ -1218,6 +1229,24 @@ export const AccountSupportScreen: React.FC = () => {
       subtitle: 'FAQs, Live Chat & 30-Day Return Policy',
       icon: HelpCircle,
       screen: 'support' as const,
+    },
+    {
+      label: language === 'BN' ? '৩০ দিনের প্রাইস ট্র্যাকার' : '30-Day Price Tracker',
+      subtitle: 'Historical landed cost & price drop alerts',
+      icon: TrendingDown,
+      screen: 'price_tracker' as const,
+    },
+    {
+      label: language === 'BN' ? '৩টি শিপিং রুট তুলনা' : '3-Route Landed Cost Compare',
+      subtitle: 'Direct Air · Local Ready · Consolidated',
+      icon: Truck,
+      screen: 'seller_compare' as const,
+    },
+    {
+      label: language === 'BN' ? 'ইন্ট্রো স্লাইডগুলো দেখুন' : 'Replay Intro Walkthrough',
+      subtitle: 'View DeshiMart onboarding & customs overview',
+      icon: Sparkles,
+      screen: 'splash' as const,
     },
   ];
 
@@ -1309,84 +1338,93 @@ export const AccountSupportScreen: React.FC = () => {
         <span>{language === 'BN' ? 'লগ আউট করুন' : 'Sign Out'}</span>
       </button>
 
-      {/* Edit Profile Bottom Sheet Modal */}
-      <AnimatePresence>
-        {editProfileOpen && (
-          <div className="absolute inset-0 z-50 flex items-end justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setEditProfileOpen(false)}
-              className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]"
-            />
-            <motion.form
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-              onSubmit={handleSaveProfile}
-              className="relative z-10 w-full bg-white rounded-t-2xl p-5 shadow-2xl space-y-3 border-t border-app-border"
-            >
-              <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto -mt-1" />
-              <h3 className="text-sm font-bold text-content-primary">
-                {language === 'BN' ? 'প্রোফাইল আপডেট করুন' : 'Edit Profile Details'}
-              </h3>
-              <div>
-                <label className="block text-xs font-medium text-content-secondary mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-content-secondary mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-content-secondary mb-1">
-                  Phone Number (Bangladesh)
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
-                />
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
+      {/* Viewport-Docked Edit Profile Bottom Sheet Modal (Docked above BottomTabBar via #mobile-sheet-root) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {editProfileOpen && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Edit Profile Details"
+                className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
+              >
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   onClick={() => setEditProfileOpen(false)}
-                  className="flex-1 h-11 rounded-lg border border-app-border text-xs font-semibold text-content-primary"
+                  className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
+                />
+                <motion.form
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  onSubmit={handleSaveProfile}
+                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-5 shadow-2xl space-y-3 border-t border-app-border"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 h-11 rounded-lg bg-brand-primary text-white text-xs font-semibold"
-                >
-                  Save Profile
-                </button>
+                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto -mt-1" />
+                  <h3 className="text-sm font-bold text-content-primary">
+                    {language === 'BN' ? 'প্রোফাইল আপডেট করুন' : 'Edit Profile Details'}
+                  </h3>
+                  <div>
+                    <label className="block text-xs font-medium text-content-secondary mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-content-secondary mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-content-secondary mb-1">
+                      Phone Number (Bangladesh)
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditProfileOpen(false)}
+                      className="flex-1 h-11 rounded-lg border border-app-border text-xs font-semibold text-content-primary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 h-11 rounded-lg bg-brand-primary text-white text-xs font-semibold"
+                    >
+                      Save Profile
+                    </button>
+                  </div>
+                </motion.form>
               </div>
-            </motion.form>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.getElementById('mobile-sheet-root') || document.body
         )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -44,16 +44,16 @@ export const CartScreen: React.FC = () => {
         >
           <ShoppingBag className="w-8 h-8" />
         </motion.div>
-        <h2 className="text-lg font-semibold text-content-primary">
+        <h2 className="text-lg leading-6 font-semibold text-content-primary">
           Your Shopping Bag is Empty
         </h2>
-        <p className="text-xs text-content-secondary mt-1 max-w-[240px]">
+        <p className="text-xs leading-4 text-content-secondary mt-2 max-w-[240px]">
           Explore verified global products with customs duty & VAT included upfront.
         </p>
         <button
           type="button"
           onClick={() => navigateTo('home')}
-          className="mt-5 px-5 min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
+          className="mt-6 px-6 h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
         >
           Explore Catalog
         </button>
@@ -65,36 +65,36 @@ export const CartScreen: React.FC = () => {
     <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-app-bg">
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs text-content-secondary">
+          <span className="text-xs leading-4 text-content-secondary">
             Prices include shipping, 10% duty & 15% VAT
           </span>
           <button
             type="button"
             onClick={clearCart}
-            className="text-xs font-medium text-content-muted hover:text-promo-accent transition-colors"
+            className="text-xs leading-4 font-medium text-content-muted hover:text-promo-accent transition-colors"
           >
             Clear Bag
           </button>
         </div>
 
         {/* 1. Smart Global Hub Parcel Consolidation Toggle */}
-        <div className="bg-white rounded-xl border border-app-border p-4 flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-app-subtle text-content-primary flex items-center justify-center shrink-0 mt-0.5">
+        <div className="bg-white rounded-xl border border-app-border p-4 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="w-10 h-10 rounded-lg bg-app-subtle text-content-primary flex items-center justify-center shrink-0">
               <Boxes className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-medium text-content-primary">
+                <h3 className="text-sm leading-6 font-medium text-content-primary">
                   Global Hub Parcel Consolidation
                 </h3>
                 {consolidateParcel && cartCount >= 2 && (
-                  <span className="text-[11px] font-bold tabular-nums text-promo-accent bg-promo-subtle px-1.5 py-0.5 rounded">
+                  <span className="text-[11px] leading-4 font-bold tabular-nums text-promo-accent bg-promo-subtle px-2 py-1 rounded">
                     -{formatPrice(cartTotals.consolidationSavingsBdt)}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-content-secondary mt-0.5">
+              <p className="text-xs leading-4 text-content-secondary mt-1">
                 {cartCount >= 2
                   ? 'Combines your items into 1 export box to save 25% on international air freight.'
                   : 'Add 2+ items to combine into 1 export parcel and save 25% on air freight.'}
@@ -117,13 +117,13 @@ export const CartScreen: React.FC = () => {
                 'info'
               );
             }}
-            className={`w-11 h-6 rounded-full transition-colors p-0.5 shrink-0 mt-1 ${
+            className={`w-10 h-6 rounded-full transition-colors p-1 shrink-0 mt-1 ${
               consolidateParcel ? 'bg-content-primary' : 'bg-slate-300'
             }`}
           >
             <div
-              className={`w-5 h-5 rounded-full bg-white shadow-xs transition-transform ${
-                consolidateParcel ? 'translate-x-5' : 'translate-x-0'
+              className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform ${
+                consolidateParcel ? 'translate-x-4' : 'translate-x-0'
               }`}
             />
           </button>
@@ -144,11 +144,11 @@ export const CartScreen: React.FC = () => {
                 <motion.div
                   key={`${item.productId}-${item.selectedColor}`}
                   layout
-                  initial={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -24 }}
                   transition={{ duration: 0.16 }}
-                  className="p-4 flex items-center gap-3"
+                  className="p-4 flex items-center gap-4"
                 >
                   <img
                     src={prod.image}
@@ -157,7 +157,7 @@ export const CartScreen: React.FC = () => {
                     onClick={() =>
                       navigateTo('product_detail', { productId: prod.id })
                     }
-                    className="w-16 h-16 rounded-lg object-contain bg-slate-50 p-1.5 border border-app-border cursor-pointer shrink-0"
+                    className="w-16 h-16 rounded-lg object-contain bg-slate-50 p-2 border border-app-border cursor-pointer shrink-0"
                   />
 
                   <div className="flex-1 min-w-0">
@@ -166,7 +166,7 @@ export const CartScreen: React.FC = () => {
                         onClick={() =>
                           navigateTo('product_detail', { productId: prod.id })
                         }
-                        className="text-sm font-medium text-content-primary truncate cursor-pointer hover:underline"
+                        className="text-sm leading-6 font-medium text-content-primary truncate cursor-pointer hover:underline"
                       >
                         {prod.name}
                       </h3>
@@ -174,33 +174,33 @@ export const CartScreen: React.FC = () => {
                         type="button"
                         aria-label={`Remove ${prod.name}`}
                         onClick={() => removeFromCart(prod.id)}
-                        className="text-content-muted hover:text-promo-accent p-1.5 -mr-1.5 transition-colors"
+                        className="w-8 h-8 rounded-lg text-content-muted hover:text-promo-accent flex items-center justify-center -mr-1 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <p className="text-xs text-content-secondary mt-0.5 truncate">
+                    <p className="text-xs leading-4 text-content-secondary mt-1 truncate">
                       {item.selectedColor}
                       {item.selectedSize ? ` · EU ${item.selectedSize}` : ''} ·{' '}
                       <span>{route?.name || 'Global Direct'}</span>
                     </p>
 
-                    <div className="flex items-center justify-between mt-2.5">
-                      <span className="tabular-nums text-base font-bold text-content-primary">
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="tabular-nums text-base leading-6 font-bold text-content-primary">
                         {formatPrice(unitLanded * item.quantity)}
                       </span>
 
-                      <div className="flex items-center gap-1.5 bg-app-subtle border border-app-border rounded-lg p-1">
+                      <div className="flex items-center gap-2 bg-app-subtle border border-app-border rounded-lg p-1">
                         <button
                           type="button"
                           aria-label="Decrease quantity"
                           onClick={() => updateCartQuantity(prod.id, -1)}
                           className="w-8 h-8 rounded-md bg-white text-content-primary hover:bg-slate-50 flex items-center justify-center transition-colors shadow-2xs"
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <Minus className="w-4 h-4" />
                         </button>
-                        <span className="tabular-nums text-xs font-semibold text-content-primary min-w-[20px] text-center">
+                        <span className="tabular-nums text-xs leading-4 font-semibold text-content-primary min-w-[24px] text-center">
                           {item.quantity}
                         </span>
                         <button
@@ -209,7 +209,7 @@ export const CartScreen: React.FC = () => {
                           onClick={() => updateCartQuantity(prod.id, 1)}
                           className="w-8 h-8 rounded-md bg-white text-content-primary hover:bg-slate-50 flex items-center justify-center transition-colors shadow-2xs"
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -221,7 +221,7 @@ export const CartScreen: React.FC = () => {
         </div>
 
         {/* 3. Single Compact Promo Input Row (DESIGN_SYSTEM_SPEC.md Section 5.3) */}
-        <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-2">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -232,13 +232,13 @@ export const CartScreen: React.FC = () => {
             className="flex items-center gap-2"
           >
             <div className="relative flex-1">
-              <Tag className="w-3.5 h-3.5 text-content-muted absolute left-3 top-1/2 -translate-y-1/2" />
+              <Tag className="w-4 h-4 text-content-muted absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={voucherInput}
                 onChange={(e) => setVoucherInput(e.target.value)}
                 placeholder="Promo code (e.g. DESHI10, FIRST500)"
-                className="w-full h-10 pl-8 pr-3 rounded-lg bg-app-subtle border border-app-border text-xs uppercase text-content-primary placeholder:normal-case placeholder:text-content-muted focus:outline-none focus:border-app-borderStrong"
+                className="w-full h-10 pl-10 pr-4 rounded-lg bg-app-subtle border border-app-border text-xs uppercase text-content-primary placeholder:normal-case placeholder:text-content-muted focus:outline-none focus:border-app-borderStrong"
               />
             </div>
             <button
@@ -250,7 +250,7 @@ export const CartScreen: React.FC = () => {
           </form>
 
           {promoCode && (
-            <div className="flex items-center justify-between pt-1 text-xs">
+            <div className="flex items-center justify-between pt-1 text-xs leading-4">
               <span className="text-content-secondary">
                 Applied voucher:{' '}
                 <strong className="font-semibold text-content-primary">
@@ -260,10 +260,10 @@ export const CartScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={removePromoCode}
-                className="text-xs font-medium text-promo-accent hover:underline inline-flex items-center gap-1"
+                className="text-xs leading-4 font-medium text-promo-accent hover:underline inline-flex items-center gap-1"
               >
                 <span>Remove</span>
-                <X className="w-3 h-3" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -271,8 +271,8 @@ export const CartScreen: React.FC = () => {
       </div>
 
       {/* 4. Neutral Landed Cost Invoice Card & Primary Checkout CTA */}
-      <div className="bg-white border border-app-border rounded-xl p-4 space-y-3">
-        <div className="space-y-2 text-xs">
+      <div className="bg-white border border-app-border rounded-xl p-4 space-y-4">
+        <div className="space-y-2 text-xs leading-4">
           <div className="flex justify-between text-content-secondary">
             <span>Factory Items ({cartCount} items)</span>
             <span className="tabular-nums font-medium text-content-primary">
@@ -315,17 +315,17 @@ export const CartScreen: React.FC = () => {
             <span className="font-medium text-content-primary">Free</span>
           </div>
 
-          <div className="pt-3 border-t border-app-border flex justify-between items-baseline">
-            <span className="text-sm font-semibold text-content-primary">
+          <div className="pt-4 border-t border-app-border flex justify-between items-baseline">
+            <span className="text-sm leading-6 font-semibold text-content-primary">
               Total Landed Payable
             </span>
-            <span className="text-content-primary text-xl font-bold tabular-nums">
+            <span className="text-content-primary text-xl leading-6 font-bold tabular-nums">
               {formatPrice(cartTotals.subtotalBdt)}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-content-secondary pt-0.5">
+        <div className="flex items-center gap-2 text-[11px] leading-4 text-content-secondary">
           <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
           <span>NBR customs pre-cleared · Zero extra fees on arrival</span>
         </div>

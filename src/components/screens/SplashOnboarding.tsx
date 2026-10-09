@@ -980,7 +980,7 @@ export const SplashOnboarding: React.FC = () => {
   const renderDots = (activeIdx: number, isSplash = false) => (
     <div
       className={`flex justify-center gap-2 ${
-        isSplash ? '' : 'my-3'
+        isSplash ? '' : 'my-4'
       }`}
     >
       {[0, 1, 2].map((k) => {
@@ -994,14 +994,14 @@ export const SplashOnboarding: React.FC = () => {
               e.stopPropagation();
               goStep((k + 1) as FlowStep);
             }}
-            className={`block h-[7px] rounded-full transition-all duration-300 ${
+            className={`block h-2 rounded-full transition-all duration-300 ${
               active
                 ? isSplash
-                  ? 'w-[22px] bg-white'
-                  : 'w-[22px] bg-[#059669]'
+                  ? 'w-6 bg-white'
+                  : 'w-6 bg-[#059669]'
                 : isSplash
-                ? 'w-[7px] bg-white/40 hover:bg-white/60'
-                : 'w-[7px] bg-[#DFEAE3] hover:bg-[#A7C4B5]'
+                ? 'w-2 bg-white/40 hover:bg-white/60'
+                : 'w-2 bg-[#DFEAE3] hover:bg-[#A7C4B5]'
             }`}
           />
         );
@@ -1037,7 +1037,7 @@ export const SplashOnboarding: React.FC = () => {
                   e.stopPropagation();
                   navigateTo('home');
                 }}
-                className="text-xs leading-4 font-semibold text-white/85 hover:text-white bg-white/12 hover:bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-xs transition-colors"
+                className="h-8 px-4 text-xs leading-4 font-semibold text-white/85 hover:text-white bg-white/12 hover:bg-white/20 rounded-full backdrop-blur-xs transition-colors flex items-center"
               >
                 Skip to Store →
               </button>
@@ -1055,7 +1055,7 @@ export const SplashOnboarding: React.FC = () => {
 
               <h1
                 aria-label="DeshiMart"
-                className="mt-5 text-[36px] leading-[42px] font-bold tracking-tight flex justify-center text-white"
+                className="mt-6 text-[36px] leading-[40px] font-bold tracking-tight flex justify-center text-white"
               >
                 {'DeshiMart'.split('').map((ch, idx) => (
                   <span
@@ -1068,11 +1068,11 @@ export const SplashOnboarding: React.FC = () => {
                 ))}
               </h1>
 
-              <p className="dm-flow-sp mt-1.5 text-[16px] leading-6 font-medium text-white">
+              <p className="dm-flow-sp mt-2 text-[16px] leading-6 font-medium text-white">
                 Drop Shipping Store
               </p>
 
-              <p className="dm-flow-tg mt-3 text-[14px] leading-6 text-white/90">
+              <p className="dm-flow-tg mt-4 text-[14px] leading-6 text-white/90">
                 <span>Global Products</span>
                 <span>Local Dreams</span>
               </p>
@@ -1103,7 +1103,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   aria-label="Back"
                   onClick={() => goStep((step - 1) as FlowStep)}
-                  className="w-9 h-9 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1] transition-colors"
+                  className="w-10 h-10 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1] transition-colors"
                 >
                   <BackIconSvg />
                 </button>
@@ -1112,7 +1112,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   aria-label="Account Login"
                   onClick={() => goStep(4)}
-                  className="w-9 h-9 rounded-full grid place-items-center text-[#059669] hover:bg-[#EFF4F1] transition-colors"
+                  className="w-10 h-10 rounded-full grid place-items-center text-[#059669] hover:bg-[#EFF4F1] transition-colors"
                 >
                   <svg
                     width="22"
@@ -1129,7 +1129,7 @@ export const SplashOnboarding: React.FC = () => {
                 </button>
               </div>
 
-              <div className="min-h-[104px] flex flex-col justify-center mt-3">
+              <div className="min-h-[104px] flex flex-col justify-center mt-4">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={`ob-copy-${step}`}
@@ -1138,13 +1138,13 @@ export const SplashOnboarding: React.FC = () => {
                     exit={{ opacity: 0, scale: 0.98 }}
                     transition={{ duration: 0.22, ease: 'easeOut' }}
                   >
-                    <h2 className="text-[21px] leading-[27px] font-bold text-[#0F1D17]">
+                    <h2 className="text-[20px] leading-6 font-bold text-[#0F1D17]">
                       {step === 1 && 'Worldwide Products Delivered to Your Door'}
                       {step === 2 && 'Safe & Secure Shopping'}
                       {step === 3 && 'Fast & Reliable Delivery'}
                     </h2>
 
-                    <p className="text-[13px] leading-5 text-[#485B52] mt-2">
+                    <p className="text-[13px] leading-6 text-[#485B52] mt-2">
                       {step === 1 &&
                         'Discover the best products from global brands with upfront BD customs & VAT.'}
                       {step === 2 &&
@@ -1158,7 +1158,7 @@ export const SplashOnboarding: React.FC = () => {
             </div>
 
             {/* Stationary Center Illustration Stage with In-Place Artwork Choreography */}
-            <div className="flex-1 grid place-items-center min-h-0 my-1">
+            <div className="flex-1 grid place-items-center min-h-0 my-2">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={`ob-art-${step}`}
@@ -1190,11 +1190,11 @@ export const SplashOnboarding: React.FC = () => {
                 {step === 3 ? 'Get Started' : 'Next'}
               </RippleButton>
 
-              <div className="mt-3 h-6 flex items-center justify-center gap-4">
+              <div className="mt-4 h-6 flex items-center justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => navigateTo('home')}
-                  className="text-[13px] font-semibold text-[#059669] hover:underline"
+                  className="text-[13px] leading-4 font-semibold text-[#059669] hover:underline"
                 >
                   {step < 3 ? 'Skip to Store' : 'Browse Store as Guest →'}
                 </button>
@@ -1211,7 +1211,7 @@ export const SplashOnboarding: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.24, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-6 pt-7 pb-6 text-center bg-white text-[#0F1D17] overflow-y-auto"
+            className="flex-1 flex flex-col justify-between px-6 pt-8 pb-6 text-center bg-white text-[#0F1D17] overflow-y-auto"
           >
             <div>
               <div className="flex items-center justify-between w-full dm-flow-a">
@@ -1219,14 +1219,14 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   aria-label="Back"
                   onClick={() => goStep(3)}
-                  className="w-9 h-9 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1]"
+                  className="w-10 h-10 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1]"
                 >
                   <BackIconSvg />
                 </button>
                 <button
                   type="button"
                   onClick={() => navigateTo('home')}
-                  className="text-xs font-semibold text-[#059669] hover:underline"
+                  className="text-xs leading-4 font-semibold text-[#059669] hover:underline"
                 >
                   Skip to Store →
                 </button>
@@ -1240,13 +1240,13 @@ export const SplashOnboarding: React.FC = () => {
               </div>
 
               <h2
-                className="dm-flow-a text-[22px] leading-7 font-bold mt-2.5 text-[#0F1D17]"
+                className="dm-flow-a text-[22px] leading-8 font-bold mt-2 text-[#0F1D17]"
                 style={{ '--d': 0.12 } as React.CSSProperties}
               >
                 Welcome Back
               </h2>
               <p
-                className="dm-flow-a text-[13px] leading-5 text-[#485B52] mt-1"
+                className="dm-flow-a text-[13px] leading-4 text-[#485B52] mt-1"
                 style={{ '--d': 0.18 } as React.CSSProperties}
               >
                 Login to your DeshiMart account
@@ -1255,7 +1255,7 @@ export const SplashOnboarding: React.FC = () => {
               <form
                 onSubmit={handleLoginSubmit}
                 noValidate
-                className={`text-left mt-4 space-y-3 ${
+                className={`text-left mt-4 space-y-4 ${
                   loginShake ? 'dm-flow-shake' : ''
                 }`}
               >
@@ -1263,10 +1263,10 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.24 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
+                  <label className="block text-[12px] leading-4 font-semibold text-[#0F1D17] mb-1">
                     Email or Phone
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-12 px-4 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type="text"
                       value={loginIdentifier}
@@ -1282,10 +1282,10 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.32 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
+                  <label className="block text-[12px] leading-4 font-semibold text-[#0F1D17] mb-1">
                     Password
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-12 px-4 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type={showLoginPw ? 'text' : 'password'}
                       value={loginPassword}
@@ -1314,7 +1314,7 @@ export const SplashOnboarding: React.FC = () => {
                     onClick={() =>
                       showToast('Password reset link sent to your email/SMS', 'info')
                     }
-                    className="text-[12px] font-semibold text-[#059669] hover:underline"
+                    className="text-[12px] leading-4 font-semibold text-[#059669] hover:underline"
                   >
                     Forgot Password?
                   </button>
@@ -1327,7 +1327,7 @@ export const SplashOnboarding: React.FC = () => {
 
               {/* Social Auth Divider */}
               <div
-                className="dm-flow-a flex items-center gap-3 text-[#74887E] text-xs my-3.5 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
+                className="dm-flow-a flex items-center gap-4 text-[#74887E] text-xs leading-4 my-4 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
                 style={{ '--d': 0.52 } as React.CSSProperties}
               >
                 or
@@ -1338,7 +1338,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   onClick={() => handleSocialLogin('Google')}
                   style={{ '--d': 0.56 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="dm-flow-a flex items-center justify-center gap-2 w-full h-12 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
                 >
                   <GoogleIconSvg />
                   <span>Continue with Google</span>
@@ -1347,7 +1347,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   onClick={() => handleSocialLogin('Facebook')}
                   style={{ '--d': 0.62 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="dm-flow-a flex items-center justify-center gap-2 w-full h-12 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
                 >
                   <FacebookIconSvg />
                   <span>Continue with Facebook</span>
@@ -1356,7 +1356,7 @@ export const SplashOnboarding: React.FC = () => {
             </div>
 
             <p
-              className="dm-flow-a pt-3 text-[13px] text-[#485B52]"
+              className="dm-flow-a pt-4 text-[13px] leading-4 text-[#485B52]"
               style={{ '--d': 0.7 } as React.CSSProperties}
             >
               Don&apos;t have an account?{' '}
@@ -1379,7 +1379,7 @@ export const SplashOnboarding: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.24, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-6 pt-7 pb-6 text-center bg-white text-[#0F1D17] overflow-y-auto"
+            className="flex-1 flex flex-col justify-between px-6 pt-8 pb-6 text-center bg-white text-[#0F1D17] overflow-y-auto"
           >
             <div>
               <div className="flex items-center justify-between w-full dm-flow-a">
@@ -1387,14 +1387,14 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   aria-label="Back to Login"
                   onClick={() => goStep(4)}
-                  className="w-9 h-9 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1]"
+                  className="w-10 h-10 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1]"
                 >
                   <BackIconSvg />
                 </button>
                 <button
                   type="button"
                   onClick={() => navigateTo('home')}
-                  className="text-xs font-semibold text-[#059669] hover:underline"
+                  className="text-xs leading-4 font-semibold text-[#059669] hover:underline"
                 >
                   Skip to Store →
                 </button>
@@ -1408,13 +1408,13 @@ export const SplashOnboarding: React.FC = () => {
               </div>
 
               <h2
-                className="dm-flow-a text-[22px] leading-7 font-bold mt-2.5 text-[#0F1D17]"
+                className="dm-flow-a text-[22px] leading-8 font-bold mt-2 text-[#0F1D17]"
                 style={{ '--d': 0.12 } as React.CSSProperties}
               >
                 Create Your Account
               </h2>
               <p
-                className="dm-flow-a text-[13px] leading-5 text-[#485B52] mt-1"
+                className="dm-flow-a text-[13px] leading-4 text-[#485B52] mt-1"
                 style={{ '--d': 0.18 } as React.CSSProperties}
               >
                 Join DeshiMart and start global shopping
@@ -1423,7 +1423,7 @@ export const SplashOnboarding: React.FC = () => {
               <form
                 onSubmit={handleRegisterSubmit}
                 noValidate
-                className={`text-left mt-3.5 space-y-2.5 ${
+                className={`text-left mt-4 space-y-2 ${
                   regShake ? 'dm-flow-shake' : ''
                 }`}
               >
@@ -1431,10 +1431,10 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.24 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
+                  <label className="block text-[12px] leading-4 font-semibold text-[#0F1D17] mb-1">
                     Full Name
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-12 px-4 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type="text"
                       value={regName}
@@ -1450,10 +1450,10 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.31 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
+                  <label className="block text-[12px] leading-4 font-semibold text-[#0F1D17] mb-1">
                     Phone Number
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-12 px-4 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type="tel"
                       value={regPhone}
@@ -1469,10 +1469,10 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.38 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
+                  <label className="block text-[12px] leading-4 font-semibold text-[#0F1D17] mb-1">
                     Password
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-12 px-4 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type={showRegPw ? 'text' : 'password'}
                       value={regPassword}
@@ -1494,7 +1494,7 @@ export const SplashOnboarding: React.FC = () => {
 
                 <div
                   style={{ '--d': 0.44 } as React.CSSProperties}
-                  className={`dm-flow-a text-xs transition-colors ${
+                  className={`dm-flow-a text-xs leading-4 transition-colors ${
                     regPassword.length >= 8
                       ? 'text-[#059669] font-semibold'
                       : 'text-[#485B52]'
@@ -1510,7 +1510,7 @@ export const SplashOnboarding: React.FC = () => {
 
               {/* Social Auth Divider */}
               <div
-                className="dm-flow-a flex items-center gap-3 text-[#74887E] text-xs my-3 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
+                className="dm-flow-a flex items-center gap-4 text-[#74887E] text-xs leading-4 my-4 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
                 style={{ '--d': 0.56 } as React.CSSProperties}
               >
                 or
@@ -1521,7 +1521,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   onClick={() => handleSocialLogin('Google')}
                   style={{ '--d': 0.6 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="dm-flow-a flex items-center justify-center gap-2 w-full h-12 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
                 >
                   <GoogleIconSvg />
                   <span>Continue with Google</span>
@@ -1530,7 +1530,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   onClick={() => handleSocialLogin('Facebook')}
                   style={{ '--d': 0.66 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="dm-flow-a flex items-center justify-center gap-2 w-full h-12 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
                 >
                   <FacebookIconSvg />
                   <span>Continue with Facebook</span>
@@ -1539,7 +1539,7 @@ export const SplashOnboarding: React.FC = () => {
             </div>
 
             <p
-              className="dm-flow-a pt-3 text-[13px] text-[#485B52]"
+              className="dm-flow-a pt-4 text-[13px] leading-4 text-[#485B52]"
               style={{ '--d': 0.72 } as React.CSSProperties}
             >
               Already have an account?{' '}

@@ -54,7 +54,23 @@ The design language balances **institutional trust** (customs authority, freight
 
 ---
 
-## 4. Currency Formatter Utility Function
+## 4. 8pt Spatial & Typographic Grid System
+
+### Spatial Grid Scale (Strict 8pt Multiples + 4px Sub-Grid)
+- **Sub-Grid (`4px`)**: `p-1`, `py-1`, `gap-1`, `mt-1` — strictly for micro-badge vertical padding, segmented control track insets, and tight label-to-value stacking.
+- **1× Grid (`8px`)**: `p-2`, `px-2`, `py-2`, `gap-2`, `space-y-2`, `mt-2` — standard inline icon-to-text gap, chip horizontal padding, and compact list row spacing.
+- **1.5× Grid (`12px`)**: `p-3`, `px-3` — permitted strictly for compact 2-column mobile product cards and filter chip horizontal padding.
+- **2× Grid (`16px`)**: `p-4`, `px-4`, `py-4`, `gap-4`, `space-y-4` — **Default Screen & Card Unit** (screen edge padding, card padding, 2-column grid gap, standard card stack).
+- **3× Grid (`24px`)**: `p-6`, `py-6`, `gap-6`, `space-y-6` — major section separation, modal/empty-state container padding.
+- **4× Grid (`32px`)**: `w-8 h-8`, `h-8` — compact stepper buttons, filter pills, and avatar badges.
+- **5× Grid (`40px`)**: `w-10 h-10`, `h-10` — secondary buttons, form inputs, and icon containers.
+- **6× Grid (`48px`)**: `w-12 h-12`, `h-12` — **Primary Interactive Target** (search bar, primary CTAs, navigation touch targets, product thumbnails).
+- **7× Grid (`56px`)**: `h-14` — Sticky `TopAppBar` height.
+- **8× Grid (`64px`)**: `h-16`, `w-16 h-16` — Fixed `BottomTabBar` height and cart item thumbnails.
+
+---
+
+## 5. Currency Formatter Utility Function
 
 ```typescript
 export function formatLandedPrice(amount: number): string {

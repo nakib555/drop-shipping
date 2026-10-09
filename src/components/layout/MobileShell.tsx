@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { BottomTabBar } from './BottomTabBar';
-import { SideDrawer } from './SideDrawer';
 import { TopAppBar } from './TopAppBar';
 import { ToastContainer } from '../shared/ToastContainer';
 
@@ -38,9 +37,6 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
         {/* Frame-Anchored Toast Feedback Overlay */}
         <ToastContainer />
 
-        {/* Frame-Anchored Slide-Out Side Navigation Drawer */}
-        <SideDrawer />
-
         {/* Dedicated Scrollable Screen Body */}
         <main
           ref={mainScrollRef}
@@ -59,6 +55,12 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
             </motion.div>
           </AnimatePresence>
         </main>
+
+        {/* Viewport-Locked Bottom Sheet Portal Slot (Docked directly above BottomTabBar) */}
+        <div
+          id="mobile-sheet-root"
+          className="pointer-events-none absolute inset-x-0 top-14 bottom-16 z-40 overflow-hidden"
+        />
 
         {/* Fixed Bottom Navigation Bar */}
         <BottomTabBar />

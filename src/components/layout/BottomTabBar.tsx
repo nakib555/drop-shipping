@@ -115,7 +115,7 @@ export const BottomTabBar: React.FC = () => {
             aria-current={isActive ? 'page' : undefined}
             whileTap={{ scale: 0.94 }}
             onClick={() => navigateTo(tab.id)}
-            className={`group relative min-w-[56px] min-h-[44px] py-1.5 px-2 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+            className={`group relative min-w-[56px] h-12 py-1 px-2 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
               isActive
                 ? 'text-brand-primary text-[11px] font-semibold'
                 : 'text-content-secondary hover:text-content-primary text-[11px] font-medium'
@@ -146,7 +146,7 @@ export const BottomTabBar: React.FC = () => {
                   initial={{ scale: 0.6 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1 -right-2.5 bg-promo-accent text-white text-[10px] font-bold tabular-nums h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white"
+                  className="absolute -top-1 -right-2 bg-promo-accent text-white text-[10px] font-bold tabular-nums h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white"
                 >
                   {tab.badge}
                 </motion.span>
@@ -154,12 +154,12 @@ export const BottomTabBar: React.FC = () => {
 
               {/* Subtle Unread Dot on Account Tab */}
               {tab.hasDot && (
-                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-promo-accent ring-2 ring-white" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-promo-accent ring-2 ring-white" />
               )}
             </div>
 
             {/* Destination Label */}
-            <span className="leading-3.5 whitespace-nowrap">
+            <span className="leading-4 whitespace-nowrap">
               {language === 'BN' ? tab.labelBn : tab.label}
             </span>
           </motion.button>

@@ -78,7 +78,7 @@ export const SellerCompareScreen: React.FC = () => {
     return (
       <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Product Selectors */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {[prodA, prodB].map((prod, idx) => (
             <div
               key={idx}
@@ -93,7 +93,7 @@ export const SellerCompareScreen: React.FC = () => {
                     idx === 0 ? [newId, prev[1]] : [prev[0], newId]
                   );
                 }}
-                className="w-full mb-2 text-[11px] font-medium text-content-primary bg-app-subtle border border-app-border rounded-lg px-2 py-1.5 focus:outline-none focus:border-app-borderStrong"
+                className="w-full h-8 mb-2 text-[11px] leading-4 font-medium text-content-primary bg-app-subtle border border-app-border rounded-lg px-2 focus:outline-none focus:border-app-borderStrong"
               >
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -106,12 +106,12 @@ export const SellerCompareScreen: React.FC = () => {
                 src={prod.image}
                 alt={prod.name}
                 referrerPolicy="no-referrer"
-                className="w-20 h-20 rounded-lg object-contain bg-slate-50 p-1.5 border border-app-border mb-2"
+                className="w-20 h-20 rounded-lg object-contain bg-slate-50 p-2 border border-app-border mb-2"
               />
-              <h3 className="text-xs font-medium text-content-primary line-clamp-1">
+              <h3 className="text-xs leading-4 font-medium text-content-primary line-clamp-1">
                 {prod.name}
               </h3>
-              <span className="tabular-nums text-sm font-bold text-content-primary mt-0.5">
+              <span className="tabular-nums text-sm leading-5 font-bold text-content-primary mt-1">
                 {formatPrice(prod.totalLandedBdt)}
               </span>
             </div>
@@ -121,11 +121,11 @@ export const SellerCompareScreen: React.FC = () => {
         {/* Comparison Table */}
         <div className="bg-white rounded-xl border border-app-border overflow-hidden divide-y divide-app-border">
           {specRows.map((row) => (
-            <div key={row.label} className="p-3 text-xs">
-              <span className="block text-[11px] font-medium text-content-muted text-center mb-1">
+            <div key={row.label} className="p-3 text-xs leading-4">
+              <span className="block text-[11px] leading-4 font-medium text-content-muted text-center mb-1">
                 {row.label}
               </span>
-              <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="grid grid-cols-2 gap-4 text-center">
                 <div
                   className={`font-medium ${
                     row.highlight
@@ -158,11 +158,11 @@ export const SellerCompareScreen: React.FC = () => {
         </div>
 
         {/* Add to Bag Row */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
             onClick={() => addToCart(prodA.id, 1)}
-            className="h-12 rounded-lg bg-white border border-app-borderStrong text-content-primary hover:bg-slate-50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            className="h-12 rounded-lg bg-white border border-app-borderStrong text-content-primary hover:bg-slate-50 text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodA.name.split(' ')[0]}</span>
@@ -170,7 +170,7 @@ export const SellerCompareScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => addToCart(prodB.id, 1)}
-            className="h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            className="h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodB.name.split(' ')[0]}</span>
@@ -194,7 +194,7 @@ export const SellerCompareScreen: React.FC = () => {
   return (
     <div className="p-4 space-y-4 pb-6 bg-app-bg">
       {/* Product Selector Header */}
-      <div className="bg-white rounded-xl border border-app-border p-3.5 flex items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={selectedProduct.image}
@@ -203,10 +203,10 @@ export const SellerCompareScreen: React.FC = () => {
             className="w-12 h-12 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
           />
           <div className="min-w-0">
-            <h2 className="text-sm font-medium text-content-primary truncate">
+            <h2 className="text-sm leading-5 font-medium text-content-primary truncate">
               {selectedProduct.name}
             </h2>
-            <p className="text-xs text-content-secondary">
+            <p className="text-xs leading-4 text-content-secondary mt-1">
               Select your preferred cross-border route
             </p>
           </div>
@@ -214,14 +214,14 @@ export const SellerCompareScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('spec_compare')}
-          className="px-2.5 py-1.5 rounded-lg bg-app-subtle border border-app-border text-xs font-medium text-content-primary hover:bg-slate-200/70 shrink-0"
+          className="h-8 px-3 rounded-lg bg-app-subtle border border-app-border text-xs leading-4 font-medium text-content-primary hover:bg-slate-200/70 shrink-0"
         >
           Compare 2 Items
         </button>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
         {(
           [
             { id: 'all', label: 'All Routes' },
@@ -234,7 +234,7 @@ export const SellerCompareScreen: React.FC = () => {
             key={tab.id}
             type="button"
             onClick={() => setRouteFilter(tab.id)}
-            className={`h-9 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`h-10 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap transition-colors ${
               routeFilter === tab.id
                 ? 'bg-content-primary text-white'
                 : 'bg-white text-content-secondary border border-app-border hover:border-app-borderStrong'
@@ -255,34 +255,34 @@ export const SellerCompareScreen: React.FC = () => {
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
-              className={`rounded-xl p-2.5 border text-center flex flex-col justify-between transition-all ${
+              className={`rounded-xl p-3 border text-center flex flex-col justify-between transition-all ${
                 isSelected
                   ? 'bg-app-subtle border-2 border-content-primary'
                   : 'bg-white border-app-border hover:border-app-borderStrong'
               }`}
             >
               <div>
-                <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-content-secondary mb-1">
+                <span className="inline-block text-[10px] leading-4 font-semibold uppercase tracking-wide text-content-secondary mb-1">
                   {rt.badge}
                 </span>
-                <h3 className="text-xs font-semibold text-content-primary leading-tight">
+                <h3 className="text-xs leading-4 font-semibold text-content-primary">
                   {rt.name}
                 </h3>
-                <p className="text-[11px] text-content-secondary mt-0.5 truncate">
+                <p className="text-[11px] leading-4 text-content-secondary mt-1 truncate">
                   {rt.originCountry}
                 </p>
               </div>
 
-              <div className="my-3 py-2 border-y border-app-border">
-                <span className="block tabular-nums text-sm font-bold text-content-primary">
+              <div className="my-2 py-2 border-y border-app-border">
+                <span className="block tabular-nums text-sm leading-5 font-bold text-content-primary">
                   {formatPrice(rt.totalLandedBdt)}
                 </span>
-                <span className="block text-[11px] text-content-secondary mt-1">
+                <span className="block text-[11px] leading-4 text-content-secondary mt-1">
                   {rt.deliveryDays}
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-1 text-[11px] tabular-nums font-medium text-content-primary">
+              <div className="flex items-center justify-center gap-1 text-[11px] leading-4 tabular-nums font-medium text-content-primary">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>{rt.rating.toFixed(1)}</span>
               </div>
@@ -292,7 +292,7 @@ export const SellerCompareScreen: React.FC = () => {
       </div>
 
       {/* Detailed Route Breakdown List */}
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {sortedRoutes.map((rt) => {
           const isSelected = rt.id === activeRouteId;
           return (
@@ -306,7 +306,7 @@ export const SellerCompareScreen: React.FC = () => {
                   selectRouteForProduct(selectedProduct.id, rt.id);
                 }
               }}
-              className={`rounded-xl p-3.5 border transition-colors cursor-pointer bg-white ${
+              className={`rounded-xl p-4 border transition-colors cursor-pointer bg-white ${
                 isSelected
                   ? 'border-2 border-content-primary'
                   : 'border-app-border'
@@ -323,33 +323,33 @@ export const SellerCompareScreen: React.FC = () => {
                   >
                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                   </div>
-                  <span className="text-xs font-semibold text-content-primary">
+                  <span className="text-xs leading-4 font-semibold text-content-primary">
                     {rt.name}
                   </span>
-                  <span className="text-xs text-content-secondary">
+                  <span className="text-xs leading-4 text-content-secondary">
                     · {rt.originCountry}
                   </span>
                 </div>
-                <span className="tabular-nums text-xs font-semibold text-content-primary">
+                <span className="tabular-nums text-xs leading-4 font-semibold text-content-primary">
                   {rt.onTimeRate} On-Time
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-xs text-content-secondary bg-app-subtle border border-app-border p-2.5 rounded-lg">
+              <div className="grid grid-cols-3 gap-2 text-xs leading-4 text-content-secondary bg-app-subtle border border-app-border p-3 rounded-lg">
                 <div>
-                  <span className="block text-[10px] text-content-muted">Base + Ship</span>
+                  <span className="block text-[10px] leading-4 text-content-muted">Base + Ship</span>
                   <span className="tabular-nums font-semibold text-content-primary">
                     {formatPrice(rt.basePriceBdt + rt.shippingBdt)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px] text-content-muted">Duty + VAT</span>
+                  <span className="block text-[10px] leading-4 text-content-muted">Duty + VAT</span>
                   <span className="tabular-nums font-semibold text-content-primary">
                     {formatPrice(rt.dutyBdt + rt.vatBdt)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px] text-content-muted">Landed Total</span>
+                  <span className="block text-[10px] leading-4 text-content-muted">Landed Total</span>
                   <span className="tabular-nums font-bold text-content-primary">
                     {formatPrice(rt.totalLandedBdt)}
                   </span>
@@ -362,18 +362,18 @@ export const SellerCompareScreen: React.FC = () => {
 
       {/* Guarantee Summary */}
       <div className="bg-white rounded-xl border border-app-border p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-content-primary mb-1">
+        <h3 className="text-xs leading-4 font-semibold text-content-primary mb-1">
           Included on All 3 Routes
         </h3>
-        <div className="flex items-center gap-2 text-xs text-content-secondary">
+        <div className="flex items-center gap-2 text-xs leading-4 text-content-secondary">
           <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
           <span>True Landed Price (Zero extra customs charge on arrival)</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-content-secondary">
+        <div className="flex items-center gap-2 text-xs leading-4 text-content-secondary">
           <Truck className="w-4 h-4 text-status-transit shrink-0" />
           <span>Live milestone tracking from export hub to Dhaka</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-content-secondary">
+        <div className="flex items-center gap-2 text-xs leading-4 text-content-secondary">
           <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
           <span>Pre-shipment physical quality inspection</span>
         </div>
@@ -382,7 +382,7 @@ export const SellerCompareScreen: React.FC = () => {
       <button
         type="button"
         onClick={() => navigateTo('product_detail', { productId: selectedProduct.id })}
-        className="w-full h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm transition-colors"
+        className="w-full h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm leading-5 transition-colors"
       >
         Confirm Selected Route
       </button>

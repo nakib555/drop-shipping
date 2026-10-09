@@ -15,11 +15,11 @@ export const ToastContainer: React.FC = () => {
         {toasts.map((toast) => (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, y: -14, scale: 0.94 }}
+            initial={{ opacity: 0, y: -16, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.94 }}
+            exit={{ opacity: 0, y: -8, scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-content-primary text-white text-xs font-medium shadow-lg border border-slate-700"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-content-primary text-white text-xs leading-4 font-medium shadow-lg border border-slate-700"
           >
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckCircle2,
@@ -373,80 +374,90 @@ export const OrdersTrackingScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Animated Landed Cost Receipt / Invoice Modal */}
-      <AnimatePresence>
-        {invoiceOpen && (
-          <div className="absolute inset-0 z-50 flex items-end justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setInvoiceOpen(false)}
-              className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-              className="relative z-10 w-full bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
-            >
-              <div className="flex items-center justify-between border-b border-app-border pb-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-content-primary">
-                    Customs-Cleared Tax Invoice
-                  </h3>
-                  <p className="tabular-nums text-xs text-content-secondary">
-                    Order #{selectedOrder.id} · {selectedOrder.placedDate}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setInvoiceOpen(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:text-content-primary"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                {selectedOrder.items.map((item, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span className="text-content-secondary">
-                      {item.name} × {item.quantity}
-                    </span>
-                    <span className="tabular-nums font-semibold text-content-primary">
-                      {formatPrice(item.landedUnitBdt * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-                <div className="pt-2 border-t border-app-border flex justify-between text-content-secondary">
-                  <span>Bangladesh Customs Duty & VAT</span>
-                  <span className="text-content-primary font-medium">
-                    Pre-Paid Included
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-app-border flex justify-between items-baseline">
-                  <span className="text-sm font-semibold text-content-primary">
-                    Total Landed Paid
-                  </span>
-                  <span className="tabular-nums text-lg font-bold text-content-primary">
-                    {formatPrice(selectedOrder.totalBdt)}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setInvoiceOpen(false)}
-                className="w-full min-h-[44px] rounded-lg bg-content-primary text-white text-xs font-semibold"
+      {/* Viewport-Docked Landed Cost Receipt / Invoice Bottom Sheet (Docked above BottomTabBar via #mobile-sheet-root) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {invoiceOpen && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Customs-Cleared Tax Invoice"
+                className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
               >
-                Close Invoice
-              </button>
-            </motion.div>
-          </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setInvoiceOpen(false)}
+                  className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
+                />
+                <motion.div
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
+                >
+                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                  <div className="flex items-center justify-between border-b border-app-border pb-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-content-primary">
+                        Customs-Cleared Tax Invoice
+                      </h3>
+                      <p className="tabular-nums text-xs text-content-secondary">
+                        Order #{selectedOrder.id} · {selectedOrder.placedDate}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setInvoiceOpen(false)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:text-content-primary"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    {selectedOrder.items.map((item, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span className="text-content-secondary">
+                          {item.name} × {item.quantity}
+                        </span>
+                        <span className="tabular-nums font-semibold text-content-primary">
+                          {formatPrice(item.landedUnitBdt * item.quantity)}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="pt-2 border-t border-app-border flex justify-between text-content-secondary">
+                      <span>Bangladesh Customs Duty & VAT</span>
+                      <span className="text-content-primary font-medium">
+                        Pre-Paid Included
+                      </span>
+                    </div>
+                    <div className="pt-2 border-t border-app-border flex justify-between items-baseline">
+                      <span className="text-sm font-semibold text-content-primary">
+                        Total Landed Paid
+                      </span>
+                      <span className="tabular-nums text-lg font-bold text-content-primary">
+                        {formatPrice(selectedOrder.totalBdt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setInvoiceOpen(false)}
+                    className="w-full min-h-[44px] rounded-lg bg-content-primary text-white text-xs font-semibold"
+                  >
+                    Close Invoice
+                  </button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.getElementById('mobile-sheet-root') || document.body
         )}
-      </AnimatePresence>
     </div>
   );
 };

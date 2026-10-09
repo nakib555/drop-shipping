@@ -40,12 +40,12 @@ export const ProductCardGhost: React.FC = () => {
 
       <div className="p-3 space-y-2">
         <div className="h-4 w-4/5 rounded bg-slate-200 animate-pulse" />
-        <div className="h-3.5 w-3/5 rounded bg-slate-100 animate-pulse" />
+        <div className="h-4 w-3/5 rounded bg-slate-100 animate-pulse" />
         <div className="pt-1 flex items-center justify-between">
-          <div className="h-5 w-20 rounded bg-slate-200 animate-pulse" />
+          <div className="h-6 w-20 rounded bg-slate-200 animate-pulse" />
           <div className="h-4 w-10 rounded bg-slate-100 animate-pulse" />
         </div>
-        <div className="h-3 w-28 rounded bg-slate-100 animate-pulse" />
+        <div className="h-4 w-28 rounded bg-slate-100 animate-pulse" />
       </div>
     </div>
   );
@@ -91,11 +91,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* 1:1 Image Container (bg-slate-50) with Max 1 Top-Left Origin Pill */}
       <div className="relative w-full aspect-square bg-slate-50 overflow-hidden flex items-center justify-center border-b border-app-border">
         {/* Single Top-Left Origin Overlay Pill per DESIGN_SYSTEM_SPEC.md */}
-        <span className="absolute top-2.5 left-2.5 z-10 bg-slate-900/70 text-white backdrop-blur-sm text-[11px] font-medium px-2 py-0.5 rounded-full">
+        <span className="absolute top-2 left-2 z-10 bg-slate-900/70 text-white backdrop-blur-sm text-[11px] leading-4 font-medium px-2 py-1 rounded-full">
           {originChipText}
         </span>
 
-        {/* Top-Right Wishlist Button */}
+        {/* Top-Right Wishlist Button (32x32 4x8pt box at 8px offset) */}
         <motion.button
           type="button"
           whileTap={{ scale: 1.2 }}
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           }`}
         >
           <Heart
-            className={`w-3.5 h-3.5 transition-transform duration-150 ${
+            className={`w-4 h-4 transition-transform duration-150 ${
               isWishlisted ? 'fill-promo-accent text-promo-accent' : ''
             }`}
           />
@@ -142,7 +142,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </>
         ) : (
           <div className="flex flex-col items-center justify-center p-4 text-center bg-slate-50 w-full h-full">
-            <Package className="w-7 h-7 text-content-muted mb-1.5" />
+            <Package className="w-8 h-8 text-content-muted mb-2" />
             <span className="text-xs leading-4 font-medium text-content-secondary line-clamp-2">
               {product.name}
             </span>
@@ -150,34 +150,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
 
-      {/* Content Container */}
+      {/* Content Container (8pt Sub-Grid p-3 for 2-column density, 8px internal spacing) */}
       <div className="p-3 flex-1 flex flex-col justify-between">
         {/* Title: 2 lines max (line-clamp-2 text-content-primary text-sm font-medium) */}
         <h3 className="line-clamp-2 text-content-primary text-sm font-medium leading-5">
           {language === 'BN' ? product.nameBn : product.name}
         </h3>
 
-        <div className="mt-2.5 pt-2 border-t border-app-border">
+        <div className="mt-2 pt-2 border-t border-app-border">
           {/* Price Row */}
           <div className="flex items-center">
-            <span className="text-content-primary font-bold text-base tabular-nums">
+            <span className="text-content-primary font-bold text-base leading-6 tabular-nums">
               {formatPrice(landedBdt)}
             </span>
             {product.discountPercent > 0 && (
-              <span className="text-content-muted text-xs line-through ml-1.5 tabular-nums truncate">
+              <span className="text-content-muted text-xs leading-4 line-through ml-2 tabular-nums truncate">
                 {formatPrice(product.originalLandedBdt)}
               </span>
             )}
             {product.discountPercent > 0 && (
-              <span className="bg-promo-subtle text-promo-accent text-[11px] font-bold px-1.5 py-0.5 rounded ml-auto tabular-nums shrink-0">
+              <span className="bg-promo-subtle text-promo-accent text-[11px] leading-4 font-bold px-2 py-0.5 rounded ml-auto tabular-nums shrink-0">
                 -{product.discountPercent}%
               </span>
             )}
           </div>
 
           {/* Bottom Micro-copy + Restrained Quick-Add */}
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="text-[11px] text-content-secondary flex items-center gap-1 truncate">
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-[11px] leading-4 text-content-secondary flex items-center gap-1 truncate">
               <span className="text-brand-primary font-bold">✓</span>
               <span className="truncate">
                 {language === 'BN' ? 'কাস্টমস ও ডেলিভারিসহ' : 'Incl. Customs & Delivery'}

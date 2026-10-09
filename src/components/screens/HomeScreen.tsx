@@ -510,7 +510,65 @@ export const HomeScreen: React.FC = () => {
         </section>
       )}
 
-      {/* 5. Verified Global Catalog Section with Department Pills */}
+      {/* 5. Recently Viewed Products Horizontal Rail (Positioned above main catalog for instant session continuity) */}
+      {!searchQuery.trim() && recentlyViewedProducts.length > 0 && (
+        <section
+          aria-label="Recently Viewed Products"
+          className="space-y-2.5"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-content-primary">
+                {language === 'BN' ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed'}
+              </h2>
+              <p className="text-xs text-content-secondary">
+                {language === 'BN'
+                  ? 'আপনার সাম্প্রতিক ব্রাউজিং থেকে আবার দেখুন'
+                  : 'Pick up right where you left off'}
+              </p>
+            </div>
+            <span className="text-xs text-content-muted tabular-nums">
+              {recentlyViewedProducts.length} items
+            </span>
+          </div>
+
+          <div className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
+            {recentlyViewedProducts.map((item) => (
+              <div
+                key={`recent-${item.id}`}
+                onClick={() =>
+                  navigateTo('product_detail', { productId: item.id })
+                }
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    navigateTo('product_detail', { productId: item.id });
+                  }
+                }}
+                className="w-44 shrink-0 snap-start bg-white rounded-xl border border-app-border p-2.5 flex items-center gap-2.5 hover:border-app-borderStrong transition-colors cursor-pointer"
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  referrerPolicy="no-referrer"
+                  className="w-11 h-11 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-content-primary truncate">
+                    {language === 'BN' ? item.nameBn : item.name}
+                  </p>
+                  <p className="tabular-nums text-xs font-bold text-content-primary mt-0.5">
+                    {formatPrice(item.totalLandedBdt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 6. Verified Global Catalog Section with Department Pills */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -793,57 +851,6 @@ export const HomeScreen: React.FC = () => {
           )}
         </div>
       </section>
-
-      {/* 5. Recently Viewed Products Horizontal Rail */}
-      {recentlyViewedProducts.length > 0 && (
-        <section
-          aria-label="Recently Viewed Products"
-          className="space-y-2.5 pt-2 border-t border-app-border"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-content-primary">
-              {language === 'BN' ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed'}
-            </h2>
-            <span className="text-xs text-content-muted tabular-nums">
-              {recentlyViewedProducts.length} items
-            </span>
-          </div>
-
-          <div className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
-            {recentlyViewedProducts.map((item) => (
-              <div
-                key={`recent-${item.id}`}
-                onClick={() =>
-                  navigateTo('product_detail', { productId: item.id })
-                }
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    navigateTo('product_detail', { productId: item.id });
-                  }
-                }}
-                className="w-40 shrink-0 snap-start bg-white rounded-xl border border-app-border p-2.5 flex items-center gap-2.5 hover:border-app-borderStrong transition-colors cursor-pointer"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  referrerPolicy="no-referrer"
-                  className="w-11 h-11 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-content-primary truncate">
-                    {language === 'BN' ? item.nameBn : item.name}
-                  </p>
-                  <p className="tabular-nums text-xs font-bold text-content-primary mt-0.5">
-                    {formatPrice(item.totalLandedBdt)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 };
