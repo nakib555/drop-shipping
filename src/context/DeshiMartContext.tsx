@@ -11,6 +11,11 @@ import {
   searchFreeProductApis,
 } from '../services/productApi';
 import {
+  EXCHANGE_RATE_SNAPSHOT,
+  formatCanonicalPrice,
+  getCanonicalLandedPricing,
+} from '../utils/pricingEngine';
+import {
   AppNotification,
   CartItem,
   CategoryId,
@@ -119,6 +124,8 @@ interface DeshiMartContextValue {
   // Catalog & Discovery
   products: Product[];
   isLoadingProducts: boolean;
+  isSearchingRemote: boolean;
+  catalogSyncError: string | null;
   refreshCatalogFromApi: () => Promise<void>;
   fetchMoreFromApi: () => Promise<number>;
   selectedProductId: string;
@@ -226,11 +233,10 @@ const DEFAULT_FILTERS: SmartFiltersState = {
 
 const DeshiMartContext = createContext<DeshiMartContextValue | undefined>(undefined);
 
-const BDT_PER_USD = 120;
+const BDT_PER_USD = EXCHANGE_RATE_SNAPSHOT.bdtPerUsd;
 
 export function formatLandedPrice(amount: number): string {
-  // Uses non-breaking space after Bengali Taka symbol and en-IN grouping
-  return `৳\u00A0${Math.round(amount).toLocaleString('en-IN')}`;
+  return formatCanonicalPrice(amount, 'BDT');
 }
 
 const INITIAL_PROMO_VOUCHERS: PromoVoucher[] = [
@@ -306,13 +312,19 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const [catalogProducts, setCatalogProducts] = useState<Product[]>(CATALOG_PRODUCTS);
-  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
+  // Start false when local catalog products are already available so we never show fake loading skeletons for immediately available data
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(
+    CATALOG_PRODUCTS.length === 0
+  );
+  const [isSearchingRemote, setIsSearchingRemote] = useState<boolean>(false);
+  const [catalogSyncError, setCatalogSyncError] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>(CATALOG_PRODUCTS[0].id);
   const [selectedCategoryId, setSelectedCategoryId] = useState<CategoryId>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [smartFilters, setSmartFilters] = useState<SmartFiltersState>(DEFAULT_FILTERS);
   const batchCursorRef = useRef<number>(1);
   const isFetchingBatchRef = useRef<boolean>(false);
+  const searchRequestSeqRef = useRef<number>(0);
 
   const mergeProductsIntoCatalog = useCallback((incoming: Product[]) => {
     if (!incoming || incoming.length === 0) return;
@@ -330,7 +342,10 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const loadApiCatalog = useCallback(
     async (notify = false) => {
-      setIsLoadingProducts(true);
+      if (notify) {
+        setIsLoadingProducts(true);
+      }
+      setCatalogSyncError(null);
       try {
         const apiItems = await fetchGlobalCatalogFromApi(notify);
         if (apiItems.length > 0) {
@@ -338,6 +353,12 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (notify) {
             showToast(`Synced ${apiItems.length} global products from free APIs`);
           }
+        } else if (notify) {
+          setCatalogSyncError('Could not reach external catalog APIs. Showing verified local catalog.');
+        }
+      } catch {
+        if (notify) {
+          setCatalogSyncError('Network error while syncing external catalog.');
         }
       } finally {
         setIsLoadingProducts(false);
@@ -357,6 +378,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         mergeProductsIntoCatalog(batch);
       }
       return batch.length;
+    } catch {
+      return 0;
     } finally {
       isFetchingBatchRef.current = false;
     }
@@ -379,19 +402,39 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.clearInterval(intervalId);
   }, [fetchMoreFromApi]);
 
-  // Live remote search supplementation when user types a search query
+  // Live remote search supplementation with AbortController & sequence guard to prevent race conditions
   useEffect(() => {
     const q = searchQuery.trim();
-    if (q.length < 2) return;
+    if (q.length < 2) {
+      setIsSearchingRemote(false);
+      return;
+    }
+
+    const requestSeq = ++searchRequestSeqRef.current;
+    const abortController = new AbortController();
 
     const timer = window.setTimeout(async () => {
-      const remoteMatches = await searchFreeProductApis(q);
-      if (remoteMatches.length > 0) {
-        mergeProductsIntoCatalog(remoteMatches);
+      setIsSearchingRemote(true);
+      try {
+        const remoteMatches = await searchFreeProductApis(q, abortController.signal);
+        if (
+          !abortController.signal.aborted &&
+          requestSeq === searchRequestSeqRef.current &&
+          remoteMatches.length > 0
+        ) {
+          mergeProductsIntoCatalog(remoteMatches);
+        }
+      } finally {
+        if (!abortController.signal.aborted && requestSeq === searchRequestSeqRef.current) {
+          setIsSearchingRemote(false);
+        }
       }
-    }, 350);
+    }, 320);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      abortController.abort();
+    };
   }, [searchQuery, mergeProductsIntoCatalog]);
 
   const [selectedRouteByProduct, setSelectedRouteByProduct] = useState<Record<string, string>>({
@@ -482,11 +525,32 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [consolidateParcel, setConsolidateParcel] = useState<boolean>(true);
   const [promoCode, setPromoCode] = useState<string | null>(null);
-  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([
-    'prod-wireless-earbuds',
-    'prod-smartwatch-pro',
-    'prod-urban-backpack',
-  ]);
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('deshimart_recent_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return Array.from(new Set(parsed.filter((id) => typeof id === 'string')));
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return [
+      'prod-wireless-earbuds',
+      'prod-smartwatch-pro',
+      'prod-urban-backpack',
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('deshimart_recent_v1', JSON.stringify(recentlyViewedIds));
+    } catch {
+      // ignore
+    }
+  }, [recentlyViewedIds]);
 
   useEffect(() => {
     try {
@@ -558,11 +622,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const formatPrice = (bdtAmount: number): string => {
-    if (currency === 'USD') {
-      const usd = bdtAmount / BDT_PER_USD;
-      return `$\u00A0${usd.toFixed(2)}`;
-    }
-    return formatLandedPrice(bdtAmount);
+    return formatCanonicalPrice(bdtAmount, currency);
   };
 
   const selectedProduct = useMemo(
@@ -635,7 +695,12 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   ) => {
     const product = catalogProducts.find((p) => p.id === productId);
     if (!product) return;
+    if (!product.inStock) {
+      showToast(`${product.name} is currently out of stock`, 'info');
+      return;
+    }
     const chosenColor = color || product.colors[0]?.name || 'Standard';
+    const chosenSize = size || product.sizes?.[0];
     const chosenRoute =
       routeId || selectedRouteByProduct[productId] || product.routes[0]?.id || 'default';
 
@@ -645,9 +710,9 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity,
+          quantity: Math.min(20, updated[existingIndex].quantity + quantity),
           selectedColor: chosenColor,
-          selectedSize: size || updated[existingIndex].selectedSize,
+          selectedSize: chosenSize || updated[existingIndex].selectedSize,
           selectedRouteId: chosenRoute,
         };
         return updated;
@@ -656,9 +721,9 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ...prev,
         {
           productId,
-          quantity,
+          quantity: Math.min(20, Math.max(1, quantity)),
           selectedColor: chosenColor,
-          selectedSize: size,
+          selectedSize: chosenSize,
           selectedRouteId: chosenRoute,
         },
       ];
@@ -725,19 +790,14 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     for (const item of cart) {
       const prod = catalogProducts.find((p) => p.id === item.productId);
       if (!prod) continue;
-      const route =
-        prod.routes.find((r) => r.id === item.selectedRouteId) || prod.routes[0];
-      const unitBase = route ? route.basePriceBdt : prod.productPriceBdt;
-      const unitFreight = route ? route.shippingBdt : prod.shippingBdt;
-      const unitDutyVat = route
-        ? route.dutyBdt + route.vatBdt
-        : prod.importDutyBdt + prod.vatBdt;
-      const unitLanded = route ? route.totalLandedBdt : prod.totalLandedBdt;
+      const pricing = getCanonicalLandedPricing(prod, {
+        [prod.id]: item.selectedRouteId,
+      });
 
-      baseItemsBdt += unitBase * item.quantity;
-      freightBdt += unitFreight * item.quantity;
-      dutyAndVatBdt += unitDutyVat * item.quantity;
-      rawLandedBdt += unitLanded * item.quantity;
+      baseItemsBdt += pricing.productPriceBdt * item.quantity;
+      freightBdt += pricing.shippingBdt * item.quantity;
+      dutyAndVatBdt += pricing.dutyAndVatBdt * item.quantity;
+      rawLandedBdt += pricing.estimatedLandedBdt * item.quantity;
     }
 
     const totalQty = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -1400,6 +1460,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         formatPrice,
         products: catalogProducts,
         isLoadingProducts,
+        isSearchingRemote,
+        catalogSyncError,
         refreshCatalogFromApi: () => loadApiCatalog(true),
         fetchMoreFromApi,
         selectedProductId,

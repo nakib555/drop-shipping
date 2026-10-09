@@ -42,8 +42,6 @@ export const BottomTabBar: React.FC = () => {
     return null;
   }
 
-  const isEmptyCartScreen = currentScreen === 'cart' && cartCount === 0;
-
   const tabs: {
     id: ScreenId;
     label: string;
@@ -75,22 +73,21 @@ export const BottomTabBar: React.FC = () => {
         'spec_compare',
       ],
     },
-    isEmptyCartScreen
-      ? {
-          id: 'wishlist',
-          label: 'Wishlist',
-          labelBn: 'উইশলিস্ট',
-          icon: Heart,
-          matchScreens: ['wishlist'],
-          badge: wishlist.length,
-        }
-      : {
-          id: 'orders',
-          label: 'Orders',
-          labelBn: 'অর্ডার',
-          icon: Package,
-          matchScreens: ['orders', 'order_tracking'],
-        },
+    {
+      id: 'wishlist',
+      label: 'Wishlist',
+      labelBn: 'উইশলিস্ট',
+      icon: Heart,
+      matchScreens: ['wishlist'],
+      badge: wishlist.length,
+    },
+    {
+      id: 'orders',
+      label: 'Orders',
+      labelBn: 'অর্ডার',
+      icon: Package,
+      matchScreens: ['orders', 'order_tracking'],
+    },
     {
       id: 'cart',
       label: 'Cart',
@@ -120,7 +117,6 @@ export const BottomTabBar: React.FC = () => {
         'support',
         'settings',
         'guides',
-        ...(isEmptyCartScreen ? [] : (['wishlist'] as ScreenId[])),
       ],
       hasDot: unreadNotificationCount > 0,
     },
@@ -130,7 +126,7 @@ export const BottomTabBar: React.FC = () => {
     <nav
       role="navigation"
       aria-label="Primary Bottom Navigation"
-      className="z-50 min-h-[60px] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur border-t border-app-border flex items-center justify-around px-2 shrink-0 select-none"
+      className="z-50 min-h-[60px] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur border-t border-app-border grid grid-cols-6 items-center px-1.5 shrink-0 select-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -143,10 +139,10 @@ export const BottomTabBar: React.FC = () => {
             aria-current={isActive ? 'page' : undefined}
             whileTap={{ scale: 0.94 }}
             onClick={() => navigateTo(tab.id)}
-            className={`group relative min-w-[56px] min-h-[44px] py-1.5 px-2 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+            className={`group relative w-full min-h-[46px] py-1.5 px-1 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
               isActive
-                ? 'text-brand-primary text-[11px] font-semibold'
-                : 'text-content-secondary hover:text-content-primary text-[11px] font-medium'
+                ? 'text-brand-primary text-[10px] font-semibold'
+                : 'text-content-secondary hover:text-content-primary text-[10px] font-medium'
             }`}
           >
             {/* Active top indicator bar */}

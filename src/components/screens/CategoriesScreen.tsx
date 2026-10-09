@@ -17,6 +17,11 @@ import {
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { CATEGORIES } from '../../data/catalogData';
 import { searchFreeProductApis } from '../../services/productApi';
+import {
+  doesProductArriveThisWeek,
+  getCanonicalLandedPricing,
+  isVerifiedQualitySupplier,
+} from '../../utils/pricingEngine';
 import { ProductCard, ProductCardGhost } from '../shared/ProductCard';
 
 const PAGE_SIZE = 16;
@@ -30,6 +35,7 @@ export const CategoriesScreen: React.FC = () => {
     fetchMoreFromApi,
     selectedCategoryId,
     setSelectedCategoryId,
+    selectedRouteByProduct,
     smartFilters,
     setSmartFilters,
     resetSmartFilters,
@@ -70,15 +76,26 @@ export const CategoriesScreen: React.FC = () => {
       ) {
         return false;
       }
+      const pricing = getCanonicalLandedPricing(p, selectedRouteByProduct);
       if (smartFilters.inStockOnly && !p.inStock) return false;
-      if (smartFilters.dealsOnly && p.discountPercent <= 0) return false;
-      if (smartFilters.verifiedOnly && (!p.verifiedSupplier || p.dropScore < 8.5))
+      if (smartFilters.dealsOnly && !pricing.hasValidDiscount) return false;
+      if (smartFilters.under2000Bdt && pricing.estimatedLandedBdt > 2000) return false;
+      if (
+        smartFilters.arrivesThisWeek &&
+        !doesProductArriveThisWeek(p, selectedRouteByProduct)
+      ) {
         return false;
-      if (p.totalLandedBdt > smartFilters.maxPriceBdt) return false;
+      }
+      if (smartFilters.verifiedOnly && !isVerifiedQualitySupplier(p)) return false;
+      if (pricing.estimatedLandedBdt > smartFilters.maxPriceBdt) return false;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === 'price_asc') return a.totalLandedBdt - b.totalLandedBdt;
+      if (sortBy === 'price_asc' || smartFilters.lowestLandedCost) {
+        const priceA = getCanonicalLandedPricing(a, selectedRouteByProduct).estimatedLandedBdt;
+        const priceB = getCanonicalLandedPricing(b, selectedRouteByProduct).estimatedLandedBdt;
+        return priceA - priceB;
+      }
       if (sortBy === 'rating') return b.rating - a.rating;
       return b.dropScore - a.dropScore;
     });

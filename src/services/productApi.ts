@@ -211,9 +211,21 @@ const ORIGIN_HUBS = [
   },
 ];
 
-async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 6500): Promise<T | null> {
+async function fetchJsonWithTimeout<T>(
+  url: string,
+  timeoutMs = 6500,
+  externalSignal?: AbortSignal
+): Promise<T | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onExternalAbort = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      clearTimeout(timer);
+      return null;
+    }
+    externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+  }
   try {
     const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) return null;
@@ -222,6 +234,9 @@ async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 6500): Promise<T
     return null;
   } finally {
     clearTimeout(timer);
+    if (externalSignal) {
+      externalSignal.removeEventListener('abort', onExternalAbort);
+    }
   }
 }
 
@@ -693,19 +708,28 @@ export async function fetchContinuousProductBatch(batchCursor: number): Promise<
 /**
  * Live search against free public product APIs when the user types a search query.
  */
-export async function searchFreeProductApis(query: string): Promise<Product[]> {
+export async function searchFreeProductApis(
+  query: string,
+  signal?: AbortSignal
+): Promise<Product[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
   const encoded = encodeURIComponent(trimmed);
   const [dummySearch, escuelaSearch] = await Promise.all([
     fetchJsonWithTimeout<{ products?: DummyJsonProduct[] }>(
-      `https://dummyjson.com/products/search?q=${encoded}&limit=24`
+      `https://dummyjson.com/products/search?q=${encoded}&limit=24`,
+      6500,
+      signal
     ),
     fetchJsonWithTimeout<EscuelaProduct[]>(
-      `https://api.escuelajs.co/api/v1/products/?title=${encoded}`
+      `https://api.escuelajs.co/api/v1/products/?title=${encoded}`,
+      6500,
+      signal
     ),
   ]);
+
+  if (signal?.aborted) return [];
 
   const results: Product[] = [];
 

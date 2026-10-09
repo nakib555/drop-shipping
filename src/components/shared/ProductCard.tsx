@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Check, Heart, Package, Plus } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { Product } from '../../types/deshimart';
+import { getCanonicalLandedPricing } from '../../utils/pricingEngine';
 
 interface ProductCardProps {
   product: Product;
@@ -65,12 +66,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   const [justAdded, setJustAdded] = useState(false);
 
   const isWishlisted = wishlist.includes(product.id);
-  const activeRouteId = selectedRouteByProduct[product.id];
-  const activeRoute =
-    product.routes.find((r) => r.id === activeRouteId) || product.routes[0];
-  const landedBdt = activeRoute ? activeRoute.totalLandedBdt : product.totalLandedBdt;
-  const deliveryWindow = (activeRoute?.deliveryDays || '7–12 days').replace(/\s*days/i, 'd');
+  const pricing = getCanonicalLandedPricing(product, selectedRouteByProduct);
+  const landedBdt = pricing.estimatedLandedBdt;
+  const deliveryWindow = pricing.deliveryDaysLabel.replace(/\s*days/i, 'd');
   const originMeta = `${getCleanOriginName(product.originLabel)} · ${deliveryWindow}`;
+  const isBn = language === 'BN';
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (justAdded || !product.inStock) return;
+    // If product requires explicit size selection, open Product Detail so user selects size
+    if (product.sizes && product.sizes.length > 1) {
+      navigateTo('product_detail', { productId: product.id });
+      return;
+    }
+    addToCart(product.id, 1);
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 750);
+  };
 
   return (
     <motion.div
@@ -85,7 +98,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           navigateTo('product_detail', { productId: product.id });
         }
       }}
-      className="group relative bg-white border border-app-border rounded-xl overflow-hidden flex flex-col justify-between hover:border-app-borderStrong transition-colors cursor-pointer text-left"
+      className="group relative bg-white border border-app-border rounded-xl overflow-hidden flex flex-col justify-between hover:border-app-borderStrong transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
     >
       {/* Clean 1:1 Image Container */}
       <div className="relative w-full aspect-square bg-slate-50 overflow-hidden flex items-center justify-center border-b border-app-border">
@@ -95,12 +108,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             type="button"
             whileTap={{ scale: 1.15 }}
             transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            aria-label={
+              isWishlisted
+                ? isBn
+                  ? `${product.nameBn} উইশলিস্ট থেকে সরান`
+                  : `Remove ${product.name} from wishlist`
+                : isBn
+                ? `${product.nameBn} উইশলিস্টে যোগ করুন`
+                : `Add ${product.name} to wishlist`
+            }
+            aria-pressed={isWishlisted}
             onClick={(e) => {
               e.stopPropagation();
               toggleWishlist(product.id);
             }}
-            className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors ${
+            className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
               isWishlisted
                 ? 'bg-brand-subtle border-brand-border text-brand-primary'
                 : 'bg-white/90 border-app-border text-content-secondary hover:text-brand-primary'
@@ -126,8 +148,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             )}
             <img
               src={product.image}
-              alt={product.name}
+              alt={isBn ? product.nameBn : product.name}
+              width={320}
+              height={320}
               loading="lazy"
+              decoding="async"
               referrerPolicy="no-referrer"
               onLoad={() => setImgLoaded(true)}
               onError={() => setImgError(true)}
@@ -140,7 +165,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           <div className="flex flex-col items-center justify-center p-4 text-center bg-slate-50 w-full h-full">
             <Package className="w-8 h-8 text-content-muted mb-2" />
             <span className="text-xs leading-4 font-medium text-content-secondary line-clamp-2">
-              {product.name}
+              {isBn ? product.nameBn : product.name}
             </span>
           </div>
         )}
@@ -155,17 +180,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
               getCleanOriginName(product.originLabel)
             ) : (
               <>
-                {originMeta} ·{' '}
-                <span className="text-brand-primary font-medium">
-                  {language === 'BN' ? 'ডিউটিসহ' : 'Duty Paid'}
-                </span>
+                {originMeta}
+                {pricing.isEstimatedCustomsPreCleared && (
+                  <>
+                    {' · '}
+                    <span className="text-brand-primary font-medium">
+                      {isBn ? 'আনুমানিক ডিউটিসহ' : 'Est. Landed'}
+                    </span>
+                  </>
+                )}
               </>
             )}
           </p>
 
           {/* Product Title */}
           <h3 className="line-clamp-2 text-content-primary text-[13px] font-semibold leading-[1.35] tracking-[-0.01em] mt-1 min-h-[35px]">
-            {language === 'BN' ? product.nameBn : product.name}
+            {isBn ? product.nameBn : product.name}
           </h3>
         </div>
 
@@ -175,9 +205,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             <span className="block tabular-nums text-content-primary font-bold text-[14px] leading-5 tracking-tight">
               {formatPrice(landedBdt)}
             </span>
-            {product.discountPercent > 0 && (
-              <span className="block tabular-nums text-content-muted text-[11px] leading-3.5 line-through truncate">
-                {formatPrice(product.originalLandedBdt)}
+            {pricing.hasValidDiscount && pricing.discountPercent > 0 && (
+              <span className="block tabular-nums text-content-muted text-[11px] leading-3.5 truncate">
+                <span className="line-through">{formatPrice(pricing.originalLandedBdt)}</span>
+                <span className="text-brand-primary font-medium ml-1">
+                  -{pricing.discountPercent}%
+                </span>
               </span>
             )}
           </div>
@@ -185,16 +218,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           {!compact && (
             <motion.button
               type="button"
-              whileTap={{ scale: 0.92 }}
-              aria-label={`Add ${product.name} to cart`}
-              onClick={(e) => {
-                e.stopPropagation();
-                addToCart(product.id, 1);
-                setJustAdded(true);
-                setTimeout(() => setJustAdded(false), 750);
-              }}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
-                justAdded
+              disabled={!product.inStock}
+              whileTap={product.inStock ? { scale: 0.92 } : undefined}
+              aria-label={
+                !product.inStock
+                  ? isBn
+                    ? `${product.nameBn} স্টকে নেই`
+                    : `${product.name} out of stock`
+                  : product.sizes && product.sizes.length > 1
+                  ? isBn
+                    ? `${product.nameBn} সাইজ নির্বাচন করুন`
+                    : `Select options for ${product.name}`
+                  : isBn
+                  ? `${product.nameBn} কার্টে যোগ করুন`
+                  : `Add ${product.name} to cart`
+              }
+              onClick={handleQuickAdd}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                !product.inStock
+                  ? 'bg-app-subtle text-content-muted cursor-not-allowed'
+                  : justAdded
                   ? 'bg-brand-primary text-white'
                   : 'bg-brand-subtle hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-border'
               }`}
