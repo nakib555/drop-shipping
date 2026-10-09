@@ -1262,7 +1262,7 @@ export const SplashOnboarding: React.FC = () => {
 
               {/* Quick Role Selector (Customer Account vs Admin Console) */}
               <div
-                className="dm-flow-a grid grid-cols-2 gap-2 mt-3.5 p-1 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3]"
+                className="dm-flow-a grid grid-cols-2 gap-1.5 mt-3.5 p-1 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3]"
                 style={{ '--d': 0.21 } as React.CSSProperties}
               >
                 <button
@@ -1272,9 +1272,9 @@ export const SplashOnboarding: React.FC = () => {
                     setLoginIdentifier('tanvir.ahmed@deshimart.bd');
                     setLoginPassword('••••••••••••');
                   }}
-                  className={`h-9 rounded-lg text-xs font-semibold transition-all ${
+                  className={`h-9 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                     loginRole === 'customer'
-                      ? 'bg-[#059669] text-white shadow-xs'
+                      ? 'bg-[#065F46] text-white shadow-xs'
                       : 'text-[#485B52] hover:text-[#0F1D17]'
                   }`}
                 >
@@ -1287,9 +1287,9 @@ export const SplashOnboarding: React.FC = () => {
                     setLoginIdentifier('admin@deshimart.bd');
                     setLoginPassword('••••••••••••');
                   }}
-                  className={`h-9 rounded-lg text-xs font-semibold transition-all ${
+                  className={`h-9 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                     loginRole === 'admin'
-                      ? 'bg-[#0F1D17] text-white shadow-xs'
+                      ? 'bg-[#065F46] text-white shadow-xs'
                       : 'text-[#485B52] hover:text-[#0F1D17]'
                   }`}
                 >
