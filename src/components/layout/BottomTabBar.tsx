@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import {
-  Camera,
   Grid,
   Home,
+  Package,
   ShoppingCart,
   User,
 } from 'lucide-react';
@@ -11,7 +11,14 @@ import { useDeshiMart } from '../../context/DeshiMartContext';
 import { ScreenId } from '../../types/deshimart';
 
 export const BottomTabBar: React.FC = () => {
-  const { currentScreen, navigateTo, cartCount, language } = useDeshiMart();
+  const {
+    currentScreen,
+    navigateTo,
+    cartCount,
+    orders,
+    unreadNotificationCount,
+    language,
+  } = useDeshiMart();
 
   const hiddenScreens: ScreenId[] = ['splash', 'onboarding', 'auth'];
 
@@ -26,6 +33,7 @@ export const BottomTabBar: React.FC = () => {
     icon: React.FC<{ className?: string }>;
     matchScreens: ScreenId[];
     badge?: number;
+    hasDot?: boolean;
   }[] = [
     {
       id: 'home',
@@ -39,14 +47,23 @@ export const BottomTabBar: React.FC = () => {
       label: 'Catalog',
       labelBn: 'ক্যাটালগ',
       icon: Grid,
-      matchScreens: ['categories', 'category_products', 'product_detail', 'supplier_store'],
+      matchScreens: [
+        'categories',
+        'category_products',
+        'product_detail',
+        'supplier_store',
+        'price_tracker',
+        'seller_compare',
+        'spec_compare',
+      ],
     },
     {
-      id: 'visual_scan',
-      label: 'Scan',
-      labelBn: 'স্ক্যান',
-      icon: Camera,
-      matchScreens: ['visual_scan', 'price_tracker', 'seller_compare', 'spec_compare'],
+      id: 'orders',
+      label: 'Orders',
+      labelBn: 'অর্ডার',
+      icon: Package,
+      matchScreens: ['orders', 'order_tracking'],
+      badge: orders.length > 0 ? orders.length : undefined,
     },
     {
       id: 'cart',
@@ -71,22 +88,22 @@ export const BottomTabBar: React.FC = () => {
         'account',
         'addresses',
         'payment_methods',
-        'orders',
-        'order_tracking',
         'wishlist',
         'notifications',
         'support',
         'settings',
         'guides',
       ],
+      hasDot: unreadNotificationCount > 0,
     },
   ];
 
-  // 8pt Grid: h-16 (64px = 8*8), px-2 (8px), gap-1 (4px)
+  // 8pt Grid: h-16 (64px), px-2 (8px), gap-1 (4px)
   return (
     <nav
+      role="navigation"
       aria-label="Primary Bottom Navigation"
-      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-[#DFEAE3] grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
+      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-[#DFEAE3] shadow-[0_-4px_16px_-6px_rgba(15,29,23,0.06)] grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -96,43 +113,63 @@ export const BottomTabBar: React.FC = () => {
           <motion.button
             key={tab.id}
             type="button"
+            aria-current={isActive ? 'page' : undefined}
             whileTap={{ scale: 0.94 }}
             onClick={() => navigateTo(tab.id)}
-            className={`relative h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors ${
-              isActive
-                ? 'text-[#059669] bg-[#ECFDF5]/50'
-                : 'text-[#5C7066] hover:text-[#0F1D17]'
-            }`}
+            className="group relative h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
           >
+            {/* Top hairline active indicator */}
             {isActive && (
               <motion.span
-                layoutId="bottom-tab-indicator"
-                transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#059669]"
+                layoutId="bottom-tab-top-line"
+                transition={{ type: 'spring', stiffness: 440, damping: 34 }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2.5px] rounded-full bg-[#059669]"
               />
             )}
 
-            <div className="relative px-3 py-0.5">
+            {/* Icon Container with Material 3 / Apple HIG Active Capsule */}
+            <div className="relative flex items-center justify-center w-12 h-7 rounded-full">
+              {isActive && (
+                <motion.span
+                  layoutId="bottom-tab-pill"
+                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  className="absolute inset-0 rounded-full bg-[#ECFDF5] border border-[#A7F3D0]/70"
+                />
+              )}
+
               <Icon
-                className={`relative z-10 w-4 h-4 transition-transform duration-150 ${
-                  isActive ? 'stroke-[2.3]' : 'stroke-[1.8]'
+                className={`relative z-10 w-[17px] h-[17px] transition-all duration-150 ${
+                  isActive
+                    ? 'text-[#059669] stroke-[2.3]'
+                    : 'text-[#485B52] group-hover:text-[#0F1D17] stroke-[1.85]'
                 }`}
               />
+
+              {/* Numeric Badge */}
               {typeof tab.badge === 'number' && tab.badge > 0 && (
                 <motion.span
                   key={tab.badge}
                   initial={{ scale: 0.6 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1.5 -right-0.5 z-20 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center"
+                  className="absolute -top-1 right-1 z-20 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center ring-2 ring-white shadow-2xs"
                 >
                   {tab.badge}
                 </motion.span>
               )}
+
+              {/* Subtle Unread Dot on Account Tab */}
+              {tab.hasDot && (
+                <span className="absolute top-0.5 right-2.5 z-20 w-2 h-2 rounded-full bg-[#059669] ring-2 ring-white" />
+              )}
             </div>
+
+            {/* Destination Label */}
             <span
-              className={`text-[10px] leading-3 tracking-tight whitespace-nowrap ${
-                isActive ? 'font-semibold text-[#0F1D17]' : 'font-medium text-[#5C7066]'
+              className={`text-[10px] leading-3 tracking-tight whitespace-nowrap transition-colors ${
+                isActive
+                  ? 'font-bold text-[#0F1D17]'
+                  : 'font-medium text-[#485B52] group-hover:text-[#0F1D17]'
               }`}
             >
               {language === 'BN' ? tab.labelBn : tab.label}
@@ -143,3 +180,5 @@ export const BottomTabBar: React.FC = () => {
     </nav>
   );
 };
+
+

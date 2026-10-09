@@ -12,7 +12,6 @@ import { CategoriesScreen } from './components/screens/CategoriesScreen';
 import { ProductDetailScreen } from './components/screens/ProductDetailScreen';
 import { PriceTrackerScreen } from './components/screens/PriceTrackerScreen';
 import { SellerCompareScreen } from './components/screens/SellerCompareScreen';
-import { VisualScanScreen } from './components/screens/VisualScanScreen';
 import { CartScreen } from './components/screens/CartScreen';
 import { CheckoutFlowScreen } from './components/screens/CheckoutFlowScreen';
 import { OrdersTrackingScreen } from './components/screens/OrdersTrackingScreen';
@@ -38,8 +37,6 @@ const ScreenRouter: React.FC = () => {
     case 'seller_compare':
     case 'spec_compare':
       return <SellerCompareScreen />;
-    case 'visual_scan':
-      return <VisualScanScreen />;
     case 'cart':
       return <CartScreen />;
     case 'checkout_shipping':

@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   Bell,
   BookOpen,
-  Camera,
   ChevronRight,
   CreditCard,
   Globe,
@@ -108,13 +107,6 @@ export const SideDrawer: React.FC = () => {
       title: 'Cross-Border Tools',
       titleBn: 'ক্রস-বর্ডার টুলস',
       items: [
-        {
-          label: 'Visual & Link Scanner',
-          labelBn: 'ভিজ্যুয়াল ও লিংক স্ক্যানার',
-          screen: 'visual_scan',
-          matchScreens: ['visual_scan'],
-          icon: Camera,
-        },
         {
           label: '30-Day Price Tracker',
           labelBn: '৩০ দিনের প্রাইস ট্র্যাকার',
@@ -223,6 +215,11 @@ export const SideDrawer: React.FC = () => {
     .slice(0, 2)
     .toUpperCase();
 
+  const handleNavigate = (screen: ScreenId) => {
+    setDrawerOpen(false);
+    navigateTo(screen);
+  };
+
   return (
     <AnimatePresence>
       {drawerOpen && (
@@ -256,7 +253,7 @@ export const SideDrawer: React.FC = () => {
               <div className="flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => navigateTo('account')}
+                  onClick={() => handleNavigate('account')}
                   className="flex items-center gap-3 text-left group min-w-0 flex-1 py-0.5 focus-visible:outline-none"
                 >
                   <div className="w-11 h-11 rounded-2xl bg-[#0F1D17] text-white font-semibold text-xs flex items-center justify-center shrink-0 ring-2 ring-[#059669]/25 group-hover:bg-[#059669] transition-colors">
@@ -267,7 +264,7 @@ export const SideDrawer: React.FC = () => {
                       {user.fullName}
                     </h2>
                     {/* Clean unboxed metadata with middle-dot separator */}
-                    <div className="flex items-center gap-1.5 text-[11px] leading-4 text-[#5C7066] truncate mt-0.5">
+                    <div className="flex items-center gap-1.5 text-[11px] leading-4 text-[#485B52] truncate mt-0.5">
                       <span className="text-[#059669] font-medium">
                         {language === 'BN' ? 'ভেরিফাইড মেম্বার' : 'Verified Buyer'}
                       </span>
@@ -281,7 +278,7 @@ export const SideDrawer: React.FC = () => {
                   type="button"
                   aria-label="Close navigation menu"
                   onClick={() => setDrawerOpen(false)}
-                  className="min-w-[44px] min-h-[44px] -mr-1.5 rounded-xl flex items-center justify-center text-[#5C7066] hover:text-[#0F1D17] hover:bg-[#E2ECE6] transition-colors shrink-0"
+                  className="min-w-[44px] min-h-[44px] -mr-1.5 rounded-xl flex items-center justify-center text-[#485B52] hover:text-[#0F1D17] hover:bg-[#E2ECE6] transition-colors shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -291,39 +288,39 @@ export const SideDrawer: React.FC = () => {
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => navigateTo('orders')}
+                  onClick={() => handleNavigate('orders')}
                   className="py-2 px-2.5 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors"
                 >
                   <span className="block font-mono-num text-sm leading-5 font-semibold text-[#0F1D17]">
                     {orders.length}
                   </span>
-                  <span className="block text-[11px] leading-3.5 text-[#5C7066] mt-0.5 truncate">
+                  <span className="block text-[11px] leading-3.5 text-[#485B52] mt-0.5 truncate">
                     {language === 'BN' ? 'অর্ডার' : 'Orders'}
                   </span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => navigateTo('wishlist')}
+                  onClick={() => handleNavigate('wishlist')}
                   className="py-2 px-2.5 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors"
                 >
                   <span className="block font-mono-num text-sm leading-5 font-semibold text-[#0F1D17]">
                     {wishlist.length}
                   </span>
-                  <span className="block text-[11px] leading-3.5 text-[#5C7066] mt-0.5 truncate">
+                  <span className="block text-[11px] leading-3.5 text-[#485B52] mt-0.5 truncate">
                     {language === 'BN' ? 'উইশলিস্ট' : 'Saved'}
                   </span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => navigateTo('cart')}
+                  onClick={() => handleNavigate('cart')}
                   className="py-2 px-2.5 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors"
                 >
                   <span className="block font-mono-num text-sm leading-5 font-semibold text-[#059669]">
                     {cartCount}
                   </span>
-                  <span className="block text-[11px] leading-3.5 text-[#5C7066] mt-0.5 truncate">
+                  <span className="block text-[11px] leading-3.5 text-[#485B52] mt-0.5 truncate">
                     {language === 'BN' ? 'ব্যাগ' : 'In Bag'}
                   </span>
                 </button>
@@ -406,7 +403,7 @@ export const SideDrawer: React.FC = () => {
                           key={item.label}
                           type="button"
                           aria-current={isActive ? 'page' : undefined}
-                          onClick={() => navigateTo(item.screen)}
+                          onClick={() => handleNavigate(item.screen)}
                           className={`group relative w-full min-h-[44px] px-3 rounded-xl flex items-center justify-between gap-3 text-xs leading-4 transition-colors text-left ${
                             isActive
                               ? 'bg-[#ECFDF5] text-[#065F46] font-semibold'

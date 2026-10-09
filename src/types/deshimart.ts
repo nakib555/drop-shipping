@@ -9,7 +9,6 @@ export type ScreenId =
   | 'price_tracker'
   | 'seller_compare'
   | 'spec_compare'
-  | 'visual_scan'
   | 'cart'
   | 'checkout_shipping'
   | 'checkout_payment'

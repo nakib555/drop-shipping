@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowRight,
-  Camera,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -107,8 +106,8 @@ export const HomeScreen: React.FC = () => {
           : 'Pay securely via Cash on Delivery, bKash, Nagad, or Card.',
       primaryLabel: language === 'BN' ? 'লাইভ ট্র্যাকিং' : 'Track Orders',
       primaryAction: () => navigateTo('order_tracking', { orderId: 'DM123456' }),
-      secondaryLabel: language === 'BN' ? 'স্ক্যানার' : 'Visual Scan',
-      secondaryAction: () => navigateTo('visual_scan'),
+      secondaryLabel: language === 'BN' ? 'শপিং গাইড' : 'Customs Guide',
+      secondaryAction: () => navigateTo('guides'),
       product: products[3] || products[0],
     },
   ];
@@ -230,34 +229,23 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div className="p-4 space-y-5 pb-6 bg-[#F5F8F6]">
-      {/* 1. Search Bar + Scan Button */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#74887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setVisibleLimit(24);
-            }}
-            placeholder={
-              language === 'BN'
-                ? 'পণ্য, ব্র্যান্ড বা লিংক খুঁজুন...'
-                : 'Search global products or paste URL...'
-            }
-            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-[#DFEAE3] text-xs leading-4 text-[#0F1D17] placeholder:text-[#74887E] focus:outline-none focus:border-[#059669] transition-colors"
-          />
-        </div>
-        <button
-          type="button"
-          aria-label="Visual Search or Paste Link"
-          onClick={() => navigateTo('visual_scan')}
-          className="h-10 px-3.5 rounded-xl bg-white border border-[#DFEAE3] text-[#0F1D17] hover:border-[#A7C4B5] flex items-center gap-1.5 text-xs leading-4 font-semibold shrink-0 transition-colors"
-        >
-          <Camera className="w-4 h-4 text-[#059669]" />
-          <span>{language === 'BN' ? 'স্ক্যান' : 'Scan'}</span>
-        </button>
+      {/* 1. Global Search Bar */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-[#74887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setVisibleLimit(24);
+          }}
+          placeholder={
+            language === 'BN'
+              ? 'পণ্য, ব্র্যান্ড বা ক্যাটাগরি খুঁজুন...'
+              : 'Search global products, brands, or categories...'
+          }
+          className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-[#DFEAE3] text-xs leading-4 text-[#0F1D17] placeholder:text-[#74887E] focus:outline-none focus:border-[#059669] transition-colors"
+        />
       </div>
 
       {/* 2. Interactive Swipeable 3-Slide Hero Banner Carousel */}

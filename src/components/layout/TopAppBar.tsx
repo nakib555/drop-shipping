@@ -3,8 +3,11 @@ import {
   ArrowLeft,
   Bell,
   Heart,
+  MapPin,
   Menu,
   Search,
+  Share2,
+  ShieldCheck,
   ShoppingBag,
   ShoppingCart,
 } from 'lucide-react';
@@ -24,8 +27,12 @@ export const TopAppBar: React.FC = () => {
     toggleWishlist,
     wishlist,
     language,
+    setLanguage,
     currency,
     setCurrency,
+    addresses,
+    selectedAddressId,
+    showToast,
   } = useDeshiMart();
 
   if (
@@ -37,163 +44,321 @@ export const TopAppBar: React.FC = () => {
   }
 
   const isHome = currentScreen === 'home';
+  const isBn = language === 'BN';
 
-  const getScreenTitle = (): string => {
-    const isBn = language === 'BN';
+  const activeAddress =
+    addresses.find((a) => a.id === selectedAddressId) || addresses[0];
+  const deliveryLocationLabel = activeAddress
+    ? `${activeAddress.label} · ${activeAddress.city}`
+    : isBn
+    ? 'ঢাকা, বাংলাদেশ'
+    : 'Dhaka, BD';
+
+  const getScreenMeta = (): { title: string; subtitle?: string } => {
     switch (currentScreen) {
       case 'categories':
-        return isBn ? 'সকল ক্যাটাগরি' : 'Categories';
+        return {
+          title: isBn ? 'সকল ক্যাটাগরি' : 'Global Catalog',
+          subtitle: isBn ? '৮টি গ্লোবাল হাব · ডিউটিসহ মূল্য' : '8 Global Hubs · Duty & VAT Included',
+        };
       case 'category_products': {
-        if (selectedCategoryId === 'all')
-          return isBn ? 'সকল গ্লোবাল পণ্য' : 'All Global Products';
+        if (selectedCategoryId === 'all') {
+          return {
+            title: isBn ? 'সকল গ্লোবাল পণ্য' : 'All Global Products',
+            subtitle: isBn ? 'ল্যান্ডেড প্রাইস গ্যারান্টি' : '100% Landed Price Guarantee',
+          };
+        }
         const cat = CATEGORIES.find((c) => c.id === selectedCategoryId);
-        return cat ? (isBn ? cat.nameBn : cat.name) : isBn ? 'পণ্যসমূহ' : 'Products';
+        return {
+          title: cat ? (isBn ? cat.nameBn : cat.name) : isBn ? 'পণ্যসমূহ' : 'Products',
+          subtitle: isBn ? 'ভেরিফাইড ইমপোর্ট রুট' : 'Verified Direct Import Routes',
+        };
       }
       case 'product_detail':
-        return isBn ? 'পণ্যের বিবরণ' : 'Product Details';
+        return {
+          title: selectedProduct.supplierName || (isBn ? 'পণ্যের বিবরণ' : 'Product Details'),
+          subtitle: isBn
+            ? `${selectedProduct.originLabel} · ডিউটি পেইড`
+            : `${selectedProduct.originLabel} · Customs Cleared`,
+        };
       case 'price_tracker':
-        return isBn ? 'প্রাইস হিস্ট্রি (৩০ দিন)' : 'Price History';
+        return {
+          title: isBn ? 'প্রাইস হিস্ট্রি (৩০ দিন)' : '30-Day Price History',
+          subtitle: isBn ? 'রিয়েল-টাইম মার্কেট ইন্টেলিজেন্স' : 'Real-Time Landed Cost Analytics',
+        };
       case 'seller_compare':
-        return isBn ? '৩টি রুট তুলনা' : 'Shipping Routes';
+        return {
+          title: isBn ? '৩টি রুট তুলনা' : 'Shipping Route Compare',
+          subtitle: isBn ? 'ডিরেক্ট · লোকাল · কনসলিডেটেড' : 'Direct Air · Local Ready · Consolidated',
+        };
       case 'spec_compare':
-        return isBn ? 'স্পেসিফিকেশন তুলনা' : 'Compare Specs';
-      case 'visual_scan':
-        return isBn ? 'ভিজ্যুয়াল ও লিংক স্ক্যান' : 'Visual & Link Search';
+        return {
+          title: isBn ? 'স্পেসিফিকেশন তুলনা' : 'Spec Comparison',
+          subtitle: isBn ? 'পাশাপাশি মডেল যাচাই' : 'Side-by-Side Technical Audit',
+        };
       case 'cart':
-        return isBn ? `শপিং ব্যাগ (${cartCount})` : `Shopping Bag (${cartCount})`;
+        return {
+          title: isBn ? `শপিং ব্যাগ (${cartCount})` : `Shopping Bag (${cartCount})`,
+          subtitle: isBn ? 'কাস্টমস ডিউটি ও ভ্যাট অন্তর্ভুক্ত' : 'Includes Customs Duty & 15% VAT',
+        };
       case 'checkout_shipping':
-        return isBn ? 'ডেলিভারি ঠিকানা' : 'Delivery Address';
+        return {
+          title: isBn ? 'ডেলিভারি ঠিকানা' : 'Delivery Address',
+          subtitle: isBn ? 'ধাপ ১/৩ · ডোরস্টেপ কুরিয়ার' : 'Step 1 of 3 · Doorstep Courier',
+        };
       case 'checkout_payment':
-        return isBn ? 'পেমেন্ট মাধ্যম' : 'Payment Method';
+        return {
+          title: isBn ? 'পেমেন্ট মাধ্যম' : 'Payment Method',
+          subtitle: isBn ? 'ধাপ ২/৩ · এসক্রো সুরক্ষিত' : 'Step 2 of 3 · Escrow Protected',
+        };
       case 'checkout_review':
-        return isBn ? 'অর্ডার রিভিউ' : 'Review Order';
+        return {
+          title: isBn ? 'অর্ডার রিভিউ' : 'Review & Confirm',
+          subtitle: isBn ? 'ধাপ ৩/৩ · ল্যান্ডেড প্রাইস লক' : 'Step 3 of 3 · Landed Price Lock',
+        };
       case 'order_success':
-        return isBn ? 'অর্ডার সফল' : 'Order Confirmed';
+        return {
+          title: isBn ? 'অর্ডার সফল' : 'Order Confirmed',
+          subtitle: isBn ? 'কাস্টমস প্রি-ক্লিয়ারেন্স শুরু হয়েছে' : 'Customs Pre-Clearance Initiated',
+        };
       case 'orders':
-        return isBn ? 'আমার অর্ডার' : 'My Orders';
+        return {
+          title: isBn ? 'আমার অর্ডার' : 'My Orders',
+          subtitle: isBn ? 'আন্তর্জাতিক ও লোকাল শিপমেন্ট' : 'International & Local Shipments',
+        };
       case 'order_tracking':
-        return isBn ? 'লাইভ অর্ডার ট্র্যাকিং' : 'Live Tracking';
+        return {
+          title: isBn ? 'লাইভ অর্ডার ট্র্যাকিং' : 'Live Parcel Radar',
+          subtitle: isBn ? 'অরিজিন হাব থেকে ঢাকা কাস্টমস' : 'Origin Hub to Dhaka Customs',
+        };
       case 'account':
-        return isBn ? 'অ্যাকাউন্ট' : 'Account';
+        return {
+          title: isBn ? 'আমার অ্যাকাউন্ট' : 'Member Profile',
+          subtitle: isBn ? 'ভেরিফাইড ক্রস-বর্ডার মেম্বার' : 'Verified Cross-Border Member',
+        };
       case 'addresses':
-        return isBn ? 'সংরক্ষিত ঠিকানা' : 'Saved Addresses';
+        return {
+          title: isBn ? 'সংরক্ষিত ঠিকানা' : 'Saved Addresses',
+          subtitle: isBn ? 'হোম ও অফিস ডেলিভারি হাব' : 'Home & Office Delivery Hubs',
+        };
       case 'payment_methods':
-        return isBn ? 'পেমেন্ট মাধ্যম' : 'Payment Methods';
+        return {
+          title: isBn ? 'পেমেন্ট মাধ্যম' : 'Payment Wallets',
+          subtitle: isBn ? 'বিকাশ · নগদ · কার্ড · ক্যাশ অন ডেলিভারি' : 'bKash · Nagad · Cards · COD',
+        };
       case 'supplier_store':
-        return isBn ? 'সাপ্লায়ার স্টোর' : 'Supplier Store';
+        return {
+          title: isBn ? 'সাপ্লায়ার স্টোর' : 'Verified Supplier Hub',
+          subtitle: isBn ? 'সরাসরি ফ্যাক্টরি ও অনুমোদিত ডিলার' : 'Direct Factory & Authorized Dealer',
+        };
       case 'wishlist':
-        return isBn ? 'উইশলিস্ট' : 'Wishlist';
+        return {
+          title: isBn ? 'উইশলিস্ট' : 'Saved Wishlist',
+          subtitle: isBn ? 'প্রাইস ড্রপ অ্যালার্ট সক্রিয়' : 'Price Drop Monitoring Active',
+        };
       case 'notifications':
-        return isBn ? 'নোটিফিকেশন' : 'Notifications';
+        return {
+          title: isBn ? 'নোটিফিকেশন' : 'Activity & Alerts',
+          subtitle: isBn ? 'শিপমেন্ট ও প্রাইস ড্রপ আপডেট' : 'Shipment & Price Drop Updates',
+        };
       case 'support':
-        return isBn ? 'হেল্প ও সাপোর্ট' : 'Help & Support';
+        return {
+          title: isBn ? 'হেল্প ও সাপোর্ট' : 'Concierge Support',
+          subtitle: isBn ? '২৪/৭ কাস্টমস ও অর্ডার সহায়তা' : '24/7 Customs & Order Assistance',
+        };
       case 'settings':
-        return isBn ? 'সেটিংস' : 'Preferences';
+        return {
+          title: isBn ? 'সেটিংস' : 'App Preferences',
+          subtitle: isBn ? 'কারেন্সি, ভাষা ও নোটিফিকেশন' : 'Currency, Language & Alerts',
+        };
       case 'guides':
-        return isBn ? 'শপিং গাইড' : 'Buying Guides';
+        return {
+          title: isBn ? 'শপিং গাইড' : 'Import & Customs Guide',
+          subtitle: isBn ? 'বাংলাদেশ কাস্টমস ও ডিউটি নিয়মাবলী' : 'BD HS-Code & Duty Transparency',
+        };
       default:
-        return isBn ? 'দেশিমার্ট' : 'DeshiMart';
+        return {
+          title: isBn ? 'দেশিমার্ট' : 'DeshiMart',
+          subtitle: isBn ? 'গ্লোবাল শপিং' : 'Global Commerce',
+        };
     }
   };
 
   const isProductLiked = wishlist.includes(selectedProduct.id);
+  const screenMeta = getScreenMeta();
 
-  // 8pt Grid: h-14 (56px = 7*8), px-4 (16px = 2*8), gap-2 (8px), w-10 h-10 (40px)
+  const handleShareProduct = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+    showToast(
+      isBn
+        ? `${selectedProduct.name} এর লিংক কপি করা হয়েছে`
+        : `Copied landed-price link for ${selectedProduct.name}`,
+      'info'
+    );
+  };
+
   return (
-    <header className="sticky top-0 z-30 h-14 px-4 bg-white/95 backdrop-blur-md border-b border-[#DFEAE3] flex items-center justify-between gap-2 shrink-0">
-      {/* Left Zone */}
-      <div className="flex items-center gap-2 min-w-0">
+    <header
+      role="banner"
+      className="sticky top-0 z-30 h-14 px-3 bg-white/95 backdrop-blur-md border-b border-[#DFEAE3] shadow-[0_1px_2px_rgba(15,29,23,0.03)] flex items-center justify-between gap-2 shrink-0 select-none"
+    >
+      {/* Left Zone: Ergonomic 44x44 Menu/Back Trigger + Brand / Location Context */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {isHome ? (
           <>
             <button
               type="button"
-              aria-label="Open navigation menu"
+              aria-label={isBn ? 'নেভিগেশন মেনু খুলুন' : 'Open navigation menu'}
               onClick={() => setDrawerOpen(true)}
-              className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
+              className="relative w-10 h-10 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-[19px] h-[19px] stroke-[2]" />
             </button>
-            <button
-              type="button"
-              onClick={() => navigateTo('home')}
-              className="flex items-center gap-2 text-left"
-            >
-              <div className="w-7 h-7 rounded-lg bg-[#059669] text-white flex items-center justify-center shadow-2xs">
+
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={() => navigateTo('home')}
+                className="w-8 h-8 rounded-xl bg-gradient-to-b from-[#059669] to-[#047857] text-white flex items-center justify-center shadow-[0_2px_6px_rgba(5,150,105,0.28)] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+              >
                 <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
+              </button>
+
+              <div className="min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('home')}
+                    className="text-[15px] leading-4 font-bold tracking-tight text-[#0F1D17] truncate focus-visible:outline-none"
+                  >
+                    {isBn ? 'দেশিমার্ট' : 'DeshiMart'}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Toggle currency between BDT and USD"
+                    onClick={() => setCurrency(currency === 'BDT' ? 'USD' : 'BDT')}
+                    className="px-1.5 py-0.5 rounded-md bg-[#ECFDF5] border border-[#A7F3D0] text-[10px] leading-3 font-mono-num font-semibold text-[#047857] hover:bg-[#D1FAE5] transition-colors shrink-0"
+                  >
+                    {currency === 'BDT' ? '৳ BDT' : '$ USD'}
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigateTo('addresses')}
+                  className="flex items-center gap-1 text-[11px] leading-3.5 text-[#485B52] hover:text-[#059669] transition-colors truncate mt-0.5 text-left"
+                >
+                  <MapPin className="w-2.5 h-2.5 text-[#059669] shrink-0" />
+                  <span className="truncate">{deliveryLocationLabel}</span>
+                </button>
               </div>
-              <span className="text-base leading-5 font-bold tracking-tight text-[#0F1D17]">
-                DeshiMart
-              </span>
-            </button>
+            </div>
           </>
         ) : (
-          <button
-            type="button"
-            aria-label="Go back"
-            onClick={goBack}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <>
+            <button
+              type="button"
+              aria-label={isBn ? 'পেছনে যান' : 'Go back'}
+              onClick={goBack}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+            >
+              <ArrowLeft className="w-[19px] h-[19px] stroke-[2]" />
+            </button>
+
+            <div className="min-w-0 flex-1 pl-0.5">
+              <h1 className="text-[14px] leading-4 font-bold tracking-tight text-[#0F1D17] truncate">
+                {screenMeta.title}
+              </h1>
+              {screenMeta.subtitle && (
+                <p className="text-[11px] leading-3.5 text-[#485B52] truncate mt-0.5 flex items-center gap-1">
+                  <ShieldCheck className="w-2.5 h-2.5 text-[#059669] shrink-0" />
+                  <span className="truncate">{screenMeta.subtitle}</span>
+                </p>
+              )}
+            </div>
+          </>
         )}
       </div>
 
-      {/* Center Zone (Sub-screens) */}
-      {!isHome && (
-        <h1 className="text-sm leading-5 font-semibold text-[#0F1D17] truncate text-center flex-1">
-          {getScreenTitle()}
-        </h1>
-      )}
+      {/* Right Zone: Contextual Utility Actions */}
+      <div className="flex items-center gap-0.5 shrink-0">
+        {isHome && (
+          <>
+            <button
+              type="button"
+              aria-label={isBn ? 'ভাষা পরিবর্তন করুন' : 'Switch language'}
+              onClick={() => setLanguage(language === 'EN' ? 'BN' : 'EN')}
+              className="h-8 px-2 rounded-lg text-[11px] leading-4 font-semibold text-[#33473E] hover:text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
+            >
+              {language === 'EN' ? 'বাং' : 'EN'}
+            </button>
 
-      {/* Right Zone */}
-      <div className="flex items-center gap-1 shrink-0">
-        {currentScreen === 'product_detail' && (
-          <button
-            type="button"
-            aria-label="Toggle wishlist"
-            onClick={() => toggleWishlist(selectedProduct.id)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
-          >
-            <Heart
-              className={`w-4 h-4 ${
-                isProductLiked ? 'fill-[#E11D48] text-[#E11D48]' : 'text-[#0F1D17]'
-              }`}
-            />
-          </button>
+            <button
+              type="button"
+              aria-label={isBn ? 'পণ্য খুঁজুন' : 'Search global catalog'}
+              onClick={() => navigateTo('category_products', { categoryId: 'all' })}
+              className="w-9 h-9 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+            >
+              <Search className="w-4 h-4 stroke-[1.9]" />
+            </button>
+          </>
         )}
 
-        {isHome && (
-          <button
-            type="button"
-            aria-label="Search products"
-            onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-            className="w-10 h-10 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] transition-colors"
-          >
-            <Search className="w-4 h-4" />
-          </button>
+        {currentScreen === 'product_detail' && (
+          <>
+            <button
+              type="button"
+              aria-label={isBn ? 'শেয়ার করুন' : 'Share product'}
+              onClick={handleShareProduct}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+            >
+              <Share2 className="w-4 h-4 stroke-[1.9]" />
+            </button>
+
+            <button
+              type="button"
+              aria-label={isBn ? 'উইশলিস্টে যোগ করুন' : 'Toggle wishlist'}
+              onClick={() => toggleWishlist(selectedProduct.id)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+            >
+              <Heart
+                className={`w-4 h-4 transition-colors ${
+                  isProductLiked
+                    ? 'fill-[#E11D48] text-[#E11D48]'
+                    : 'text-[#0F1D17] stroke-[1.9]'
+                }`}
+              />
+            </button>
+          </>
         )}
 
         <button
           type="button"
-          aria-label="Notifications"
+          aria-label={
+            unreadNotificationCount > 0
+              ? `${unreadNotificationCount} unread notifications`
+              : 'Notifications'
+          }
           onClick={() => navigateTo('notifications')}
-          className="relative w-10 h-10 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] transition-colors"
+          className="relative w-9 h-9 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
         >
-          <Bell className="w-4 h-4" />
+          <Bell className="w-4 h-4 stroke-[1.9]" />
           {unreadNotificationCount > 0 && (
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#059669] ring-2 ring-white" />
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#059669] ring-2 ring-white" />
           )}
         </button>
 
         <button
           type="button"
-          aria-label="Shopping bag"
+          aria-label={`Shopping bag with ${cartCount} items`}
           onClick={() => navigateTo('cart')}
-          className="relative w-10 h-10 rounded-xl hover:bg-[#EFF4F1] text-[#0F1D17] flex items-center justify-center transition-colors"
+          className="relative w-9 h-9 rounded-xl hover:bg-[#EFF4F1] text-[#0F1D17] flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
         >
-          <ShoppingCart className="w-4 h-4" />
+          <ShoppingCart className="w-4 h-4 stroke-[1.9]" />
           {cartCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center shadow-2xs">
               {cartCount}
             </span>
           )}
@@ -202,3 +367,4 @@ export const TopAppBar: React.FC = () => {
     </header>
   );
 };
+
