@@ -20,6 +20,7 @@ export const TopAppBar: React.FC = () => {
     currentScreen,
     goBack,
     navigateTo,
+    user,
     cartCount,
     unreadNotificationCount,
     markAllNotificationsRead,
@@ -186,6 +187,13 @@ export const TopAppBar: React.FC = () => {
           title: isBn ? 'শপিং গাইড' : 'Import & Customs Guide',
           subtitle: isBn ? 'বাংলাদেশ কাস্টমস ও ডিউটি নিয়মাবলী' : 'BD HS-Code & Duty Transparency',
         };
+      case 'admin_dashboard':
+        return {
+          title: isBn ? 'অ্যাডমিন অপারেশনস কনসোল' : 'Admin Operations Console',
+          subtitle: isBn
+            ? 'ক্যাটালগ, কাস্টমস ক্লিয়ারেন্স ও অর্ডার কন্ট্রোল'
+            : 'Catalog, Customs Clearance & Order Control',
+        };
       default:
         return {
           title: isBn ? 'দেশিমার্ট' : 'DeshiMart',
@@ -273,6 +281,16 @@ export const TopAppBar: React.FC = () => {
 
       {/* Right Zone: Contextual Utility Actions */}
       <div className="flex items-center gap-0.5 shrink-0">
+        {user.role === 'admin' && currentScreen !== 'admin_dashboard' && (
+          <button
+            type="button"
+            onClick={() => navigateTo('admin_dashboard')}
+            className="h-8 px-2.5 mr-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold flex items-center gap-1 hover:bg-slate-800 transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Admin</span>
+          </button>
+        )}
         {isHome && (
           <>
             <button

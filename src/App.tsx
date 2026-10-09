@@ -16,6 +16,7 @@ import { CartScreen } from './components/screens/CartScreen';
 import { CheckoutFlowScreen } from './components/screens/CheckoutFlowScreen';
 import { OrdersTrackingScreen } from './components/screens/OrdersTrackingScreen';
 import { AccountSupportScreen } from './components/screens/AccountSupportScreen';
+import { AdminDashboardScreen } from './components/screens/AdminDashboardScreen';
 
 const ScreenRouter: React.FC = () => {
   const { currentScreen } = useDeshiMart();
@@ -47,6 +48,8 @@ const ScreenRouter: React.FC = () => {
     case 'orders':
     case 'order_tracking':
       return <OrdersTrackingScreen />;
+    case 'admin_dashboard':
+      return <AdminDashboardScreen />;
     case 'account':
     case 'addresses':
     case 'payment_methods':

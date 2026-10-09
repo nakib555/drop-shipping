@@ -24,7 +24,20 @@ export type ScreenId =
   | 'notifications'
   | 'support'
   | 'settings'
-  | 'guides';
+  | 'guides'
+  | 'admin_dashboard';
+
+export type UserRole = 'customer' | 'admin';
+
+export interface PromoVoucher {
+  code: string;
+  discountType: 'percent' | 'flat';
+  value: number;
+  minOrderBdt: number;
+  maxDiscountBdt?: number;
+  description: string;
+  active: boolean;
+}
 
 export type CurrencyCode = 'BDT' | 'USD';
 export type LanguageCode = 'EN' | 'BN';

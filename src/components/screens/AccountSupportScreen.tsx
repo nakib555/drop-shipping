@@ -42,8 +42,12 @@ export const AccountSupportScreen: React.FC = () => {
     currentScreen,
     navigateTo,
     user,
+    switchUserRole,
     updateUserProfile,
     logoutUser,
+    orders,
+    priceAlerts,
+    promoVouchers,
     wishlist,
     toggleWishlist,
     products,
@@ -1174,159 +1178,359 @@ export const AccountSupportScreen: React.FC = () => {
     );
   }
 
-  // 9. DEFAULT: ACCOUNT / PROFILE DASHBOARD
-  const accountLinks = [
+  // 9. DEFAULT: ACCOUNT / PROFILE DASHBOARD (Customer Suite + Admin Role Switcher)
+  const activeOrdersCount = orders.filter((o) => o.status !== 'Delivered').length;
+  const activePriceAlertsCount = Object.values(priceAlerts).filter(Boolean).length;
+  const activeVouchersCount = promoVouchers.filter((v) => v.active).length;
+  const totalCrossBorderSpendBdt = orders.reduce((sum, o) => sum + o.totalBdt, 0);
+  const estimatedLandedSavingsBdt = Math.round(totalCrossBorderSpendBdt * 0.18) + 1850;
+
+  const accountSections = [
     {
-      label: language === 'BN' ? 'আমার অর্ডার ও লাইভ ট্র্যাকিং' : 'My Orders & Live Tracking',
-      subtitle: 'Track customs & courier progress',
-      icon: Package,
-      screen: 'orders' as const,
+      heading:
+        language === 'BN'
+          ? 'অর্ডার, পেমেন্ট ও ডেলিভারি'
+          : 'Orders, Payments & Delivery',
+      items: [
+        {
+          label:
+            language === 'BN'
+              ? 'আমার অর্ডার ও লাইভ ট্র্যাকিং'
+              : 'My Orders & Live Parcel Radar',
+          subtitle: `${orders.length} total shipments (${activeOrdersCount} in transit)`,
+          icon: Package,
+          screen: 'orders' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'ডেলিভারি ঠিকানা'
+              : 'Saved Delivery Addresses',
+          subtitle: `${addresses.length} verified addresses in Bangladesh`,
+          icon: MapPin,
+          screen: 'addresses' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'পেমেন্ট ও এসক্রো ওয়ালেট'
+              : 'Payment Wallets & Escrow',
+          subtitle: 'bKash, Nagad, Visa/Mastercard, COD',
+          icon: CreditCard,
+          screen: 'payment_methods' as const,
+        },
+      ],
     },
     {
-      label: language === 'BN' ? 'উইশলিস্ট ও সেভ করা পণ্য' : 'Wishlist & Saved Items',
-      subtitle: `${wishlist.length} items with price alerts`,
-      icon: Heart,
-      screen: 'wishlist' as const,
+      heading:
+        language === 'BN'
+          ? 'প্রাইস ইন্টেলিজেন্স ও সংরক্ষিত পণ্য'
+          : 'Price Intelligence & Saved Items',
+      items: [
+        {
+          label:
+            language === 'BN'
+              ? 'উইশলিস্ট ও সেভ করা পণ্য'
+              : 'Wishlist & Saved Items',
+          subtitle: `${wishlist.length} saved global products`,
+          icon: Heart,
+          screen: 'wishlist' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? '৩০ দিনের প্রাইস ট্র্যাকার'
+              : '30-Day Landed Price Tracker',
+          subtitle: `${activePriceAlertsCount} active price drop radar alerts`,
+          icon: TrendingDown,
+          screen: 'price_tracker' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? '৩টি শিপিং রুট তুলনা'
+              : '3-Route Landed Cost Compare',
+          subtitle: 'Direct Air · Local Ready · Consolidated',
+          icon: Truck,
+          screen: 'seller_compare' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'ভেরিফাইড সাপ্লায়ার স্টোর'
+              : 'Verified Supplier Storefront',
+          subtitle: `${selectedProduct.supplierName} (${selectedProduct.originLabel})`,
+          icon: Store,
+          screen: 'supplier_store' as const,
+        },
+      ],
     },
     {
-      label: language === 'BN' ? 'ডেলিভারি ঠিকানা' : 'Delivery Addresses',
-      subtitle: `${addresses.length} saved addresses in Bangladesh`,
-      icon: MapPin,
-      screen: 'addresses' as const,
-    },
-    {
-      label: language === 'BN' ? 'পেমেন্ট মাধ্যম' : 'Payment Methods',
-      subtitle: 'COD, bKash, Nagad, Visa, PayPal',
-      icon: CreditCard,
-      screen: 'payment_methods' as const,
-    },
-    {
-      label: language === 'BN' ? 'ভেরিফাইড সাপ্লায়ার স্টোর' : 'Verified Supplier Storefront',
-      subtitle: `${selectedProduct.supplierName} (${selectedProduct.originLabel})`,
-      icon: Store,
-      screen: 'supplier_store' as const,
-    },
-    {
-      label: language === 'BN' ? 'নোটিফিকেশন ও প্রাইস অ্যালার্ট' : 'Notifications & Price Drop Alerts',
-      subtitle: 'Order & 30-day deal notifications',
-      icon: Bell,
-      screen: 'notifications' as const,
-    },
-    {
-      label: language === 'BN' ? 'কারেন্সি ও ভাষা' : 'Currency & Language',
-      subtitle: `${currency} · ${language === 'EN' ? 'English' : 'বাংলা (Noto Sans Bengali)'}`,
-      icon: Globe,
-      screen: 'settings' as const,
-    },
-    {
-      label: language === 'BN' ? 'ক্রস-বর্ডার শপিং গাইড' : 'Cross-Border Shopping Guides',
-      subtitle: 'How to buy globally without hidden tax',
-      icon: BookOpen,
-      screen: 'guides' as const,
-    },
-    {
-      label: language === 'BN' ? 'হেল্প ও ২৪/৭ সাপোর্ট' : 'Help & 24/7 Support',
-      subtitle: 'FAQs, Live Chat & 30-Day Return Policy',
-      icon: HelpCircle,
-      screen: 'support' as const,
-    },
-    {
-      label: language === 'BN' ? '৩০ দিনের প্রাইস ট্র্যাকার' : '30-Day Price Tracker',
-      subtitle: 'Historical landed cost & price drop alerts',
-      icon: TrendingDown,
-      screen: 'price_tracker' as const,
-    },
-    {
-      label: language === 'BN' ? '৩টি শিপিং রুট তুলনা' : '3-Route Landed Cost Compare',
-      subtitle: 'Direct Air · Local Ready · Consolidated',
-      icon: Truck,
-      screen: 'seller_compare' as const,
-    },
-    {
-      label: language === 'BN' ? 'ইন্ট্রো স্লাইডগুলো দেখুন' : 'Replay Intro Walkthrough',
-      subtitle: 'View DeshiMart onboarding & customs overview',
-      icon: Sparkles,
-      screen: 'splash' as const,
+      heading:
+        language === 'BN'
+          ? 'সাপোর্ট, কাস্টমস গাইড ও সেটিংস'
+          : 'Support, Customs Guides & Preferences',
+      items: [
+        {
+          label:
+            language === 'BN'
+              ? 'নোটিফিকেশন ও প্রাইস অ্যালার্ট'
+              : 'Notifications & Activity Feed',
+          subtitle: `${unreadNotificationCount} unread shipment & deal alerts`,
+          icon: Bell,
+          screen: 'notifications' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'হেল্প ও ২৪/৭ সাপোর্ট'
+              : '24/7 Dhaka Customs & Order Concierge',
+          subtitle: 'Live Chat, FAQs & 30-Day Return Guarantee',
+          icon: HelpCircle,
+          screen: 'support' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'ক্রস-বর্ডার শপিং গাইড'
+              : 'Bangladesh HS-Code & Duty Guides',
+          subtitle: 'How landed pricing & customs clearance work',
+          icon: BookOpen,
+          screen: 'guides' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'কারেন্সি ও ভাষা সেটিংস'
+              : 'Currency & Language Preferences',
+          subtitle: `${currency} · ${
+            language === 'EN' ? 'English' : 'বাংলা (Noto Sans Bengali)'
+          }`,
+          icon: Globe,
+          screen: 'settings' as const,
+        },
+        {
+          label:
+            language === 'BN'
+              ? 'ইন্ট্রো স্লাইডগুলো দেখুন'
+              : 'Replay Intro Walkthrough',
+          subtitle: 'View DeshiMart onboarding & customs overview',
+          icon: Sparkles,
+          screen: 'splash' as const,
+        },
+      ],
     },
   ];
 
   return (
     <div className="p-4 space-y-4 pb-6 bg-app-bg">
-      {/* Profile Hero Card */}
-      <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-content-primary text-white font-bold text-sm flex items-center justify-center">
-            {user.fullName
-              .split(' ')
-              .map((n) => n[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-content-primary">
-              {user.fullName}
-            </h2>
-            <p className="text-xs text-content-secondary">{user.email}</p>
-            <p className="tabular-nums text-xs text-content-secondary font-medium mt-0.5">
-              {user.phone}
-            </p>
-          </div>
+      {/* 1. Role Switcher Bar (Customer Account <-> Admin Operations Console) */}
+      <div className="bg-white rounded-xl border border-app-border p-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 pl-1.5 min-w-0">
+          <ShieldCheck className="w-4 h-4 text-brand-primary shrink-0" />
+          <span className="text-xs font-semibold text-content-primary truncate">
+            {language === 'BN' ? 'অ্যাকাউন্ট মোড:' : 'Account Mode:'}
+          </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 bg-app-subtle p-1 rounded-lg border border-app-border shrink-0">
           <button
             type="button"
-            aria-label="Edit profile"
             onClick={() => {
-              setEditName(user.fullName);
-              setEditEmail(user.email);
-              setEditPhone(user.phone);
-              setEditProfileOpen(true);
+              if (user.role !== 'customer') switchUserRole('customer');
             }}
-            className="w-10 h-10 rounded-lg bg-app-subtle border border-app-border text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors"
+            className={`h-7 px-2.5 rounded-md text-xs font-semibold transition-all ${
+              user.role === 'customer'
+                ? 'bg-brand-primary text-white shadow-xs'
+                : 'text-content-secondary hover:text-content-primary'
+            }`}
           >
-            <Edit3 className="w-4 h-4" />
+            {language === 'BN' ? 'কাস্টমার' : 'Customer'}
           </button>
           <button
             type="button"
-            aria-label="Account settings"
-            onClick={() => navigateTo('settings')}
-            className="w-10 h-10 rounded-lg bg-app-subtle border border-app-border text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors"
+            onClick={() => switchUserRole('admin')}
+            className={`h-7 px-2.5 rounded-md text-xs font-semibold transition-all ${
+              user.role === 'admin'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-content-secondary hover:text-content-primary'
+            }`}
           >
-            <Settings className="w-4 h-4" />
+            {language === 'BN' ? 'অ্যাডমিন কনসোল' : 'Admin Console'}
           </button>
         </div>
       </div>
 
-      {/* Interactive Tap List Rows */}
-      <div className="bg-white rounded-xl border border-app-border divide-y divide-app-border overflow-hidden">
-        {accountLinks.map((row) => {
-          const Icon = row.icon;
-          return (
-            <button
-              key={row.label}
-              type="button"
-              onClick={() => navigateTo(row.screen)}
-              className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-app-subtle text-content-primary flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-content-primary truncate">
-                    {row.label}
-                  </p>
-                  <p className="text-xs text-content-secondary truncate">
-                    {row.subtitle}
-                  </p>
-                </div>
+      {/* 2. Customer Profile & VIP Tier Hero Card */}
+      <div className="bg-white rounded-2xl border border-app-border p-4 space-y-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-brand-primary text-white font-bold text-sm flex items-center justify-center shrink-0">
+              {user.fullName
+                .split(' ')
+                .map((n) => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-sm font-bold text-content-primary truncate">
+                  {user.fullName}
+                </h2>
+                <span className="px-2 py-0.5 rounded-md bg-brand-subtle text-brand-primary text-[10px] font-bold">
+                  {user.memberTier || 'Gold Global Importer'}
+                </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-content-muted shrink-0" />
+              <p className="text-xs text-content-secondary truncate mt-0.5">
+                {user.email}
+              </p>
+              <p className="font-mono-num text-xs text-content-secondary font-medium">
+                {user.phone} · Since {user.memberSince || 'March 2025'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              aria-label="Edit profile"
+              onClick={() => {
+                setEditName(user.fullName);
+                setEditEmail(user.email);
+                setEditPhone(user.phone);
+                setEditProfileOpen(true);
+              }}
+              className="w-9 h-9 rounded-lg bg-app-subtle border border-app-border text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors"
+            >
+              <Edit3 className="w-4 h-4" />
             </button>
-          );
-        })}
+            <button
+              type="button"
+              aria-label="Account settings"
+              onClick={() => navigateTo('settings')}
+              className="w-9 h-9 rounded-lg bg-app-subtle border border-app-border text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* 4-Tile Customer Quick Action Strip */}
+        <div className="grid grid-cols-4 gap-2 pt-3 border-t border-app-border">
+          <button
+            type="button"
+            onClick={() => navigateTo('orders')}
+            className="p-2 rounded-xl bg-app-subtle hover:bg-slate-100 border border-app-border text-center transition-colors"
+          >
+            <p className="font-mono-num text-sm font-bold text-content-primary">
+              {orders.length}
+            </p>
+            <p className="text-[11px] text-content-secondary truncate">Orders</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigateTo('wishlist')}
+            className="p-2 rounded-xl bg-app-subtle hover:bg-slate-100 border border-app-border text-center transition-colors"
+          >
+            <p className="font-mono-num text-sm font-bold text-content-primary">
+              {wishlist.length}
+            </p>
+            <p className="text-[11px] text-content-secondary truncate">Wishlist</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigateTo('price_tracker')}
+            className="p-2 rounded-xl bg-app-subtle hover:bg-slate-100 border border-app-border text-center transition-colors"
+          >
+            <p className="font-mono-num text-sm font-bold text-brand-primary">
+              {activePriceAlertsCount}
+            </p>
+            <p className="text-[11px] text-content-secondary truncate">
+              Price Radar
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigateTo('cart')}
+            className="p-2 rounded-xl bg-app-subtle hover:bg-slate-100 border border-app-border text-center transition-colors"
+          >
+            <p className="font-mono-num text-sm font-bold text-brand-primary">
+              {activeVouchersCount}
+            </p>
+            <p className="text-[11px] text-content-secondary truncate">Vouchers</p>
+          </button>
+        </div>
       </div>
+
+      {/* 3. Customer Cross-Border Landed Savings & Duty Passport Card */}
+      <div className="rounded-2xl bg-brand-subtle/60 border border-brand-primary/20 p-4 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-brand-primary shrink-0" />
+            <span className="text-xs font-bold text-content-primary">
+              {language === 'BN'
+                ? 'ক্রস-বর্ডার সেভিংস ও কাস্টমস পাসপোর্ট'
+                : 'Cross-Border Landed Savings Passport'}
+            </span>
+          </div>
+          <span className="font-mono-num text-xs font-bold text-brand-primary">
+            Saved {formatPrice(estimatedLandedSavingsBdt)}
+          </span>
+        </div>
+        <p className="text-xs text-content-secondary leading-relaxed">
+          Your account includes automatic Dhaka HS-Code pre-clearance, 25% consolidated air-freight discount on 2+ items, and 100% escrow buyer protection.
+        </p>
+        <div className="flex items-center justify-between pt-1 text-[11px] text-content-secondary font-mono-num">
+          <span>Active Vouchers: {promoVouchers.filter((v) => v.active).map((v) => v.code).join(', ')}</span>
+          <button
+            type="button"
+            onClick={() => navigateTo('cart')}
+            className="font-sans font-semibold text-brand-primary hover:underline"
+          >
+            Apply in Bag →
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Categorized Customer Account Navigation Sections */}
+      {accountSections.map((section) => (
+        <div key={section.heading} className="space-y-1.5">
+          <h3 className="px-1 text-xs font-bold uppercase tracking-wider text-content-secondary">
+            {section.heading}
+          </h3>
+          <div className="bg-white rounded-xl border border-app-border divide-y divide-app-border overflow-hidden">
+            {section.items.map((row) => {
+              const Icon = row.icon;
+              return (
+                <button
+                  key={row.label}
+                  type="button"
+                  onClick={() => navigateTo(row.screen)}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-app-subtle text-content-primary flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-content-primary truncate">
+                        {row.label}
+                      </p>
+                      <p className="text-xs text-content-secondary truncate">
+                        {row.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-content-muted shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
       {/* Logout Button */}
       <button

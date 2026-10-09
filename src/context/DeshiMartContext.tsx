@@ -15,9 +15,11 @@ import {
   Order,
   PaymentMethodId,
   Product,
+  PromoVoucher,
   ScreenId,
   ShippingAddress,
   ShippingMethodId,
+  UserRole,
 } from '../types/deshimart';
 
 export interface SmartFiltersState {
@@ -43,11 +45,63 @@ interface DeshiMartContextValue {
   navigateTo: (screen: ScreenId, options?: { productId?: string; categoryId?: CategoryId; orderId?: string }) => void;
   goBack: () => void;
 
-  // User & Auth
-  user: { fullName: string; email: string; phone: string; isLoggedIn: boolean };
-  loginUser: (emailOrPhone: string, fullName?: string) => void;
+  // User & Auth (Multi-Role RBAC: customer | admin)
+  user: {
+    fullName: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+    memberTier: string;
+    memberSince: string;
+    isLoggedIn: boolean;
+  };
+  loginUser: (emailOrPhone: string, fullName?: string, role?: UserRole) => void;
+  switchUserRole: (role: UserRole) => void;
   updateUserProfile: (data: { fullName: string; email: string; phone: string }) => void;
   logoutUser: () => void;
+
+  // Admin Operations & Merchandising
+  promoVouchers: PromoVoucher[];
+  createPromoVoucher: (voucher: PromoVoucher) => void;
+  togglePromoVoucher: (code: string) => void;
+  adminAddProduct: (input: {
+    name: string;
+    nameBn?: string;
+    subtitle: string;
+    category: CategoryId;
+    image: string;
+    originLabel: string;
+    supplierName: string;
+    hsCode: string;
+    productPriceBdt: number;
+    shippingBdt: number;
+    discountPercent?: number;
+    inStock: boolean;
+  }) => void;
+  adminUpdateProduct: (
+    productId: string,
+    updates: Partial<
+      Pick<
+        Product,
+        | 'name'
+        | 'productPriceBdt'
+        | 'shippingBdt'
+        | 'importDutyBdt'
+        | 'vatBdt'
+        | 'totalLandedBdt'
+        | 'inStock'
+        | 'verifiedSupplier'
+        | 'arrivesThisWeek'
+      >
+    >
+  ) => void;
+  adminDeleteProduct: (productId: string) => void;
+  adminAdvanceOrderStatus: (orderId: string) => void;
+  adminBroadcastNotification: (
+    title: string,
+    body: string,
+    type: AppNotification['type']
+  ) => void;
 
   // Preferences
   currency: CurrencyCode;
@@ -153,15 +207,73 @@ export function formatLandedPrice(amount: number): string {
   return `৳\u00A0${Math.round(amount).toLocaleString('en-IN')}`;
 }
 
+const INITIAL_PROMO_VOUCHERS: PromoVoucher[] = [
+  {
+    code: 'DESHI10',
+    discountType: 'percent',
+    value: 10,
+    minOrderBdt: 1000,
+    maxDiscountBdt: 1500,
+    description: '10% off total landed cost (up to ৳ 1,500)',
+    active: true,
+  },
+  {
+    code: 'FIRST500',
+    discountType: 'flat',
+    value: 500,
+    minOrderBdt: 2500,
+    description: 'Flat ৳ 500 off cross-border orders above ৳ 2,500',
+    active: true,
+  },
+  {
+    code: 'BKASHCB',
+    discountType: 'percent',
+    value: 5,
+    minOrderBdt: 1500,
+    maxDiscountBdt: 1000,
+    description: '5% instant bKash escrow cashback (up to ৳ 1,000)',
+    active: true,
+  },
+];
+
 export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [screenHistory, setScreenHistory] = useState<ScreenId[]>(['splash']);
 
-  const [user, setUser] = useState(() => ({
-    fullName: 'Tanvir Ahmed',
-    email: 'tanvir.ahmed@deshimart.bd',
-    phone: '+880 1712 345678',
-    isLoggedIn: true,
-  }));
+  const [user, setUser] = useState<{
+    fullName: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+    memberTier: string;
+    memberSince: string;
+    isLoggedIn: boolean;
+  }>(() => {
+    try {
+      const saved = localStorage.getItem('deshimart_user_v2');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return {
+      fullName: 'Tanvir Ahmed',
+      email: 'tanvir.ahmed@deshimart.bd',
+      phone: '+880 1712 345678',
+      role: 'customer',
+      memberTier: 'Gold Global Importer',
+      memberSince: 'March 2025',
+      isLoggedIn: true,
+    };
+  });
+
+  const [promoVouchers, setPromoVouchers] = useState<PromoVoucher[]>(() => {
+    try {
+      const saved = localStorage.getItem('deshimart_vouchers_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return INITIAL_PROMO_VOUCHERS;
+  });
 
   const [currency, setCurrency] = useState<CurrencyCode>('BDT');
   const [language, setLanguage] = useState<LanguageCode>('EN');
@@ -292,6 +404,22 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // ignore
     }
   }, [wishlist]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('deshimart_user_v2', JSON.stringify(user));
+    } catch {
+      // ignore
+    }
+  }, [user]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('deshimart_vouchers_v1', JSON.stringify(promoVouchers));
+    } catch {
+      // ignore
+    }
+  }, [promoVouchers]);
 
   const showToast = (text: string, type: 'success' | 'info' = 'success') => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -468,16 +596,19 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const applyPromoCode = (rawCode: string): boolean => {
     const normalized = rawCode.trim().toUpperCase();
     if (!normalized) return false;
-    if (
-      normalized === 'DESHI10' ||
-      normalized === 'FIRST500' ||
-      normalized === 'BKASHCB'
-    ) {
-      setPromoCode(normalized);
-      showToast(`Promo code ${normalized} applied!`);
+    const matched = promoVouchers.find(
+      (v) => v.code.toUpperCase() === normalized && v.active
+    );
+    if (matched) {
+      setPromoCode(matched.code);
+      showToast(`Promo code ${matched.code} applied!`);
       return true;
     }
-    showToast('Invalid code. Try DESHI10, FIRST500, or BKASHCB', 'info');
+    const activeCodes = promoVouchers
+      .filter((v) => v.active)
+      .map((v) => v.code)
+      .join(', ');
+    showToast(`Invalid or inactive code. Try: ${activeCodes || 'DESHI10'}`, 'info');
     return false;
   };
 
@@ -520,12 +651,25 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     let promoDiscountBdt = 0;
-    if (promoCode === 'DESHI10') {
-      promoDiscountBdt = Math.min(1500, Math.round(afterConsolidationBdt * 0.1));
-    } else if (promoCode === 'FIRST500') {
-      promoDiscountBdt = afterConsolidationBdt >= 2500 ? 500 : 250;
-    } else if (promoCode === 'BKASHCB') {
-      promoDiscountBdt = Math.min(1000, Math.round(afterConsolidationBdt * 0.05));
+    if (promoCode) {
+      const matchedVoucher = promoVouchers.find(
+        (v) => v.code.toUpperCase() === promoCode.toUpperCase() && v.active
+      );
+      if (matchedVoucher) {
+        if (matchedVoucher.discountType === 'percent') {
+          const rawDiscount = Math.round(
+            afterConsolidationBdt * (matchedVoucher.value / 100)
+          );
+          promoDiscountBdt = matchedVoucher.maxDiscountBdt
+            ? Math.min(matchedVoucher.maxDiscountBdt, rawDiscount)
+            : rawDiscount;
+        } else {
+          promoDiscountBdt =
+            afterConsolidationBdt >= matchedVoucher.minOrderBdt
+              ? matchedVoucher.value
+              : Math.round(matchedVoucher.value * 0.5);
+        }
+      }
     }
 
     const subtotalBdt = Math.max(0, afterConsolidationBdt - promoDiscountBdt);
@@ -542,7 +686,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       shippingBdt,
       totalBdt: subtotalBdt + shippingBdt,
     };
-  }, [cart, catalogProducts, consolidateParcel, promoCode, shippingMethod]);
+  }, [cart, catalogProducts, consolidateParcel, promoCode, promoVouchers, shippingMethod]);
 
   const toggleWishlist = (productId: string) => {
     const prod = catalogProducts.find((p) => p.id === productId);
@@ -664,15 +808,406 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return newOrder;
   };
 
-  const loginUser = (emailOrPhone: string, fullName?: string) => {
+  const loginUser = (
+    emailOrPhone: string,
+    fullName?: string,
+    role?: UserRole
+  ) => {
+    const normalized = emailOrPhone.trim().toLowerCase();
+    const detectedRole: UserRole =
+      role ||
+      (normalized.includes('admin') || normalized.includes('ops@')
+        ? 'admin'
+        : 'customer');
+    const resolvedName =
+      fullName ||
+      (detectedRole === 'admin'
+        ? 'Nakib Prince (Operations Admin)'
+        : 'Tanvir Ahmed');
+    const resolvedEmail = emailOrPhone.includes('@')
+      ? emailOrPhone.trim()
+      : detectedRole === 'admin'
+      ? 'admin@deshimart.bd'
+      : 'tanvir.ahmed@deshimart.bd';
+
     setUser({
-      fullName: fullName || 'Tanvir Ahmed',
-      email: emailOrPhone.includes('@') ? emailOrPhone : 'tanvir.ahmed@deshimart.bd',
-      phone: emailOrPhone.includes('@') ? '+880 1712 345678' : emailOrPhone,
+      fullName: resolvedName,
+      email: resolvedEmail,
+      phone: emailOrPhone.includes('@')
+        ? detectedRole === 'admin'
+          ? '+880 1819 001122'
+          : '+880 1712 345678'
+        : emailOrPhone.trim(),
+      role: detectedRole,
+      memberTier:
+        detectedRole === 'admin'
+          ? 'Staff Operations Director'
+          : 'Gold Global Importer',
+      memberSince: detectedRole === 'admin' ? 'Jan 2024' : 'March 2025',
       isLoggedIn: true,
     });
-    showToast(`Welcome, ${fullName || 'Tanvir Ahmed'}!`);
-    navigateTo('home');
+    showToast(
+      detectedRole === 'admin'
+        ? `Signed in as Admin (${resolvedName})`
+        : `Welcome back, ${resolvedName}!`
+    );
+    navigateTo(detectedRole === 'admin' ? 'admin_dashboard' : 'home');
+  };
+
+  const switchUserRole = (nextRole: UserRole) => {
+    if (nextRole === 'admin') {
+      setUser({
+        fullName: 'Nakib Prince',
+        email: 'admin@deshimart.bd',
+        phone: '+880 1819 001122',
+        role: 'admin',
+        memberTier: 'Staff Operations Director',
+        memberSince: 'Jan 2024',
+        isLoggedIn: true,
+      });
+      showToast('Switched to Admin Operations Console');
+      navigateTo('admin_dashboard');
+    } else {
+      setUser({
+        fullName: 'Tanvir Ahmed',
+        email: 'tanvir.ahmed@deshimart.bd',
+        phone: '+880 1712 345678',
+        role: 'customer',
+        memberTier: 'Gold Global Importer',
+        memberSince: 'March 2025',
+        isLoggedIn: true,
+      });
+      showToast('Switched to Customer Shopping Account');
+      navigateTo('account');
+    }
+  };
+
+  const createPromoVoucher = (voucher: PromoVoucher) => {
+    const code = voucher.code.trim().toUpperCase();
+    if (!code) return;
+    setPromoVouchers((prev) => [
+      { ...voucher, code },
+      ...prev.filter((v) => v.code.toUpperCase() !== code),
+    ]);
+    showToast(`Promo voucher ${code} published!`);
+  };
+
+  const togglePromoVoucher = (code: string) => {
+    setPromoVouchers((prev) =>
+      prev.map((v) =>
+        v.code.toUpperCase() === code.toUpperCase()
+          ? { ...v, active: !v.active }
+          : v
+      )
+    );
+    showToast(`Updated status for voucher ${code}`);
+  };
+
+  const adminAddProduct = (input: {
+    name: string;
+    nameBn?: string;
+    subtitle: string;
+    category: CategoryId;
+    image: string;
+    originLabel: string;
+    supplierName: string;
+    hsCode: string;
+    productPriceBdt: number;
+    shippingBdt: number;
+    discountPercent?: number;
+    inStock: boolean;
+  }) => {
+    const base = Math.max(100, Math.round(input.productPriceBdt));
+    const ship = Math.max(0, Math.round(input.shippingBdt));
+    const duty = Math.round(base * 0.1);
+    const vat = Math.round((base + duty) * 0.15);
+    const totalLanded = base + ship + duty + vat;
+    const discountPct = input.discountPercent ?? 15;
+    const origLanded = Math.round(totalLanded / (1 - discountPct / 100));
+    const newId = `prod-custom-${Date.now()}`;
+
+    const newProduct: Product = {
+      id: newId,
+      name: input.name.trim(),
+      nameBn: input.nameBn?.trim() || input.name.trim(),
+      subtitle: input.subtitle.trim() || 'Direct Factory Import · Duty & VAT Paid',
+      category: input.category,
+      image:
+        input.image.trim() ||
+        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+      hsCode: input.hsCode.trim() || '8517.62.00',
+      corridorTag: `${input.originLabel} → Dhaka Air Hub`,
+      originLabel: input.originLabel.trim() || 'Shenzhen, CN',
+      verifiedSupplier: true,
+      supplierName: input.supplierName.trim() || 'DeshiMart Global Direct',
+      supplierFollowers: '14.2K',
+      supplierProductsCount: '120+',
+      rating: 4.9,
+      reviewCount: 18,
+      dropScore: 9.2,
+      dropScoreLabel: 'Excellent',
+      productPriceBdt: base,
+      shippingBdt: ship,
+      importDutyBdt: duty,
+      vatBdt: vat,
+      totalLandedBdt: totalLanded,
+      originalLandedBdt: origLanded,
+      discountPercent: discountPct,
+      lowest30dBdt: Math.round(totalLanded * 0.96),
+      arrivesThisWeek: true,
+      inStock: input.inStock,
+      colors: [
+        { name: 'Obsidian Black', hex: '#0F172A' },
+        { name: 'Titanium Silver', hex: '#94A3B8' },
+      ],
+      highlights: [
+        '100% Customs Duty & 15% BD VAT Pre-Cleared',
+        `Direct Air Freight from ${input.originLabel || 'Global Hub'}`,
+        '1-Year Official DeshiMart Escrow Warranty',
+      ],
+      specs: {
+        warranty: '1 Year Official BD Warranty',
+        weight: '380g Packaged',
+      },
+      routes: [
+        {
+          id: `${newId}-direct`,
+          name: 'Direct Air Express',
+          badge: 'Best Landed Value',
+          originCountry: input.originLabel || 'Shenzhen, CN',
+          basePriceBdt: base,
+          shippingBdt: ship,
+          dutyBdt: duty,
+          vatBdt: vat,
+          totalLandedBdt: totalLanded,
+          deliveryDays: '5–8 Days',
+          rating: 4.9,
+          reliabilityScore: 9.6,
+          verified: true,
+          onTimeRate: '99.1%',
+          returnRate: '0.7%',
+          responseTime: '< 1 hr',
+        },
+        {
+          id: `${newId}-consolidated`,
+          name: 'Consolidated Cargo Saver',
+          badge: 'Lowest Freight',
+          originCountry: input.originLabel || 'Shenzhen, CN',
+          basePriceBdt: base,
+          shippingBdt: Math.max(120, Math.round(ship * 0.65)),
+          dutyBdt: duty,
+          vatBdt: vat,
+          totalLandedBdt:
+            base + Math.max(120, Math.round(ship * 0.65)) + duty + vat,
+          deliveryDays: '9–13 Days',
+          rating: 4.8,
+          reliabilityScore: 9.3,
+          verified: true,
+          onTimeRate: '97.8%',
+          returnRate: '1.1%',
+          responseTime: '< 2 hrs',
+        },
+      ],
+      priceHistory: {
+        '7D': [
+          { dateLabel: '7d ago', priceBdt: origLanded },
+          { dateLabel: '4d ago', priceBdt: Math.round((origLanded + totalLanded) / 2) },
+          { dateLabel: 'Today', priceBdt: totalLanded },
+        ],
+        '30D': [
+          { dateLabel: '30d ago', priceBdt: origLanded },
+          { dateLabel: '15d ago', priceBdt: Math.round((origLanded + totalLanded) / 2) },
+          { dateLabel: 'Today', priceBdt: totalLanded },
+        ],
+        '90D': [
+          { dateLabel: '90d ago', priceBdt: origLanded },
+          { dateLabel: '45d ago', priceBdt: Math.round((origLanded + totalLanded) / 2) },
+          { dateLabel: 'Today', priceBdt: totalLanded },
+        ],
+        '1Y': [
+          { dateLabel: '1y ago', priceBdt: origLanded },
+          { dateLabel: '6m ago', priceBdt: Math.round((origLanded + totalLanded) / 2) },
+          { dateLabel: 'Today', priceBdt: totalLanded },
+        ],
+      },
+      reviews: [
+        {
+          id: `rev-init-${Date.now()}`,
+          author: 'Verified Dhaka Importer',
+          verified: true,
+          rating: 5,
+          date: 'Today',
+          comment: 'Cleared Dhaka customs with zero extra charges. Authentic factory unit.',
+          variantChosen: 'Direct Air Express',
+        },
+      ],
+    };
+
+    setCatalogProducts((prev) => [newProduct, ...prev]);
+    setSelectedProductId(newProduct.id);
+    showToast(`Added "${newProduct.name}" to Global Catalog!`);
+  };
+
+  const adminUpdateProduct = (
+    productId: string,
+    updates: Partial<
+      Pick<
+        Product,
+        | 'name'
+        | 'productPriceBdt'
+        | 'shippingBdt'
+        | 'importDutyBdt'
+        | 'vatBdt'
+        | 'totalLandedBdt'
+        | 'inStock'
+        | 'verifiedSupplier'
+        | 'arrivesThisWeek'
+      >
+    >
+  ) => {
+    setCatalogProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        const base =
+          updates.productPriceBdt !== undefined
+            ? Math.max(50, Math.round(updates.productPriceBdt))
+            : p.productPriceBdt;
+        const ship =
+          updates.shippingBdt !== undefined
+            ? Math.max(0, Math.round(updates.shippingBdt))
+            : p.shippingBdt;
+        const duty =
+          updates.importDutyBdt !== undefined
+            ? Math.round(updates.importDutyBdt)
+            : Math.round(base * 0.1);
+        const vat =
+          updates.vatBdt !== undefined
+            ? Math.round(updates.vatBdt)
+            : Math.round((base + duty) * 0.15);
+        const landed =
+          updates.totalLandedBdt !== undefined
+            ? Math.round(updates.totalLandedBdt)
+            : base + ship + duty + vat;
+
+        return {
+          ...p,
+          ...updates,
+          productPriceBdt: base,
+          shippingBdt: ship,
+          importDutyBdt: duty,
+          vatBdt: vat,
+          totalLandedBdt: landed,
+          routes: p.routes.map((r, idx) =>
+            idx === 0
+              ? {
+                  ...r,
+                  basePriceBdt: base,
+                  shippingBdt: ship,
+                  dutyBdt: duty,
+                  vatBdt: vat,
+                  totalLandedBdt: landed,
+                }
+              : r
+          ),
+        };
+      })
+    );
+    showToast('Product pricing & inventory updated');
+  };
+
+  const adminDeleteProduct = (productId: string) => {
+    setCatalogProducts((prev) => {
+      if (prev.length <= 2) {
+        showToast('Cannot delete last catalog items', 'info');
+        return prev;
+      }
+      const target = prev.find((p) => p.id === productId);
+      const next = prev.filter((p) => p.id !== productId);
+      if (selectedProductId === productId && next[0]) {
+        setSelectedProductId(next[0].id);
+      }
+      showToast(`Removed ${target?.name || 'product'} from catalog`, 'info');
+      return next;
+    });
+  };
+
+  const adminAdvanceOrderStatus = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((ord) => {
+        if (ord.id !== orderId) return ord;
+        const nextStatus: Order['status'] =
+          ord.status === 'Processing'
+            ? 'Shipped'
+            : ord.status === 'Shipped'
+            ? 'Delivered'
+            : 'Delivered';
+
+        const updatedMilestones = ord.milestones.map((m, idx) => {
+          if (nextStatus === 'Shipped') {
+            return {
+              ...m,
+              completed: idx <= 2,
+              current: idx === 2,
+              timestamp: idx === 2 ? 'Cleared Just Now · Dhaka Hub' : m.timestamp,
+            };
+          }
+          return {
+            ...m,
+            completed: true,
+            current: idx === ord.milestones.length - 1,
+            timestamp:
+              idx === ord.milestones.length - 1
+                ? 'Delivered Just Now'
+                : m.timestamp,
+          };
+        });
+
+        const statusNotif: AppNotification = {
+          id: `notif-admin-ord-${Date.now()}`,
+          type: 'order',
+          title: `Order #${ord.id} ${
+            nextStatus === 'Shipped'
+              ? 'Cleared Customs & Shipped'
+              : 'Delivered to Doorstep'
+          }`,
+          body:
+            nextStatus === 'Shipped'
+              ? `Parcel #${ord.trackingCode} cleared Dhaka HS-Code customs and is in transit with ${ord.courierName}.`
+              : `Parcel #${ord.trackingCode} was delivered to ${ord.shippingAddress.city}. Tax invoice is ready.`,
+          timestamp: 'Just now',
+          read: false,
+          targetScreen: 'order_tracking',
+          targetOrderId: ord.id,
+        };
+        setNotifications((nPrev) => [statusNotif, ...nPrev]);
+        showToast(`Order #${ord.id} advanced to ${nextStatus}`);
+
+        return {
+          ...ord,
+          status: nextStatus,
+          milestones: updatedMilestones,
+        };
+      })
+    );
+  };
+
+  const adminBroadcastNotification = (
+    title: string,
+    body: string,
+    type: AppNotification['type']
+  ) => {
+    if (!title.trim() || !body.trim()) return;
+    const newNotif: AppNotification = {
+      id: `notif-broadcast-${Date.now()}`,
+      type,
+      title: title.trim(),
+      body: body.trim(),
+      timestamp: 'Just now',
+      read: false,
+      targetScreen: type === 'promo' ? 'cart' : 'home',
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+    showToast('Live alert broadcasted to all customers!');
   };
 
   const logoutUser = () => {
@@ -720,8 +1255,17 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         goBack,
         user,
         loginUser,
+        switchUserRole,
         updateUserProfile,
         logoutUser,
+        promoVouchers,
+        createPromoVoucher,
+        togglePromoVoucher,
+        adminAddProduct,
+        adminUpdateProduct,
+        adminDeleteProduct,
+        adminAdvanceOrderStatus,
+        adminBroadcastNotification,
         currency,
         setCurrency,
         language,
