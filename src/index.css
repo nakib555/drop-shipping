@@ -1,5 +1,31 @@
 @import "tailwindcss";
 
+@theme {
+  --color-app-bg: #F8FAFC;
+  --color-app-surface: #FFFFFF;
+  --color-app-subtle: #F1F5F9;
+  --color-app-border: #E2E8F0;
+  --color-app-borderStrong: #CBD5E1;
+
+  --color-content-primary: #0F172A;
+  --color-content-secondary: #475569;
+  --color-content-muted: #94A3B8;
+  --color-content-inverted: #FFFFFF;
+
+  --color-brand-primary: #065F46;
+  --color-brand-hover: #047857;
+  --color-brand-subtle: #ECFDF5;
+  --color-brand-border: #A7F3D0;
+
+  --color-promo-accent: #DC2626;
+  --color-promo-subtle: #FEF2F2;
+  --color-promo-border: #FECACA;
+
+  --color-status-transit: #2563EB;
+  --color-status-warning: #D97706;
+  --color-status-success: #059669;
+}
+
 @layer base {
   :root {
     --font-en: 'Plus Jakarta Sans', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -7,36 +33,36 @@
     --font-mono: 'JetBrains Mono', 'Noto Sans Bengali', monospace;
 
     /* DeshiMart Flow Brand & Architectural Color Tokens */
-    --g: #059669;
+    --g: #065F46;
     --g2: #047857;
     --g3: #064E3B;
-    --ink: #0F1D17;
-    --mut: #485B52;
+    --ink: #0F172A;
+    --mut: #475569;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* DeshiMart Retail Surface & Ink Palette */
-    --dm-canvas: #F5F8F6;
+    /* DeshiMart Semantic Surface & Content Palette */
+    --dm-canvas: #F8FAFC;
     --dm-surface: #FFFFFF;
-    --dm-surface-subtle: #EFF4F1;
-    --dm-surface-dark: #0B1913;
-    --dm-ink: #0F1D17;
-    --dm-ink-secondary: #485B52;
-    --dm-ink-muted: #74887E;
-    --dm-border: #DFEAE3;
-    --dm-border-hover: #A7C4B5;
-    --dm-divider: #EAF0EC;
-    --dm-emerald: #059669;
+    --dm-surface-subtle: #F1F5F9;
+    --dm-surface-dark: #0F172A;
+    --dm-ink: #0F172A;
+    --dm-ink-secondary: #475569;
+    --dm-ink-muted: #94A3B8;
+    --dm-border: #E2E8F0;
+    --dm-border-hover: #CBD5E1;
+    --dm-divider: #E2E8F0;
+    --dm-emerald: #065F46;
     --dm-emerald-hover: #047857;
     --dm-emerald-deep: #065F46;
     --dm-emerald-tint: #ECFDF5;
-    --dm-emerald-soft: #F2F9F5;
-    --dm-emerald-border: #CBE4D6;
+    --dm-emerald-soft: #ECFDF5;
+    --dm-emerald-border: #A7F3D0;
     --dm-amber: #D97706;
-    --dm-rose: #E11D48;
-    --dm-sky: #0284C7;
+    --dm-rose: #DC2626;
+    --dm-sky: #2563EB;
 
-    /* Strict 8pt Grid Spacing System (8px base unit / 4px half-step) */
+    /* Strict 4px / 8pt Grid Spacing System */
     --grid-half: 4px;
     --grid-1x: 8px;
     --grid-1-5x: 12px;
@@ -51,8 +77,10 @@
 
   body {
     font-family: var(--font-en);
-    font-size: 12px;
-    line-height: 16px; /* 2 * 8px */
+    font-size: 14px;
+    line-height: 20px;
+    background-color: var(--dm-canvas);
+    color: var(--dm-ink);
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;

@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, Heart, Package, Plus, Star } from 'lucide-react';
+import { Check, Heart, Package, Plus } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { Product } from '../../types/deshimart';
 
 interface ProductCardProps {
   product: Product;
   compact?: boolean;
+}
+
+function getOriginFlagAndName(originLabel: string): string {
+  const lower = originLabel.toLowerCase();
+  if (lower.includes('china') || lower.includes('shenzhen') || lower.includes('yiwu')) {
+    return '🇨🇳 China';
+  }
+  if (lower.includes('singapore')) return '🇸🇬 Singapore';
+  if (lower.includes('vietnam')) return '🇻🇳 Vietnam';
+  if (lower.includes('japan') || lower.includes('tokyo')) return '🇯🇵 Japan';
+  if (lower.includes('malaysia') || lower.includes('kuala')) return '🇲🇾 Malaysia';
+  if (lower.includes('korea') || lower.includes('seoul')) return '🇰🇷 Korea';
+  if (lower.includes('usa') || lower.includes('states')) return '🇺🇸 USA';
+  if (lower.includes('bangladesh') || lower.includes('dhaka')) return '🇧🇩 Local';
+  const cleaned = originLabel.replace(/^From\s+/i, '').split('·')[0].trim();
+  return `🌏 ${cleaned || 'Global'}`;
 }
 
 /**
@@ -16,46 +32,26 @@ export const ProductCardGhost: React.FC = () => {
   return (
     <div
       aria-hidden="true"
-      className="relative bg-white rounded-2xl border border-[#DFEAE3] p-3 flex flex-col justify-between select-none overflow-hidden"
+      className="relative bg-white border border-app-border rounded-xl overflow-hidden flex flex-col justify-between select-none"
     >
-      {/* Top-Right Wishlist Circle Ghost */}
-      <div className="absolute top-5 right-5 z-10 w-7 h-7 rounded-full bg-[#EFF4F1] animate-pulse" />
-
-      <div>
-        {/* Square Image Slot Ghost */}
-        <div className="w-full aspect-square rounded-xl bg-[#F5F8F6] mb-2.5 border border-[#EAF0EC] animate-pulse flex items-center justify-center">
-          <div className="w-10 h-10 rounded-xl bg-[#DFEAE3]" />
-        </div>
-
-        {/* Unboxed Metadata Line Ghost (Origin · Delivery · Rating) */}
-        <div className="flex items-center gap-1.5 mb-1.5 h-3.5">
-          <div className="h-2.5 w-12 rounded-md bg-[#DFEAE3] animate-pulse" />
-          <div className="h-2.5 w-8 rounded-md bg-[#EFF4F1] animate-pulse" />
-          <div className="h-2.5 w-7 rounded-md bg-[#DFEAE3] animate-pulse" />
-        </div>
-
-        {/* Product Title Ghost */}
-        <div className="h-3.5 w-4/5 rounded-md bg-[#DFEAE3] animate-pulse" />
+      <div className="w-full aspect-square bg-slate-50 animate-pulse flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-slate-200" />
       </div>
 
-      {/* Price + Quick-Add Button Footer Ghost */}
-      <div className="mt-2.5 pt-2 border-t border-[#EAF0EC] flex items-center justify-between gap-2">
-        <div className="space-y-1.5 flex-1">
-          <div className="flex items-center gap-1.5">
-            <div className="h-4 w-16 rounded-md bg-[#DFEAE3] animate-pulse" />
-            <div className="h-3 w-10 rounded-md bg-[#EFF4F1] animate-pulse" />
-          </div>
-          <div className="h-2.5 w-14 rounded-md bg-[#EFF4F1] animate-pulse" />
+      <div className="p-3 space-y-2">
+        <div className="h-4 w-4/5 rounded bg-slate-200 animate-pulse" />
+        <div className="h-3.5 w-3/5 rounded bg-slate-100 animate-pulse" />
+        <div className="pt-1 flex items-center justify-between">
+          <div className="h-5 w-20 rounded bg-slate-200 animate-pulse" />
+          <div className="h-4 w-10 rounded bg-slate-100 animate-pulse" />
         </div>
-
-        {/* Quick-Add Button Ghost */}
-        <div className="w-8 h-8 rounded-lg bg-[#DFEAE3] animate-pulse shrink-0" />
+        <div className="h-3 w-28 rounded bg-slate-100 animate-pulse" />
       </div>
     </div>
   );
 };
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const {
     navigateTo,
     addToCart,
@@ -74,9 +70,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   const activeRoute =
     product.routes.find((r) => r.id === activeRouteId) || product.routes[0];
   const landedBdt = activeRoute ? activeRoute.totalLandedBdt : product.totalLandedBdt;
-  const corridorLabel =
-    product.corridorTag ||
-    product.originLabel.replace(/^From\s+/i, '').split('·')[0].trim();
+  const deliveryWindow = (activeRoute?.deliveryDays || '7–12 days').replace(/\s*days/i, 'd');
+  const originChipText = `${getOriginFlagAndName(product.originLabel)} · ${deliveryWindow}`;
 
   return (
     <motion.div
@@ -91,128 +86,128 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           navigateTo('product_detail', { productId: product.id });
         }
       }}
-      className="group relative bg-white rounded-2xl border border-[#DFEAE3] p-3 flex flex-col justify-between hover:border-[#A7C4B5] transition-colors cursor-pointer text-left"
+      className="group relative bg-white border border-app-border rounded-xl overflow-hidden flex flex-col justify-between hover:border-app-borderStrong transition-colors cursor-pointer text-left"
     >
-      {/* Top Wishlist Button */}
-      <motion.button
-        type="button"
-        whileTap={{ scale: 1.25 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-        aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleWishlist(product.id);
-        }}
-        className={`absolute top-5 right-5 z-10 w-7 h-7 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors ${
-          isWishlisted
-            ? 'bg-[#FFF1F2] border-[#FECDD3] text-[#E11D48]'
-            : 'bg-white/90 border-[#DFEAE3] text-[#5C7066] hover:text-[#E11D48]'
-        }`}
-      >
-        <Heart
-          className={`w-3.5 h-3.5 transition-transform duration-150 ${
-            isWishlisted ? 'fill-[#E11D48] text-[#E11D48]' : ''
+      {/* 1:1 Image Container (bg-slate-50) with Max 1 Top-Left Origin Pill */}
+      <div className="relative w-full aspect-square bg-slate-50 overflow-hidden flex items-center justify-center border-b border-app-border">
+        {/* Single Top-Left Origin Overlay Pill per DESIGN_SYSTEM_SPEC.md */}
+        <span className="absolute top-2.5 left-2.5 z-10 bg-slate-900/70 text-white backdrop-blur-sm text-[11px] font-medium px-2 py-0.5 rounded-full">
+          {originChipText}
+        </span>
+
+        {/* Top-Right Wishlist Button */}
+        <motion.button
+          type="button"
+          whileTap={{ scale: 1.2 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product.id);
+          }}
+          className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors ${
+            isWishlisted
+              ? 'bg-promo-subtle border-promo-border text-promo-accent'
+              : 'bg-white/90 border-app-border text-content-secondary hover:text-promo-accent'
           }`}
-        />
-      </motion.button>
+        >
+          <Heart
+            className={`w-3.5 h-3.5 transition-transform duration-150 ${
+              isWishlisted ? 'fill-promo-accent text-promo-accent' : ''
+            }`}
+          />
+        </motion.button>
 
-      {/* Clean Product Image Slot with Per-Image Ghost Placeholder */}
-      <div>
-        <div className="relative w-full aspect-square rounded-xl bg-[#F8FAF9] overflow-hidden mb-2.5 flex items-center justify-center border border-[#EAF0EC]">
-          {!imgError ? (
-            <>
-              {!imgLoaded && (
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-[#EFF4F1] animate-pulse flex items-center justify-center"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-[#DFEAE3]" />
-                </div>
-              )}
-              <img
-                src={product.image}
-                alt={product.name}
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                onLoad={() => setImgLoaded(true)}
-                onError={() => setImgError(true)}
-                className={`w-full h-full object-cover group-hover:scale-103 transition-all duration-200 ${
-                  imgLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-4 text-center bg-[#F5F8F6] w-full h-full">
-              <Package className="w-7 h-7 text-[#74887E] mb-1.5" />
-              <span className="text-xs leading-4 font-medium text-[#485B52] line-clamp-2">
-                {product.name}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Clean Unboxed Metadata Line */}
-        <div className="text-[11px] leading-4 text-[#5C7066] truncate mb-1 flex items-center gap-1">
-          <span className="truncate text-[#065F46] font-medium">{corridorLabel}</span>
-          <span className="text-[#A7C4B5]" aria-hidden="true">·</span>
-          <span>{activeRoute?.deliveryDays || '7–12d'}</span>
-          {!compact && (
-            <>
-              <span className="text-[#A7C4B5]" aria-hidden="true">·</span>
-              <span className="inline-flex items-center gap-0.5 font-mono-num text-[#0F1D17] font-semibold">
-                <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B] inline" />
-                {product.rating.toFixed(1)}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Product Title */}
-        <h3 className="text-xs leading-4 font-semibold text-[#0F1D17] truncate">
-          {language === 'BN' ? product.nameBn : product.name}
-        </h3>
+        {!imgError ? (
+          <>
+            {!imgLoaded && (
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center"
+              >
+                <div className="w-10 h-10 rounded-lg bg-slate-200" />
+              </div>
+            )}
+            <img
+              src={product.image}
+              alt={product.name}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              className={`w-full h-full object-cover group-hover:scale-103 transition-all duration-200 ${
+                imgLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-4 text-center bg-slate-50 w-full h-full">
+            <Package className="w-7 h-7 text-content-muted mb-1.5" />
+            <span className="text-xs leading-4 font-medium text-content-secondary line-clamp-2">
+              {product.name}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Price + Restrained Quick-Add Button */}
-      <div className="mt-2.5 pt-2 border-t border-[#EAF0EC] flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-mono-num text-sm leading-5 font-semibold text-[#0F1D17]">
+      {/* Content Container */}
+      <div className="p-3 flex-1 flex flex-col justify-between">
+        {/* Title: 2 lines max (line-clamp-2 text-content-primary text-sm font-medium) */}
+        <h3 className="line-clamp-2 text-content-primary text-sm font-medium leading-5">
+          {language === 'BN' ? product.nameBn : product.name}
+        </h3>
+
+        <div className="mt-2.5 pt-2 border-t border-app-border">
+          {/* Price Row */}
+          <div className="flex items-center">
+            <span className="text-content-primary font-bold text-base tabular-nums">
               {formatPrice(landedBdt)}
             </span>
             {product.discountPercent > 0 && (
-              <span className="font-mono-num text-[10px] leading-4 text-[#74887E] line-through truncate">
+              <span className="text-content-muted text-xs line-through ml-1.5 tabular-nums truncate">
                 {formatPrice(product.originalLandedBdt)}
               </span>
             )}
+            {product.discountPercent > 0 && (
+              <span className="bg-promo-subtle text-promo-accent text-[11px] font-bold px-1.5 py-0.5 rounded ml-auto tabular-nums shrink-0">
+                -{product.discountPercent}%
+              </span>
+            )}
           </div>
-          <span className="block text-[10px] leading-3 text-[#059669] font-medium mt-0.5">
-            {language === 'BN' ? 'ডিউটি ও ভ্যাটসহ' : 'Incl. duty & VAT'}
-          </span>
-        </div>
 
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.88 }}
-          aria-label={`Add ${product.name} to cart`}
-          onClick={(e) => {
-            e.stopPropagation();
-            addToCart(product.id, 1);
-            setJustAdded(true);
-            setTimeout(() => setJustAdded(false), 750);
-          }}
-          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
-            justAdded
-              ? 'bg-[#059669] text-white'
-              : 'bg-[#0F1D17] hover:bg-[#059669] text-white'
-          }`}
-        >
-          {justAdded ? (
-            <Check className="w-4 h-4 stroke-[2.5]" />
-          ) : (
-            <Plus className="w-4 h-4 stroke-[2.2]" />
-          )}
-        </motion.button>
+          {/* Bottom Micro-copy + Restrained Quick-Add */}
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <span className="text-[11px] text-content-secondary flex items-center gap-1 truncate">
+              <span className="text-brand-primary font-bold">✓</span>
+              <span className="truncate">
+                {language === 'BN' ? 'কাস্টমস ও ডেলিভারিসহ' : 'Incl. Customs & Delivery'}
+              </span>
+            </span>
+
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.9 }}
+              aria-label={`Add ${product.name} to bag`}
+              onClick={(e) => {
+                e.stopPropagation();
+                addToCart(product.id, 1);
+                setJustAdded(true);
+                setTimeout(() => setJustAdded(false), 750);
+              }}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                justAdded
+                  ? 'bg-brand-primary text-white'
+                  : 'bg-app-subtle hover:bg-brand-primary text-content-primary hover:text-white border border-app-border'
+              }`}
+            >
+              {justAdded ? (
+                <Check className="w-4 h-4 stroke-[2.5]" />
+              ) : (
+                <Plus className="w-4 h-4 stroke-[2]" />
+              )}
+            </motion.button>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

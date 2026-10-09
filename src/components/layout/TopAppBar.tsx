@@ -2,10 +2,12 @@ import React from 'react';
 import {
   ArrowLeft,
   Bell,
+  CheckCheck,
   Heart,
   MapPin,
   Menu,
   Search,
+  Settings,
   Share2,
   ShieldCheck,
   ShoppingBag,
@@ -22,6 +24,7 @@ export const TopAppBar: React.FC = () => {
     setDrawerOpen,
     cartCount,
     unreadNotificationCount,
+    markAllNotificationsRead,
     selectedCategoryId,
     selectedProduct,
     toggleWishlist,
@@ -44,6 +47,8 @@ export const TopAppBar: React.FC = () => {
   }
 
   const isHome = currentScreen === 'home';
+  const isNotifications = currentScreen === 'notifications';
+  const isCart = currentScreen === 'cart';
   const isBn = language === 'BN';
 
   const activeAddress =
@@ -159,7 +164,14 @@ export const TopAppBar: React.FC = () => {
       case 'notifications':
         return {
           title: isBn ? 'নোটিফিকেশন' : 'Activity & Alerts',
-          subtitle: isBn ? 'শিপমেন্ট ও প্রাইস ড্রপ আপডেট' : 'Shipment & Price Drop Updates',
+          subtitle:
+            unreadNotificationCount > 0
+              ? isBn
+                ? `${unreadNotificationCount}টি অপঠিত আপডেট`
+                : `${unreadNotificationCount} Unread · Shipment & Price Updates`
+              : isBn
+              ? 'সকল আপডেট পড়া হয়েছে'
+              : 'All Caught Up · Shipment & Price Updates',
         };
       case 'support':
         return {
@@ -202,9 +214,9 @@ export const TopAppBar: React.FC = () => {
   return (
     <header
       role="banner"
-      className="sticky top-0 z-30 h-14 px-3 bg-white/95 backdrop-blur-md border-b border-[#DFEAE3] shadow-[0_1px_2px_rgba(15,29,23,0.03)] flex items-center justify-between gap-2 shrink-0 select-none"
+      className="sticky top-0 z-30 h-14 px-3 bg-white/95 backdrop-blur border-b border-app-border flex items-center justify-between gap-2 shrink-0 select-none"
     >
-      {/* Left Zone: Ergonomic 44x44 Menu/Back Trigger + Brand / Location Context */}
+      {/* Left Zone: Ergonomic 44x44 Menu/Back Trigger + Brand / Screen Context */}
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {isHome ? (
           <>
@@ -212,45 +224,35 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'নেভিগেশন মেনু খুলুন' : 'Open navigation menu'}
               onClick={() => setDrawerOpen(true)}
-              className="relative w-10 h-10 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+              className="relative w-11 h-11 -ml-1 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <Menu className="w-[19px] h-[19px] stroke-[2]" />
+              <Menu className="w-5 h-5 stroke-[2]" />
             </button>
 
             <div className="flex items-center gap-2 min-w-0">
               <button
                 type="button"
                 onClick={() => navigateTo('home')}
-                className="w-8 h-8 rounded-xl bg-gradient-to-b from-[#059669] to-[#047857] text-white flex items-center justify-center shadow-[0_2px_6px_rgba(5,150,105,0.28)] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+                className="w-8 h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
               >
                 <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
               </button>
 
               <div className="min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('home')}
-                    className="text-[15px] leading-4 font-bold tracking-tight text-[#0F1D17] truncate focus-visible:outline-none"
-                  >
-                    {isBn ? 'দেশিমার্ট' : 'DeshiMart'}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Toggle currency between BDT and USD"
-                    onClick={() => setCurrency(currency === 'BDT' ? 'USD' : 'BDT')}
-                    className="px-1.5 py-0.5 rounded-md bg-[#ECFDF5] border border-[#A7F3D0] text-[10px] leading-3 font-mono-num font-semibold text-[#047857] hover:bg-[#D1FAE5] transition-colors shrink-0"
-                  >
-                    {currency === 'BDT' ? '৳ BDT' : '$ USD'}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('home')}
+                  className="text-base leading-5 font-semibold tracking-tight text-content-primary truncate text-left focus-visible:outline-none"
+                >
+                  {isBn ? 'দেশিমার্ট' : 'DeshiMart'}
+                </button>
 
                 <button
                   type="button"
                   onClick={() => navigateTo('addresses')}
-                  className="flex items-center gap-1 text-[11px] leading-3.5 text-[#485B52] hover:text-[#059669] transition-colors truncate mt-0.5 text-left"
+                  className="flex items-center gap-1 text-xs leading-4 text-content-secondary hover:text-content-primary transition-colors truncate text-left"
                 >
-                  <MapPin className="w-2.5 h-2.5 text-[#059669] shrink-0" />
+                  <MapPin className="w-3 h-3 text-content-secondary shrink-0" />
                   <span className="truncate">{deliveryLocationLabel}</span>
                 </button>
               </div>
@@ -262,18 +264,18 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'পেছনে যান' : 'Go back'}
               onClick={goBack}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+              className="w-11 h-11 -ml-1 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <ArrowLeft className="w-[19px] h-[19px] stroke-[2]" />
+              <ArrowLeft className="w-5 h-5 stroke-[2]" />
             </button>
 
             <div className="min-w-0 flex-1 pl-0.5">
-              <h1 className="text-[14px] leading-4 font-bold tracking-tight text-[#0F1D17] truncate">
+              <h1 className="text-base leading-5 font-semibold tracking-tight text-content-primary truncate">
                 {screenMeta.title}
               </h1>
               {screenMeta.subtitle && (
-                <p className="text-[11px] leading-3.5 text-[#485B52] truncate mt-0.5 flex items-center gap-1">
-                  <ShieldCheck className="w-2.5 h-2.5 text-[#059669] shrink-0" />
+                <p className="text-xs leading-4 text-content-secondary truncate flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-brand-primary shrink-0" />
                   <span className="truncate">{screenMeta.subtitle}</span>
                 </p>
               )}
@@ -288,9 +290,27 @@ export const TopAppBar: React.FC = () => {
           <>
             <button
               type="button"
+              aria-label="Toggle currency between BDT and USD"
+              onClick={() => {
+                const next = currency === 'BDT' ? 'USD' : 'BDT';
+                setCurrency(next);
+                showToast(
+                  next === 'BDT'
+                    ? 'Showing prices in ৳ BDT'
+                    : 'Showing prices in $ USD ($1 = ৳ 120)',
+                  'info'
+                );
+              }}
+              className="h-9 px-2 rounded-lg text-xs font-mono-num font-semibold text-content-secondary hover:text-content-primary hover:bg-app-subtle transition-colors"
+            >
+              {currency === 'BDT' ? '৳ BDT' : '$ USD'}
+            </button>
+
+            <button
+              type="button"
               aria-label={isBn ? 'ভাষা পরিবর্তন করুন' : 'Switch language'}
               onClick={() => setLanguage(language === 'EN' ? 'BN' : 'EN')}
-              className="h-8 px-2 rounded-lg text-[11px] leading-4 font-semibold text-[#33473E] hover:text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
+              className="h-9 px-2 rounded-lg text-xs font-semibold text-content-secondary hover:text-content-primary hover:bg-app-subtle transition-colors"
             >
               {language === 'EN' ? 'বাং' : 'EN'}
             </button>
@@ -299,9 +319,9 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'পণ্য খুঁজুন' : 'Search global catalog'}
               onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-              className="w-9 h-9 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+              className="w-10 h-10 rounded-lg hover:bg-app-subtle flex items-center justify-center text-content-primary active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <Search className="w-4 h-4 stroke-[1.9]" />
+              <Search className="w-4 h-4 stroke-[2]" />
             </button>
           </>
         )}
@@ -312,26 +332,48 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'শেয়ার করুন' : 'Share product'}
               onClick={handleShareProduct}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <Share2 className="w-4 h-4 stroke-[1.9]" />
+              <Share2 className="w-4 h-4 stroke-[2]" />
             </button>
 
             <button
               type="button"
               aria-label={isBn ? 'উইশলিস্টে যোগ করুন' : 'Toggle wishlist'}
               onClick={() => toggleWishlist(selectedProduct.id)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               <Heart
                 className={`w-4 h-4 transition-colors ${
                   isProductLiked
-                    ? 'fill-[#E11D48] text-[#E11D48]'
-                    : 'text-[#0F1D17] stroke-[1.9]'
+                    ? 'fill-promo-accent text-promo-accent'
+                    : 'text-content-primary stroke-[2]'
                 }`}
               />
             </button>
           </>
+        )}
+
+        {isNotifications && unreadNotificationCount > 0 && (
+          <button
+            type="button"
+            onClick={markAllNotificationsRead}
+            className="h-9 px-2.5 rounded-lg text-xs font-semibold text-brand-primary hover:bg-brand-subtle flex items-center gap-1 transition-colors"
+          >
+            <CheckCheck className="w-3.5 h-3.5" />
+            <span>{isBn ? 'সব পঠিত' : 'Mark Read'}</span>
+          </button>
+        )}
+
+        {isNotifications && (
+          <button
+            type="button"
+            aria-label={isBn ? 'নোটিফিকেশন সেটিংস' : 'Alert preferences'}
+            onClick={() => navigateTo('settings')}
+            className="w-10 h-10 rounded-lg hover:bg-app-subtle flex items-center justify-center text-content-primary active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          >
+            <Settings className="w-4 h-4 stroke-[2]" />
+          </button>
         )}
 
         <button
@@ -341,24 +383,36 @@ export const TopAppBar: React.FC = () => {
               ? `${unreadNotificationCount} unread notifications`
               : 'Notifications'
           }
+          aria-current={isNotifications ? 'page' : undefined}
           onClick={() => navigateTo('notifications')}
-          className="relative w-9 h-9 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+          className={`relative w-10 h-10 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+            isNotifications
+              ? 'bg-brand-subtle text-brand-primary'
+              : 'hover:bg-app-subtle text-content-primary'
+          }`}
         >
-          <Bell className="w-4 h-4 stroke-[1.9]" />
+          <Bell className="w-4 h-4 stroke-[2]" />
           {unreadNotificationCount > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#059669] ring-2 ring-white" />
+            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-promo-accent text-white tabular-nums text-[10px] leading-4 font-bold flex items-center justify-center">
+              {unreadNotificationCount}
+            </span>
           )}
         </button>
 
         <button
           type="button"
           aria-label={`Shopping bag with ${cartCount} items`}
+          aria-current={isCart ? 'page' : undefined}
           onClick={() => navigateTo('cart')}
-          className="relative w-9 h-9 rounded-xl hover:bg-[#EFF4F1] text-[#0F1D17] flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+          className={`relative w-10 h-10 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+            isCart
+              ? 'bg-brand-subtle text-brand-primary'
+              : 'hover:bg-app-subtle text-content-primary'
+          }`}
         >
-          <ShoppingCart className="w-4 h-4 stroke-[1.9]" />
+          <ShoppingCart className="w-4 h-4 stroke-[2]" />
           {cartCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center shadow-2xs">
+            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-promo-accent text-white tabular-nums text-[10px] leading-4 font-bold flex items-center justify-center">
               {cartCount}
             </span>
           )}

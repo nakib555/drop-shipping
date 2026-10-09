@@ -127,7 +127,10 @@ interface DeshiMartContextValue {
   // Notifications & Toasts
   notifications: AppNotification[];
   unreadNotificationCount: number;
+  markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  deleteNotification: (id: string) => void;
+  clearReadNotifications: () => void;
   toasts: ToastMessage[];
   showToast: (text: string, type?: 'success' | 'info') => void;
 }
@@ -146,6 +149,11 @@ const DEFAULT_FILTERS: SmartFiltersState = {
 const DeshiMartContext = createContext<DeshiMartContextValue | undefined>(undefined);
 
 const BDT_PER_USD = 120;
+
+export function formatLandedPrice(amount: number): string {
+  // Uses non-breaking space after Bengali Taka symbol and en-IN grouping
+  return `৳\u00A0${Math.round(amount).toLocaleString('en-IN')}`;
+}
 
 export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [screenHistory, setScreenHistory] = useState<ScreenId[]>(['splash']);
@@ -329,9 +337,9 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const formatPrice = (bdtAmount: number): string => {
     if (currency === 'USD') {
       const usd = bdtAmount / BDT_PER_USD;
-      return `$${usd.toFixed(2)}`;
+      return `$\u00A0${usd.toFixed(2)}`;
     }
-    return `৳${Math.round(bdtAmount).toLocaleString('en-US')}`;
+    return formatLandedPrice(bdtAmount);
   };
 
   const selectedProduct = useMemo(
@@ -374,9 +382,23 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const togglePriceAlert = (productId: string) => {
+    const prod = catalogProducts.find((p) => p.id === productId);
     setPriceAlerts((prev) => {
       const next = !prev[productId];
       showToast(next ? '30-Day Price Drop Alert activated!' : 'Price Drop Alert paused', 'info');
+      if (next && prod) {
+        const alertNotif: AppNotification = {
+          id: `notif-alert-${Date.now()}`,
+          type: 'price_drop',
+          title: `Price Radar Active: ${prod.name}`,
+          body: `Tracking 30-day landed cost (${formatPrice(prod.totalLandedBdt)}). You will be alerted immediately on any supplier or duty drop.`,
+          timestamp: 'Just now',
+          read: false,
+          targetScreen: 'price_tracker',
+          targetProductId: prod.id,
+        };
+        setNotifications((nPrev) => [alertNotif, ...nPrev]);
+      }
       return { ...prev, [productId]: next };
     });
   };
@@ -631,6 +653,17 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setOrders((prev) => [newOrder, ...prev]);
     setSelectedOrderId(newOrder.id);
     setCart([]);
+    const newOrderNotif: AppNotification = {
+      id: `notif-order-${Date.now()}`,
+      type: 'order',
+      title: `Order #${newOrder.id} Confirmed`,
+      body: `Customs pre-clearance initiated for ${orderItems.length} item(s). Delivering to ${chosenAddress.city} in ${newOrder.estimatedDelivery}.`,
+      timestamp: 'Just now',
+      read: false,
+      targetScreen: 'order_tracking',
+      targetOrderId: newOrder.id,
+    };
+    setNotifications((prev) => [newOrderNotif, ...prev]);
     showToast(`Order #${newOrder.id} placed successfully!`);
     return newOrder;
   };
@@ -657,9 +690,25 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Filters reset', 'info');
   };
 
+  const markNotificationRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
   const markAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     showToast('All notifications marked as read', 'info');
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    showToast('Notification removed', 'info');
+  };
+
+  const clearReadNotifications = () => {
+    setNotifications((prev) => prev.filter((n) => !n.read));
+    showToast('Cleared read notifications', 'info');
   };
 
   const unreadNotificationCount = useMemo(
@@ -735,7 +784,10 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         placeOrder,
         notifications,
         unreadNotificationCount,
+        markNotificationRead,
         markAllNotificationsRead,
+        deleteNotification,
+        clearReadNotifications,
         toasts,
         showToast,
       }}

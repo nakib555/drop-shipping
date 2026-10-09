@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckCircle2,
+  ChevronDown,
   Copy,
   FileText,
   MapPin,
@@ -28,6 +29,7 @@ export const OrdersTrackingScreen: React.FC = () => {
     'All' | 'Processing' | 'Shipped' | 'Delivered'
   >('All');
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [customsCertOpen, setCustomsCertOpen] = useState(false);
 
   // Screen Mode 1: My Orders List
   if (currentScreen === 'orders') {
@@ -36,7 +38,7 @@ export const OrdersTrackingScreen: React.FC = () => {
     );
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {(['All', 'Processing', 'Shipped', 'Delivered'] as const).map((st) => (
@@ -44,10 +46,10 @@ export const OrdersTrackingScreen: React.FC = () => {
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`h-8 px-3 rounded-lg text-xs font-medium transition-colors ${
+              className={`h-9 px-3.5 rounded-lg text-xs font-medium transition-colors ${
                 statusFilter === st
-                  ? 'bg-[#0F1D17] text-white'
-                  : 'bg-white text-[#485B52] border border-[#DFEAE3] hover:border-[#A7C4B5]'
+                  ? 'bg-content-primary text-white'
+                  : 'bg-white text-content-secondary border border-app-border hover:border-app-borderStrong'
               }`}
             >
               {st}
@@ -68,24 +70,24 @@ export const OrdersTrackingScreen: React.FC = () => {
                   navigateTo('order_tracking', { orderId: ord.id });
                 }
               }}
-              className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3 hover:border-[#A7C4B5] transition-colors cursor-pointer"
+              className="bg-white rounded-xl border border-app-border p-4 space-y-3 hover:border-app-borderStrong transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-mono-num text-xs font-semibold text-[#0F1D17]">
+                  <span className="tabular-nums text-xs font-semibold text-content-primary">
                     #{ord.id}
                   </span>
-                  <p className="text-[11px] text-[#485B52]">
+                  <p className="text-xs text-content-secondary">
                     Placed on {ord.placedDate}
                   </p>
                 </div>
                 <span
-                  className={`text-xs font-semibold ${
+                  className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
                     ord.status === 'Delivered'
-                      ? 'text-[#059669]'
+                      ? 'bg-brand-subtle text-brand-primary'
                       : ord.status === 'Shipped'
-                      ? 'text-[#0284C7]'
-                      : 'text-[#B45309]'
+                      ? 'bg-blue-50 text-status-transit'
+                      : 'bg-amber-50 text-status-warning'
                   }`}
                 >
                   {ord.status}
@@ -100,17 +102,17 @@ export const OrdersTrackingScreen: React.FC = () => {
                     src={item.image}
                     alt={item.name}
                     referrerPolicy="no-referrer"
-                    className="w-12 h-12 rounded-xl object-cover bg-[#F8FAF9] border border-[#EAF0EC] shrink-0"
+                    className="w-12 h-12 rounded-lg object-cover bg-slate-50 border border-app-border shrink-0"
                   />
                 ))}
               </div>
 
-              <div className="pt-2 border-t border-[#EAF0EC] flex items-center justify-between text-xs">
-                <span className="text-[#485B52]">
+              <div className="pt-2.5 border-t border-app-border flex items-center justify-between text-xs">
+                <span className="text-content-secondary">
                   {ord.items.reduce((s, i) => s + i.quantity, 0)} items ·{' '}
                   {ord.courierName}
                 </span>
-                <span className="font-mono-num font-semibold text-[#0F1D17]">
+                <span className="tabular-nums font-bold text-content-primary">
                   {formatPrice(ord.totalBdt)}
                 </span>
               </div>
@@ -121,137 +123,124 @@ export const OrdersTrackingScreen: React.FC = () => {
     );
   }
 
-  // Screen Mode 2: Live Cross-Border Order Tracking
-  const steps = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
-  const activeStepIdx =
+  // Screen Mode 2: Live Cross-Border Order Tracking (DESIGN_SYSTEM_SPEC.md Section 5.4)
+  const routeSteps = [
+    { key: 'export', label: 'Export Hub', sub: 'Factory QC' },
+    { key: 'air', label: 'Air Freight', sub: 'Linehaul' },
+    { key: 'customs', label: 'BD Customs', sub: 'Pre-Cleared' },
+    { key: 'doorstep', label: 'Dhaka Doorstep', sub: 'eCourier' },
+  ];
+
+  const activeRouteIdx =
     selectedOrder.status === 'Delivered'
       ? 3
       : selectedOrder.status === 'Shipped'
       ? 2
       : 1;
 
+  const isDelivered = selectedOrder.status === 'Delivered';
+
   return (
-    <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
-      {/* Order Header Card */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
-        <div className="flex items-center justify-between">
+    <div className="p-4 space-y-4 pb-6 bg-app-bg">
+      {/* 1. Clean Order Status & 4-Step Horizontal Micro-Progress Bar */}
+      <div className="bg-white rounded-xl border border-app-border p-4 space-y-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="font-mono-num text-sm font-semibold text-[#0F1D17]">
-              #{selectedOrder.id}
-            </span>
-            <p className="text-xs font-medium text-[#059669] mt-0.5">
-              {selectedOrder.status === 'Delivered'
-                ? 'Delivered to Doorstep'
-                : 'In Transit · Customs Pre-Cleared'}
-            </p>
-            <p className="text-[11px] text-[#485B52]">
-              Estimated: {selectedOrder.estimatedDelivery}
+            <div className="flex items-center gap-2">
+              <span className="tabular-nums text-sm font-bold text-content-primary">
+                Order #{selectedOrder.id}
+              </span>
+              <span
+                className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                  isDelivered
+                    ? 'bg-brand-subtle text-brand-primary'
+                    : 'bg-blue-50 text-status-transit'
+                }`}
+              >
+                {isDelivered ? 'Delivered' : 'In Transit'}
+              </span>
+            </div>
+            <p className="text-xs text-content-secondary mt-1">
+              Estimated arrival:{' '}
+              <strong className="text-content-primary font-medium">
+                {selectedOrder.estimatedDelivery}
+              </strong>
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+              isDelivered
+                ? 'bg-brand-subtle text-brand-primary'
+                : 'bg-blue-50 text-status-transit'
+            }`}
+          >
             <Truck className="w-5 h-5" />
           </div>
         </div>
 
-        {/* 4-Step Progress Bar */}
-        <div className="pt-2">
-          <div className="grid grid-cols-4 gap-1 text-center">
-            {steps.map((label, idx) => {
-              const done = idx <= activeStepIdx;
+        {/* Clean 4-Step Horizontal Micro-Progress Bar (Export Hub -> Air Freight -> BD Customs -> Dhaka Doorstep) */}
+        <div className="pt-2 border-t border-app-border">
+          <div className="relative flex items-center justify-between">
+            {/* Progress Track Line */}
+            <div className="absolute left-4 right-4 top-3 h-0.5 bg-app-border" />
+            <div
+              className={`absolute left-4 top-3 h-0.5 transition-all duration-300 ${
+                isDelivered ? 'bg-brand-primary' : 'bg-status-transit'
+              }`}
+              style={{
+                width: `${(activeRouteIdx / (routeSteps.length - 1)) * 88}%`,
+              }}
+            />
+
+            {routeSteps.map((step, idx) => {
+              const completed = idx <= activeRouteIdx;
+              const isCurrent = idx === activeRouteIdx;
               return (
-                <div key={label} className="flex flex-col items-center">
+                <div
+                  key={step.key}
+                  className="relative z-10 flex flex-col items-center text-center w-1/4"
+                >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mb-1 ${
-                      done
-                        ? 'bg-[#059669] text-white'
-                        : 'bg-[#DFEAE3] text-[#74887E]'
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-colors border-2 ${
+                      completed
+                        ? isDelivered
+                          ? 'bg-brand-primary border-brand-primary text-white'
+                          : isCurrent
+                          ? 'bg-status-transit border-status-transit text-white ring-4 ring-blue-100'
+                          : 'bg-content-primary border-content-primary text-white'
+                        : 'bg-white border-app-borderStrong text-content-muted'
                     }`}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
                   <span
-                    className={`text-[10px] font-medium ${
-                      done ? 'text-[#0F1D17] font-semibold' : 'text-[#74887E]'
+                    className={`text-[11px] mt-1.5 leading-tight ${
+                      completed
+                        ? 'font-semibold text-content-primary'
+                        : 'text-content-muted'
                     }`}
                   >
-                    {label}
+                    {step.label}
+                  </span>
+                  <span className="text-[10px] text-content-muted mt-0.5">
+                    {step.sub}
                   </span>
                 </div>
               );
             })}
           </div>
         </div>
-      </div>
 
-      {/* Live Route Map SVG Visualization */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] overflow-hidden">
-        <div className="relative h-36 bg-gradient-to-br from-[#0F1D17] via-[#132A20] to-[#064E3B] flex items-center justify-center p-4">
-          <svg viewBox="0 0 340 110" className="w-full h-full select-none">
-            {/* Animated Flowing Route Path */}
-            <path
-              d="M 20 85 Q 110 20, 195 60 T 315 35"
-              fill="none"
-              stroke="#10B981"
-              strokeWidth="2.5"
-              strokeDasharray="6 4"
-              className="animate-route-dash"
-            />
-            {/* Origin Hub Node */}
-            <circle cx="25" cy="82" r="5" fill="#A7C4B5" />
-            <text
-              x="25"
-              y="100"
-              textAnchor="start"
-              className="text-[9px] fill-[#D0E1D7] font-medium"
-            >
-              Export Hub
-            </text>
-
-            {/* Customs Clearance Node */}
-            <circle cx="175" cy="52" r="5" fill="#10B981" />
-            <text
-              x="175"
-              y="70"
-              textAnchor="middle"
-              className="text-[9px] fill-[#D0E1D7] font-medium"
-            >
-              BD Customs (Cleared)
-            </text>
-
-            {/* Destination Dhaka Node with Pulsing Beacon */}
-            <circle
-              cx="310"
-              cy="35"
-              r="14"
-              fill="#10B981"
-              opacity="0.3"
-              className="animate-ping"
-            />
-            <circle
-              cx="310"
-              cy="35"
-              r="7"
-              fill="#10B981"
-              stroke="#FFFFFF"
-              strokeWidth="2"
-            />
-            <text
-              x="305"
-              y="18"
-              textAnchor="end"
-              className="text-[10px] fill-[#34D399] font-semibold"
-            >
-              Dhaka Doorstep
-            </text>
-          </svg>
-        </div>
-
-        <div className="p-3.5 flex items-center justify-between bg-white border-t border-[#EAF0EC] text-xs">
+        {/* Courier & Tracking ID Bar */}
+        <div className="pt-3 border-t border-app-border flex items-center justify-between text-xs">
           <div>
-            <span className="text-[#485B52] block text-[11px]">
-              Courier: <strong className="text-[#0F1D17] font-semibold">{selectedOrder.courierName}</strong>
+            <span className="text-content-secondary block text-[11px]">
+              Courier:{' '}
+              <strong className="text-content-primary font-semibold">
+                {selectedOrder.courierName}
+              </strong>
             </span>
-            <span className="font-mono-num font-semibold text-[#0F1D17]">
+            <span className="tabular-nums font-semibold text-content-primary">
               Tracking ID: {selectedOrder.trackingCode}
             </span>
           </div>
@@ -261,37 +250,41 @@ export const OrdersTrackingScreen: React.FC = () => {
               navigator.clipboard?.writeText(selectedOrder.trackingCode);
               showToast(`Copied tracking ID ${selectedOrder.trackingCode}`);
             }}
-            className="px-3 py-1.5 rounded-lg bg-[#F5F8F6] border border-[#DFEAE3] text-xs font-medium text-[#374740] hover:text-[#0F1D17] flex items-center gap-1"
+            className="min-h-[36px] px-3 py-1.5 rounded-lg bg-app-subtle border border-app-border text-xs font-medium text-content-primary hover:bg-slate-200/70 flex items-center gap-1.5 transition-colors"
           >
-            <Copy className="w-3.5 h-3.5 text-[#059669]" />
+            <Copy className="w-3.5 h-3.5 text-content-secondary" />
             <span>Copy</span>
           </button>
         </div>
       </div>
 
-      {/* Vertical Logistics Timeline */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
-        <h3 className="text-xs font-semibold text-[#0F1D17]">
-          Cross-Border Logistics Timeline
+      {/* 2. Vertical Logistics Timeline (Active node in Blue-600 status-transit) */}
+      <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-content-primary">
+          Shipment Updates
         </h3>
-        <div className="space-y-3.5 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#DFEAE3]">
+        <div className="space-y-4 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-px before:bg-app-border">
           {selectedOrder.milestones.map((ms, idx) => (
             <div key={idx} className="relative pl-7">
               <div
                 className={`absolute left-1 top-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
                   ms.current
-                    ? 'bg-[#059669] ring-4 ring-[#059669]/20'
+                    ? isDelivered
+                      ? 'bg-brand-primary ring-4 ring-emerald-100'
+                      : 'bg-status-transit ring-4 ring-blue-100'
                     : ms.completed
-                    ? 'bg-[#0F1D17]'
-                    : 'bg-[#C5D8CE]'
+                    ? 'bg-content-primary'
+                    : 'bg-slate-300'
                 }`}
               />
-              <p className="text-xs font-semibold text-[#0F1D17]">{ms.title}</p>
-              <p className="text-[11px] text-[#485B52] flex items-center gap-1 mt-0.5">
-                <MapPin className="w-3 h-3 text-[#059669] shrink-0" />
+              <p className="text-xs font-semibold text-content-primary">
+                {ms.title}
+              </p>
+              <p className="text-xs text-content-secondary flex items-center gap-1 mt-0.5">
+                <MapPin className="w-3 h-3 text-content-muted shrink-0" />
                 <span>{ms.location}</span>
               </p>
-              <p className="font-mono-num text-[10px] text-[#74887E] mt-0.5">
+              <p className="tabular-nums text-[11px] text-content-muted mt-0.5">
                 {ms.timestamp}
               </p>
             </div>
@@ -299,46 +292,59 @@ export const OrdersTrackingScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Pre-Shipment Warehouse QC Inspection & NBR Customs Pass */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5">
-        <div className="flex items-center justify-between">
+      {/* 3. Secondary Disclosure Accordion for Customs & Warehouse QC Details */}
+      <div className="bg-white rounded-xl border border-app-border overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setCustomsCertOpen(!customsCertOpen)}
+          aria-expanded={customsCertOpen}
+          className="w-full min-h-[48px] px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+        >
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#059669]" />
-            <h3 className="text-xs font-semibold text-[#0F1D17]">
-              Warehouse QC & Customs Certificate
-            </h3>
+            <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
+            <span className="text-xs font-semibold text-content-primary">
+              Customs Clearance & Warehouse QC Certificate
+            </span>
           </div>
-          <span className="text-[10px] font-mono-num font-semibold text-[#059669] bg-[#ECFDF5] px-2 py-0.5 rounded-md">
-            QC PASSED
-          </span>
-        </div>
+          <ChevronDown
+            className={`w-4 h-4 text-content-secondary transition-transform ${
+              customsCertOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
 
-        <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
-          <div className="p-2.5 rounded-xl bg-[#F5F8F6] border border-[#EAF0EC]">
-            <span className="text-[#74887E] block text-[10px]">Net Weight</span>
-            <span className="font-mono-num font-semibold text-[#0F1D17]">
-              0.84 kg
-            </span>
+        {customsCertOpen && (
+          <div className="px-4 pb-4 pt-2 border-t border-app-border space-y-2 text-xs text-content-secondary">
+            <div className="flex justify-between py-1 border-b border-app-border">
+              <span>Inspection Status</span>
+              <span className="font-semibold text-status-success">
+                Passed X-Ray & Seal Verification
+              </span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-app-border">
+              <span>Net Parcel Weight</span>
+              <span className="tabular-nums font-medium text-content-primary">
+                0.84 kg
+              </span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span>NBR Customs Reference</span>
+              <span className="tabular-nums font-medium text-content-primary">
+                BOE-{selectedOrder.id.slice(-4)} (Pre-Paid)
+              </span>
+            </div>
           </div>
-          <div className="p-2.5 rounded-xl bg-[#F2F9F5] border border-[#CBE4D6]">
-            <span className="text-[#047857] block text-[10px]">Seal & X-Ray</span>
-            <span className="font-semibold text-[#059669]">Verified</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-[#F5F8F6] border border-[#EAF0EC]">
-            <span className="text-[#74887E] block text-[10px]">NBR Bill ID</span>
-            <span className="font-mono-num font-semibold text-[#0F1D17]">
-              BOE-{selectedOrder.id.slice(-4)}
-            </span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Post-Purchase Actions */}
+      {/* 4. Post-Purchase Actions */}
       <div className="grid grid-cols-3 gap-2">
         <button
           type="button"
-          onClick={() => showToast('Thank you! Your 5-star rating was submitted.')}
-          className="h-10 rounded-xl bg-white border border-[#DFEAE3] text-xs font-semibold text-[#374740] flex items-center justify-center gap-1.5 hover:bg-[#F5F8F6]"
+          onClick={() =>
+            showToast('Thank you! Your 5-star rating was submitted.')
+          }
+          className="min-h-[44px] rounded-lg bg-white border border-app-border text-xs font-semibold text-content-primary flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
         >
           <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
           <span>Rate</span>
@@ -351,16 +357,16 @@ export const OrdersTrackingScreen: React.FC = () => {
             if (firstItem) addToCart(firstItem.productId, 1);
             navigateTo('cart');
           }}
-          className="h-10 rounded-xl bg-white border border-[#DFEAE3] text-xs font-semibold text-[#374740] flex items-center justify-center gap-1.5 hover:bg-[#F5F8F6]"
+          className="min-h-[44px] rounded-lg bg-white border border-app-border text-xs font-semibold text-content-primary flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
         >
-          <RefreshCcw className="w-3.5 h-3.5 text-[#059669]" />
+          <RefreshCcw className="w-3.5 h-3.5 text-content-secondary" />
           <span>Reorder</span>
         </button>
 
         <button
           type="button"
           onClick={() => setInvoiceOpen(true)}
-          className="h-10 rounded-xl bg-[#0F1D17] text-white text-xs font-semibold flex items-center justify-center gap-1.5"
+          className="min-h-[44px] rounded-lg bg-content-primary hover:bg-slate-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
         >
           <FileText className="w-3.5 h-3.5" />
           <span>Invoice</span>
@@ -376,28 +382,28 @@ export const OrdersTrackingScreen: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setInvoiceOpen(false)}
-              className="absolute inset-0 bg-[#0F1D17]/55 backdrop-blur-xs"
+              className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-              className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-3 border-t border-[#DFEAE3]"
+              className="relative z-10 w-full bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
             >
-              <div className="flex items-center justify-between border-b border-[#EAF0EC] pb-3">
+              <div className="flex items-center justify-between border-b border-app-border pb-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-[#0F1D17]">
+                  <h3 className="text-sm font-semibold text-content-primary">
                     Customs-Cleared Tax Invoice
                   </h3>
-                  <p className="font-mono-num text-[11px] text-[#485B52]">
+                  <p className="tabular-nums text-xs text-content-secondary">
                     Order #{selectedOrder.id} · {selectedOrder.placedDate}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setInvoiceOpen(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#74887E]"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:text-content-primary"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -406,23 +412,25 @@ export const OrdersTrackingScreen: React.FC = () => {
               <div className="space-y-2 text-xs">
                 {selectedOrder.items.map((item, i) => (
                   <div key={i} className="flex justify-between">
-                    <span className="text-[#374740]">
+                    <span className="text-content-secondary">
                       {item.name} × {item.quantity}
                     </span>
-                    <span className="font-mono-num font-semibold text-[#0F1D17]">
+                    <span className="tabular-nums font-semibold text-content-primary">
                       {formatPrice(item.landedUnitBdt * item.quantity)}
                     </span>
                   </div>
                 ))}
-                <div className="pt-2 border-t border-[#EAF0EC] flex justify-between text-[#485B52]">
+                <div className="pt-2 border-t border-app-border flex justify-between text-content-secondary">
                   <span>Bangladesh Customs Duty & VAT</span>
-                  <span className="text-[#059669] font-medium">
+                  <span className="text-content-primary font-medium">
                     Pre-Paid Included
                   </span>
                 </div>
-                <div className="pt-2 border-t border-[#DFEAE3] flex justify-between text-sm font-semibold text-[#0F1D17]">
-                  <span>Total Landed Paid</span>
-                  <span className="font-mono-num text-[#059669]">
+                <div className="pt-2 border-t border-app-border flex justify-between items-baseline">
+                  <span className="text-sm font-semibold text-content-primary">
+                    Total Landed Paid
+                  </span>
+                  <span className="tabular-nums text-lg font-bold text-content-primary">
                     {formatPrice(selectedOrder.totalBdt)}
                   </span>
                 </div>
@@ -431,7 +439,7 @@ export const OrdersTrackingScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setInvoiceOpen(false)}
-                className="w-full h-10 rounded-xl bg-[#0F1D17] text-white text-xs font-semibold"
+                className="w-full min-h-[44px] rounded-lg bg-content-primary text-white text-xs font-semibold"
               >
                 Close Invoice
               </button>
@@ -442,3 +450,4 @@ export const OrdersTrackingScreen: React.FC = () => {
     </div>
   );
 };
+

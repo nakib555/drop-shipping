@@ -236,7 +236,7 @@ export const SideDrawer: React.FC = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0 bg-[#07120E]/55 backdrop-blur-xs"
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
           />
 
           {/* Professional 3-Zone Architectural Slide-Out Drawer */}
@@ -245,10 +245,10 @@ export const SideDrawer: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-[312px] max-w-[86%] bg-white h-full shadow-[16px_0_48px_-12px_rgba(11,25,19,0.28)] border-r border-[#DFEAE3] flex flex-col overflow-hidden"
+            className="relative z-10 w-[312px] max-w-[86%] bg-white h-full shadow-2xl border-r border-app-border flex flex-col overflow-hidden"
           >
             {/* ZONE 1: Clean Editorial Profile & Preferences Header */}
-            <div className="shrink-0 bg-[#F5F8F6] border-b border-[#DFEAE3] px-4 pt-4 pb-3.5 space-y-3.5">
+            <div className="shrink-0 bg-app-bg border-b border-app-border px-4 pt-4 pb-3.5 space-y-3.5">
               {/* Top Profile Row + 44x44 Close Hitbox */}
               <div className="flex items-center justify-between gap-2">
                 <button
@@ -256,16 +256,16 @@ export const SideDrawer: React.FC = () => {
                   onClick={() => handleNavigate('account')}
                   className="flex items-center gap-3 text-left group min-w-0 flex-1 py-0.5 focus-visible:outline-none"
                 >
-                  <div className="w-11 h-11 rounded-2xl bg-[#0F1D17] text-white font-semibold text-xs flex items-center justify-center shrink-0 ring-2 ring-[#059669]/25 group-hover:bg-[#059669] transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-content-primary text-white font-semibold text-xs flex items-center justify-center shrink-0 group-hover:bg-brand-primary transition-colors">
                     {initials}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-sm leading-5 font-semibold text-[#0F1D17] truncate group-hover:text-[#059669] transition-colors">
+                    <h2 className="text-sm leading-5 font-semibold text-content-primary truncate group-hover:text-brand-primary transition-colors">
                       {user.fullName}
                     </h2>
                     {/* Clean unboxed metadata with middle-dot separator */}
-                    <div className="flex items-center gap-1.5 text-[11px] leading-4 text-[#485B52] truncate mt-0.5">
-                      <span className="text-[#059669] font-medium">
+                    <div className="flex items-center gap-1.5 text-xs leading-4 text-content-secondary truncate mt-0.5">
+                      <span className="text-brand-primary font-medium">
                         {language === 'BN' ? 'ভেরিফাইড মেম্বার' : 'Verified Buyer'}
                       </span>
                       <span aria-hidden="true">·</span>
@@ -278,7 +278,7 @@ export const SideDrawer: React.FC = () => {
                   type="button"
                   aria-label="Close navigation menu"
                   onClick={() => setDrawerOpen(false)}
-                  className="min-w-[44px] min-h-[44px] -mr-1.5 rounded-xl flex items-center justify-center text-[#485B52] hover:text-[#0F1D17] hover:bg-[#E2ECE6] transition-colors shrink-0"
+                  className="min-w-[44px] min-h-[44px] -mr-1.5 rounded-lg flex items-center justify-center text-content-secondary hover:text-content-primary hover:bg-app-subtle transition-colors shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -289,12 +289,12 @@ export const SideDrawer: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavigate('orders')}
-                  className="py-2 px-2.5 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors"
+                  className="py-2 px-2.5 rounded-xl bg-white border border-app-border hover:border-app-borderStrong text-left transition-colors"
                 >
-                  <span className="block font-mono-num text-sm leading-5 font-semibold text-[#0F1D17]">
+                  <span className="block tabular-nums text-sm leading-5 font-semibold text-content-primary">
                     {orders.length}
                   </span>
-                  <span className="block text-[11px] leading-3.5 text-[#485B52] mt-0.5 truncate">
+                  <span className="block text-xs leading-4 text-content-secondary mt-0.5 truncate">
                     {language === 'BN' ? 'অর্ডার' : 'Orders'}
                   </span>
                 </button>
@@ -302,12 +302,12 @@ export const SideDrawer: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavigate('wishlist')}
-                  className="py-2 px-2.5 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors"
+                  className="py-2 px-2.5 rounded-xl bg-white border border-app-border hover:border-app-borderStrong text-left transition-colors"
                 >
-                  <span className="block font-mono-num text-sm leading-5 font-semibold text-[#0F1D17]">
+                  <span className="block tabular-nums text-sm leading-5 font-semibold text-content-primary">
                     {wishlist.length}
                   </span>
-                  <span className="block text-[11px] leading-3.5 text-[#485B52] mt-0.5 truncate">
+                  <span className="block text-xs leading-4 text-content-secondary mt-0.5 truncate">
                     {language === 'BN' ? 'উইশলিস্ট' : 'Saved'}
                   </span>
                 </button>
@@ -315,12 +315,12 @@ export const SideDrawer: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavigate('cart')}
-                  className="py-2 px-2.5 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors"
+                  className="py-2 px-2.5 rounded-xl bg-white border border-app-border hover:border-app-borderStrong text-left transition-colors"
                 >
-                  <span className="block font-mono-num text-sm leading-5 font-semibold text-[#059669]">
+                  <span className="block tabular-nums text-sm leading-5 font-semibold text-content-primary">
                     {cartCount}
                   </span>
-                  <span className="block text-[11px] leading-3.5 text-[#485B52] mt-0.5 truncate">
+                  <span className="block text-xs leading-4 text-content-secondary mt-0.5 truncate">
                     {language === 'BN' ? 'ব্যাগ' : 'In Bag'}
                   </span>
                 </button>
@@ -329,14 +329,14 @@ export const SideDrawer: React.FC = () => {
               {/* Dual Segmented Controls: Currency & Language */}
               <div className="grid grid-cols-2 gap-2">
                 {/* Currency Segmented Control */}
-                <div className="bg-[#E4EDE8] rounded-xl p-1 flex items-center">
+                <div className="bg-app-subtle rounded-lg p-1 flex items-center">
                   <button
                     type="button"
                     onClick={() => setCurrency('BDT')}
-                    className={`flex-1 h-8 rounded-lg text-xs font-mono-num font-semibold transition-all whitespace-nowrap ${
+                    className={`flex-1 h-8 rounded-md text-xs tabular-nums font-semibold transition-all whitespace-nowrap ${
                       currency === 'BDT'
-                        ? 'bg-white text-[#0F1D17] shadow-2xs'
-                        : 'text-[#485B52] hover:text-[#0F1D17]'
+                        ? 'bg-white text-content-primary shadow-2xs'
+                        : 'text-content-secondary hover:text-content-primary'
                     }`}
                   >
                     ৳ BDT
@@ -344,10 +344,10 @@ export const SideDrawer: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCurrency('USD')}
-                    className={`flex-1 h-8 rounded-lg text-xs font-mono-num font-semibold transition-all whitespace-nowrap ${
+                    className={`flex-1 h-8 rounded-md text-xs tabular-nums font-semibold transition-all whitespace-nowrap ${
                       currency === 'USD'
-                        ? 'bg-white text-[#0F1D17] shadow-2xs'
-                        : 'text-[#485B52] hover:text-[#0F1D17]'
+                        ? 'bg-white text-content-primary shadow-2xs'
+                        : 'text-content-secondary hover:text-content-primary'
                     }`}
                   >
                     $ USD
@@ -355,14 +355,14 @@ export const SideDrawer: React.FC = () => {
                 </div>
 
                 {/* Language Segmented Control */}
-                <div className="bg-[#E4EDE8] rounded-xl p-1 flex items-center">
+                <div className="bg-app-subtle rounded-lg p-1 flex items-center">
                   <button
                     type="button"
                     onClick={() => setLanguage('EN')}
-                    className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-1 whitespace-nowrap ${
+                    className={`flex-1 h-8 rounded-md text-xs font-semibold transition-all inline-flex items-center justify-center gap-1 whitespace-nowrap ${
                       language === 'EN'
-                        ? 'bg-white text-[#0F1D17] shadow-2xs'
-                        : 'text-[#485B52] hover:text-[#0F1D17]'
+                        ? 'bg-white text-content-primary shadow-2xs'
+                        : 'text-content-secondary hover:text-content-primary'
                     }`}
                   >
                     <Globe className="w-3 h-3" />
@@ -371,10 +371,10 @@ export const SideDrawer: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLanguage('BN')}
-                    className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                    className={`flex-1 h-8 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${
                       language === 'BN'
-                        ? 'bg-white text-[#0F1D17] shadow-2xs'
-                        : 'text-[#485B52] hover:text-[#0F1D17]'
+                        ? 'bg-white text-content-primary shadow-2xs'
+                        : 'text-content-secondary hover:text-content-primary'
                     }`}
                   >
                     বাংলা
@@ -387,8 +387,7 @@ export const SideDrawer: React.FC = () => {
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain no-scrollbar px-3 py-3.5 space-y-5">
               {menuGroups.map((group) => (
                 <div key={group.id} className="space-y-1">
-                  {/* Natural Title Case section heading (no all-caps shouting) */}
-                  <p className="px-3 text-xs leading-4 font-semibold text-[#74887E]">
+                  <p className="px-3 text-xs leading-4 font-semibold text-content-muted">
                     {language === 'BN' ? group.titleBn : group.title}
                   </p>
                   <nav aria-label={group.title} className="space-y-0.5">
@@ -404,18 +403,17 @@ export const SideDrawer: React.FC = () => {
                           type="button"
                           aria-current={isActive ? 'page' : undefined}
                           onClick={() => handleNavigate(item.screen)}
-                          className={`group relative w-full min-h-[44px] px-3 rounded-xl flex items-center justify-between gap-3 text-xs leading-4 transition-colors text-left ${
+                          className={`group relative w-full min-h-[44px] px-3 rounded-lg flex items-center justify-between gap-3 text-sm leading-5 transition-colors text-left ${
                             isActive
-                              ? 'bg-[#ECFDF5] text-[#065F46] font-semibold'
-                              : 'text-[#33473E] font-medium hover:bg-[#F2F7F4] hover:text-[#0F1D17]'
+                              ? 'bg-brand-subtle text-brand-primary font-semibold'
+                              : 'text-content-secondary font-medium hover:bg-app-subtle hover:text-content-primary'
                           }`}
                         >
-                          {/* Active Left Indicator Bar */}
                           {isActive && (
                             <motion.span
                               layoutId="sideDrawerActiveBar"
                               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                              className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-[#059669]"
+                              className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-brand-primary"
                             />
                           )}
 
@@ -423,8 +421,8 @@ export const SideDrawer: React.FC = () => {
                             <Icon
                               className={`w-4 h-4 shrink-0 transition-colors ${
                                 isActive
-                                  ? 'text-[#059669] stroke-[2.2]'
-                                  : 'text-[#74887E] group-hover:text-[#0F1D17]'
+                                  ? 'text-brand-primary stroke-[2.2]'
+                                  : 'text-content-muted group-hover:text-content-primary'
                               }`}
                             />
                             <span className="truncate">
@@ -435,10 +433,10 @@ export const SideDrawer: React.FC = () => {
                           <div className="flex items-center gap-2 shrink-0">
                             {typeof item.badge === 'number' && item.badge > 0 && (
                               <span
-                                className={`font-mono-num text-xs leading-4 font-semibold ${
-                                  item.badgeTone === 'emerald' || isActive
-                                    ? 'text-[#059669]'
-                                    : 'text-[#5C7066]'
+                                className={`tabular-nums text-xs leading-4 font-semibold ${
+                                  isActive
+                                    ? 'text-brand-primary'
+                                    : 'text-content-secondary'
                                 }`}
                               >
                                 {item.badge}
@@ -447,8 +445,8 @@ export const SideDrawer: React.FC = () => {
                             <ChevronRight
                               className={`w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5 ${
                                 isActive
-                                  ? 'text-[#059669]'
-                                  : 'text-[#B8C9C0] group-hover:text-[#5C7066]'
+                                  ? 'text-brand-primary'
+                                  : 'text-content-muted group-hover:text-content-secondary'
                               }`}
                             />
                           </div>
@@ -461,10 +459,10 @@ export const SideDrawer: React.FC = () => {
             </div>
 
             {/* ZONE 3: Clean Sticky Footer with Landed Cost Trust & 44px Sign Out */}
-            <div className="shrink-0 p-3 bg-[#F5F8F6] border-t border-[#DFEAE3] space-y-2">
-              <div className="px-3 py-2 flex items-center gap-2.5 text-[#485B52]">
-                <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0" />
-                <p className="text-[11px] leading-4 truncate">
+            <div className="shrink-0 p-3 bg-app-bg border-t border-app-border space-y-2">
+              <div className="px-3 py-2 flex items-center gap-2.5 text-content-secondary">
+                <ShieldCheck className="w-4 h-4 text-brand-primary shrink-0" />
+                <p className="text-xs leading-4 truncate">
                   {language === 'BN'
                     ? '১০০% ল্যান্ডেড প্রাইস · ডিউটি ও ১৫% ভ্যাট অন্তর্ভুক্ত'
                     : '100% Landed Price · Duty & 15% VAT included'}
@@ -474,13 +472,13 @@ export const SideDrawer: React.FC = () => {
               <button
                 type="button"
                 onClick={logoutUser}
-                className="w-full min-h-[44px] px-3 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#FECDD3] hover:bg-[#FFF1F2] flex items-center justify-between text-xs leading-4 font-semibold text-[#E11D48] transition-colors"
+                className="w-full min-h-[44px] px-3 rounded-lg bg-white border border-app-border hover:border-promo-border hover:bg-promo-subtle flex items-center justify-between text-xs leading-4 font-semibold text-promo-accent transition-colors"
               >
                 <span className="flex items-center gap-2.5">
                   <LogOut className="w-4 h-4" />
                   <span>{language === 'BN' ? 'লগ আউট করুন' : 'Sign Out'}</span>
                 </span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#FB7185]" />
+                <ChevronRight className="w-3.5 h-3.5 text-promo-accent" />
               </button>
             </div>
           </motion.aside>

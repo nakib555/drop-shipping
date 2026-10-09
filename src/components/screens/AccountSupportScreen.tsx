@@ -4,6 +4,7 @@ import {
   Banknote,
   Bell,
   BookOpen,
+  CheckCheck,
   CheckCircle2,
   ChevronRight,
   CreditCard,
@@ -22,14 +23,17 @@ import {
   ShieldCheck,
   ShoppingCart,
   Smartphone,
+  Sparkles,
   Star,
   Store,
   Trash2,
+  TrendingDown,
+  Truck,
   Wallet,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { SHOPPING_GUIDES, SUPPORT_FAQS } from '../../data/catalogData';
-import { PaymentMethodId } from '../../types/deshimart';
+import { AppNotification, PaymentMethodId } from '../../types/deshimart';
 import { ProductCard } from '../shared/ProductCard';
 
 export const AccountSupportScreen: React.FC = () => {
@@ -46,7 +50,11 @@ export const AccountSupportScreen: React.FC = () => {
     addToCart,
     formatPrice,
     notifications,
+    unreadNotificationCount,
+    markNotificationRead,
     markAllNotificationsRead,
+    deleteNotification,
+    clearReadNotifications,
     currency,
     setCurrency,
     language,
@@ -62,6 +70,8 @@ export const AccountSupportScreen: React.FC = () => {
     setPaymentMethod,
     showToast,
   } = useDeshiMart();
+
+  const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'order' | 'price_drop'>('all');
 
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
@@ -138,14 +148,14 @@ export const AccountSupportScreen: React.FC = () => {
 
     if (wishlistedProducts.length === 0) {
       return (
-        <div className="p-6 flex-1 flex flex-col items-center justify-center text-center bg-[#F5F8F6]">
-          <div className="w-16 h-16 rounded-2xl bg-[#ECFDF5] border border-[#CBE4D6] text-[#059669] flex items-center justify-center mb-4">
+        <div className="p-6 flex-1 flex flex-col items-center justify-center text-center bg-app-bg">
+          <div className="w-16 h-16 rounded-2xl bg-app-subtle border border-app-border text-content-secondary flex items-center justify-center mb-4">
             <Heart className="w-8 h-8" />
           </div>
-          <h2 className="text-base font-bold text-[#0F1D17]">
+          <h2 className="text-lg font-semibold text-content-primary">
             {language === 'BN' ? 'আপনার উইশলিস্ট খালি' : 'Your Wishlist is Empty'}
           </h2>
-          <p className="text-xs text-[#485B52] mt-1 max-w-[230px]">
+          <p className="text-xs text-content-secondary mt-1 max-w-[230px]">
             {language === 'BN'
               ? 'পছন্দের গ্লোবাল পণ্য সেভ করে রাখুন এবং ল্যান্ডেড প্রাইস ড্রপ ট্র্যাক করুন।'
               : 'Save your favorite global items and track their landed price drops here.'}
@@ -153,7 +163,7 @@ export const AccountSupportScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="mt-5 px-6 h-11 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold transition-colors"
+            className="mt-5 px-6 min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
           >
             {language === 'BN' ? 'শপিং শুরু করুন' : 'Explore Catalog'}
           </button>
@@ -162,14 +172,14 @@ export const AccountSupportScreen: React.FC = () => {
     }
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-semibold text-[#0F1D17]">
+          <span className="text-sm font-semibold text-content-primary">
             {language === 'BN'
               ? `সংরক্ষিত পণ্য (${wishlistedProducts.length})`
               : `Saved Items (${wishlistedProducts.length})`}
           </span>
-          <span className="text-[11px] text-[#059669] font-medium">
+          <span className="text-xs text-content-secondary">
             {language === 'BN' ? 'ল্যান্ডেড প্রাইস অন্তর্ভুক্ত' : 'Landed Price Included'}
           </span>
         </div>
@@ -178,7 +188,7 @@ export const AccountSupportScreen: React.FC = () => {
           {wishlistedProducts.map((prod) => (
             <div
               key={prod.id}
-              className="bg-white rounded-2xl border border-[#DFEAE3] p-3 flex items-center gap-3"
+              className="bg-white rounded-xl border border-app-border p-3 flex items-center gap-3"
             >
               <img
                 src={prod.image}
@@ -187,7 +197,7 @@ export const AccountSupportScreen: React.FC = () => {
                 onClick={() =>
                   navigateTo('product_detail', { productId: prod.id })
                 }
-                className="w-16 h-16 rounded-xl object-cover bg-[#F8FAF9] border border-[#EAF0EC] cursor-pointer shrink-0"
+                className="w-16 h-16 rounded-lg object-cover bg-slate-50 border border-app-border cursor-pointer shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between">
@@ -195,7 +205,7 @@ export const AccountSupportScreen: React.FC = () => {
                     onClick={() =>
                       navigateTo('product_detail', { productId: prod.id })
                     }
-                    className="text-xs font-semibold text-[#0F1D17] truncate cursor-pointer hover:text-[#059669]"
+                    className="text-sm font-medium text-content-primary truncate cursor-pointer hover:underline"
                   >
                     {language === 'BN' ? prod.nameBn : prod.name}
                   </h3>
@@ -203,28 +213,28 @@ export const AccountSupportScreen: React.FC = () => {
                     type="button"
                     aria-label="Remove from wishlist"
                     onClick={() => toggleWishlist(prod.id)}
-                    className="text-[#74887E] hover:text-rose-500 p-1 -mr-1"
+                    className="text-content-muted hover:text-promo-accent p-1 -mr-1"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-1 text-[11px] text-[#485B52] mt-0.5">
+                <div className="flex items-center gap-1 text-xs text-content-secondary mt-0.5">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  <span className="font-mono-num font-semibold text-[#0F1D17]">
+                  <span className="tabular-nums font-semibold text-content-primary">
                     {prod.rating.toFixed(1)}
                   </span>
                   <span>({prod.reviewCount})</span>
                 </div>
 
                 <div className="flex items-center justify-between mt-2">
-                  <span className="font-mono-num text-sm font-bold text-[#0F1D17]">
+                  <span className="tabular-nums text-base font-bold text-content-primary">
                     {formatPrice(prod.totalLandedBdt)}
                   </span>
                   <button
                     type="button"
                     onClick={() => addToCart(prod.id, 1)}
-                    className="px-3 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-3.5 py-2 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
                     <span>{language === 'BN' ? 'কার্টে দিন' : 'Add to Bag'}</span>
@@ -241,9 +251,9 @@ export const AccountSupportScreen: React.FC = () => {
   // 2. DEDICATED SAVED ADDRESSES MANAGER
   if (currentScreen === 'addresses') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-semibold text-[#0F1D17]">
+          <span className="text-sm font-semibold text-content-primary">
             {language === 'BN'
               ? `আপনার ডেলিভারি ঠিকানা (${addresses.length})`
               : `Saved Delivery Addresses (${addresses.length})`}
@@ -251,7 +261,7 @@ export const AccountSupportScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowAddAddress(!showAddAddress)}
-            className="text-xs font-semibold text-[#059669] flex items-center gap-1"
+            className="text-xs font-semibold text-content-primary hover:underline flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{language === 'BN' ? 'নতুন ঠিকানা' : 'Add Address'}</span>
@@ -261,14 +271,14 @@ export const AccountSupportScreen: React.FC = () => {
         {showAddAddress && (
           <form
             onSubmit={handleCreateAddress}
-            className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5"
+            className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
           >
-            <h3 className="text-xs font-semibold text-[#0F1D17]">
+            <h3 className="text-sm font-semibold text-content-primary">
               {language === 'BN' ? 'নতুন ডেলিভারি ঠিকানা যোগ করুন' : 'New Delivery Address'}
             </h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-medium text-[#374740] mb-1">
+                <label className="block text-[11px] font-medium text-content-secondary mb-1">
                   Label
                 </label>
                 <input
@@ -277,11 +287,11 @@ export const AccountSupportScreen: React.FC = () => {
                   value={addrLabel}
                   onChange={(e) => setAddrLabel(e.target.value)}
                   placeholder="Home / Office"
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[#374740] mb-1">
+                <label className="block text-[11px] font-medium text-content-secondary mb-1">
                   Recipient Name
                 </label>
                 <input
@@ -289,12 +299,12 @@ export const AccountSupportScreen: React.FC = () => {
                   required
                   value={addrName}
                   onChange={(e) => setAddrName(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-[#374740] mb-1">
+              <label className="block text-[11px] font-medium text-content-secondary mb-1">
                 Street / Area / House
               </label>
               <input
@@ -303,12 +313,12 @@ export const AccountSupportScreen: React.FC = () => {
                 value={addrStreet}
                 onChange={(e) => setAddrStreet(e.target.value)}
                 placeholder="House 14, Road 5, Dhanmondi"
-                className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-medium text-[#374740] mb-1">
+                <label className="block text-[11px] font-medium text-content-secondary mb-1">
                   City
                 </label>
                 <input
@@ -316,11 +326,11 @@ export const AccountSupportScreen: React.FC = () => {
                   required
                   value={addrCity}
                   onChange={(e) => setAddrCity(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[#374740] mb-1">
+                <label className="block text-[11px] font-medium text-content-secondary mb-1">
                   Postal Code
                 </label>
                 <input
@@ -328,13 +338,13 @@ export const AccountSupportScreen: React.FC = () => {
                   required
                   value={addrPostal}
                   onChange={(e) => setAddrPostal(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] font-mono-num text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
                 />
               </div>
             </div>
             <button
               type="submit"
-              className="w-full h-10 rounded-xl bg-[#0F1D17] text-white text-xs font-semibold"
+              className="w-full h-10 rounded-lg bg-content-primary text-white text-xs font-semibold"
             >
               {language === 'BN' ? 'ঠিকানা সেভ করুন' : 'Save Address'}
             </button>
@@ -347,17 +357,17 @@ export const AccountSupportScreen: React.FC = () => {
             return (
               <div
                 key={addr.id}
-                className={`p-3.5 rounded-2xl border bg-white space-y-2 ${
-                  isDefault ? 'border-[#059669] bg-[#F2F9F5]' : 'border-[#DFEAE3]'
+                className={`p-3.5 rounded-xl border bg-white space-y-2 ${
+                  isDefault ? 'border-content-primary bg-app-subtle' : 'border-app-border'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-[#059669]" />
-                    <span className="text-xs font-semibold text-[#0F1D17]">
+                    <MapPin className="w-4 h-4 text-content-secondary" />
+                    <span className="text-sm font-medium text-content-primary">
                       {addr.fullName}
                     </span>
-                    <span className="text-[10px] font-medium text-[#485B52]">
+                    <span className="text-xs text-content-secondary">
                       · {addr.label}
                     </span>
                   </div>
@@ -365,15 +375,15 @@ export const AccountSupportScreen: React.FC = () => {
                     type="button"
                     aria-label="Delete address"
                     onClick={() => deleteAddress(addr.id)}
-                    className="text-[#74887E] hover:text-rose-500 p-1"
+                    className="text-content-muted hover:text-promo-accent p-1"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <p className="text-xs text-[#485B52]">{addr.address}</p>
+                <p className="text-xs text-content-secondary">{addr.address}</p>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="font-mono-num text-[11px] font-medium text-[#374740]">
+                  <span className="tabular-nums text-xs text-content-secondary">
                     {addr.phone}
                   </span>
                   <button
@@ -383,7 +393,7 @@ export const AccountSupportScreen: React.FC = () => {
                       showToast('Default delivery address updated');
                     }}
                     className={`text-xs font-semibold ${
-                      isDefault ? 'text-[#059669]' : 'text-[#485B52] hover:text-[#0F1D17]'
+                      isDefault ? 'text-content-primary' : 'text-content-secondary hover:text-content-primary'
                     }`}
                   >
                     {isDefault
@@ -443,10 +453,10 @@ export const AccountSupportScreen: React.FC = () => {
     ];
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
-        <div className="bg-[#F2F9F5] border border-[#CBE4D6] rounded-2xl p-4 flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-[#059669] shrink-0" />
-          <p className="text-xs text-[#374740] leading-relaxed">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+        <div className="bg-brand-subtle border border-brand-border rounded-xl p-4 flex items-center gap-3">
+          <ShieldCheck className="w-5 h-5 text-brand-primary shrink-0" />
+          <p className="text-xs text-content-secondary leading-relaxed">
             {language === 'BN'
               ? 'দেশিমার্টে ক্যাশ অন ডেলিভারি, বিকাশ/নগদ এবং কার্ড পেমেন্ট শতভাগ নিরাপদ।'
               : 'All payment methods include DeshiMart 30-day return & customs protection.'}
@@ -465,30 +475,30 @@ export const AccountSupportScreen: React.FC = () => {
                   setPaymentMethod(m.id);
                   showToast(`Default payment set to ${m.name}`);
                 }}
-                className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all ${
                   active
-                    ? 'bg-[#F2F9F5] border-[#059669]'
-                    : 'bg-white border-[#DFEAE3] hover:border-[#A7C4B5]'
+                    ? 'bg-app-subtle border-content-primary'
+                    : 'bg-white border-app-border hover:border-app-borderStrong'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                       active
-                        ? 'bg-[#0F1D17] text-white'
-                        : 'bg-[#ECFDF5] text-[#059669]'
+                        ? 'bg-content-primary text-white'
+                        : 'bg-app-subtle text-content-primary'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[#0F1D17] truncate">
+                    <p className="text-sm font-medium text-content-primary truncate">
                       {m.name}
                     </p>
-                    <p className="text-[11px] text-[#485B52] truncate">{m.detail}</p>
+                    <p className="text-xs text-content-secondary truncate">{m.detail}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-semibold text-[#059669] shrink-0 ml-2">
+                <span className="text-[11px] font-semibold text-content-primary shrink-0 ml-2">
                   {active ? '✓ Active' : m.status}
                 </span>
               </button>
@@ -507,22 +517,22 @@ export const AccountSupportScreen: React.FC = () => {
     );
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Supplier Header Card */}
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-app-subtle text-content-primary flex items-center justify-center">
                 <Store className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-1">
-                  <h2 className="text-sm font-bold text-[#0F1D17]">
+                  <h2 className="text-sm font-bold text-content-primary">
                     {supplierName}
                   </h2>
-                  <CheckCircle2 className="w-4 h-4 text-[#059669]" />
+                  <CheckCircle2 className="w-4 h-4 text-status-success" />
                 </div>
-                <p className="text-xs text-[#485B52]">
+                <p className="text-xs text-content-secondary">
                   {selectedProduct.originLabel} · Tier-1 Direct Exporter
                 </p>
               </div>
@@ -539,41 +549,41 @@ export const AccountSupportScreen: React.FC = () => {
                   'info'
                 );
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+              className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors ${
                 isFollowingSupplier
-                  ? 'bg-[#F2F9F5] text-[#059669] border border-[#059669]'
-                  : 'bg-[#0F1D17] text-white'
+                  ? 'bg-app-subtle text-content-primary border border-app-borderStrong'
+                  : 'bg-content-primary text-white'
               }`}
             >
               {isFollowingSupplier ? 'Following ✓' : '+ Follow'}
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#EAF0EC] text-center text-xs">
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-app-border text-center text-xs">
             <div>
-              <span className="font-mono-num font-bold text-[#0F1D17] block">
+              <span className="tabular-nums font-bold text-content-primary block">
                 {selectedProduct.supplierProductsCount}
               </span>
-              <span className="text-[10px] text-[#485B52]">Products</span>
+              <span className="text-[11px] text-content-secondary">Products</span>
             </div>
             <div>
-              <span className="font-mono-num font-bold text-[#059669] block">
+              <span className="tabular-nums font-bold text-content-primary block">
                 98.4%
               </span>
-              <span className="text-[10px] text-[#485B52]">On-Time Ship</span>
+              <span className="text-[11px] text-content-secondary">On-Time Ship</span>
             </div>
             <div>
-              <span className="font-mono-num font-bold text-[#0F1D17] block">
+              <span className="tabular-nums font-bold text-content-primary block">
                 {selectedProduct.supplierFollowers}
               </span>
-              <span className="text-[10px] text-[#485B52]">Followers</span>
+              <span className="text-[11px] text-content-secondary">Followers</span>
             </div>
           </div>
         </div>
 
         {/* Supplier Product Grid */}
         <div className="space-y-2.5">
-          <h3 className="text-xs font-semibold text-[#0F1D17] px-1">
+          <h3 className="text-sm font-semibold text-content-primary px-1">
             {language === 'BN'
               ? 'সাপ্লায়ারের ভেরিফাইড পণ্যসমূহ'
               : `Verified Catalog (${supplierCatalog.length} items)`}
@@ -590,59 +600,256 @@ export const AccountSupportScreen: React.FC = () => {
 
   // 5. NOTIFICATIONS SCREEN
   if (currentScreen === 'notifications') {
+    const isBn = language === 'BN';
+    const filteredNotifications = notifications.filter((n) => {
+      if (notifFilter === 'unread') return !n.read;
+      if (notifFilter === 'order') return n.type === 'order' || n.type === 'arrival';
+      if (notifFilter === 'price_drop') return n.type === 'price_drop';
+      return true;
+    });
+
+    const hasReadNotifications = notifications.some((n) => n.read);
+
+    const getNotifIconConfig = (type: AppNotification['type'], read: boolean) => {
+      switch (type) {
+        case 'order':
+        case 'arrival':
+          return {
+            Icon: Truck,
+            bg: read ? 'bg-app-subtle text-content-secondary' : 'bg-blue-50 text-status-transit',
+            categoryLabel: isBn ? 'শিপমেন্ট ট্র্যাকিং' : 'Shipment Update',
+            ctaLabel: isBn ? 'পার্সেল ট্র্যাক করুন' : 'Track Live Parcel',
+          };
+        case 'price_drop':
+          return {
+            Icon: TrendingDown,
+            bg: read ? 'bg-app-subtle text-content-secondary' : 'bg-promo-subtle text-promo-accent',
+            categoryLabel: isBn ? 'প্রাইস ড্রপ অ্যালার্ট' : 'Landed Price Drop',
+            ctaLabel: isBn ? 'মূল্য চার্ট দেখুন' : 'View Price Radar',
+          };
+        default:
+          return {
+            Icon: Sparkles,
+            bg: read ? 'bg-app-subtle text-content-secondary' : 'bg-amber-50 text-status-warning',
+            categoryLabel: isBn ? 'কাস্টমস ডিল' : 'Curated Offer',
+            ctaLabel: isBn ? 'ক্যাটালগ দেখুন' : 'Explore Deal',
+          };
+      }
+    };
+
+    const handleNotificationClick = (notif: AppNotification) => {
+      if (!notif.read) {
+        markNotificationRead(notif.id);
+      }
+      if (notif.targetScreen) {
+        navigateTo(notif.targetScreen, {
+          productId: notif.targetProductId,
+          orderId: notif.targetOrderId,
+        });
+      }
+    };
+
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
-        <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-semibold text-[#0F1D17]">
-            Recent Alerts & Updates
-          </span>
-          <button
-            type="button"
-            onClick={markAllNotificationsRead}
-            className="text-xs font-semibold text-[#059669]"
-          >
-            Mark all read
-          </button>
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+        {/* Segmented Filter Control */}
+        <div className="flex items-center gap-1 p-1 bg-app-subtle border border-app-border rounded-xl overflow-x-auto no-scrollbar">
+          {[
+            {
+              id: 'all' as const,
+              label: isBn ? `সব (${notifications.length})` : `All (${notifications.length})`,
+            },
+            {
+              id: 'unread' as const,
+              label: isBn
+                ? `অপঠিত (${unreadNotificationCount})`
+                : `Unread (${unreadNotificationCount})`,
+            },
+            {
+              id: 'order' as const,
+              label: isBn ? 'শিপমেন্ট' : 'Orders',
+            },
+            {
+              id: 'price_drop' as const,
+              label: isBn ? 'প্রাইস ড্রপ' : 'Price Drops',
+            },
+          ].map((tab) => {
+            const active = notifFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setNotifFilter(tab.id)}
+                className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  active
+                    ? 'bg-white text-content-primary shadow-2xs'
+                    : 'text-content-secondary hover:text-content-primary'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="space-y-2.5">
-          {notifications.map((notif) => (
-            <button
-              key={notif.id}
-              type="button"
-              onClick={() => {
-                if (notif.targetScreen) {
-                  navigateTo(notif.targetScreen, {
-                    productId: notif.targetProductId,
-                    orderId: notif.targetOrderId,
-                  });
-                }
-              }}
-              className={`w-full p-3.5 rounded-2xl border text-left flex items-start gap-3 transition-colors ${
-                !notif.read
-                  ? 'bg-[#F2F9F5] border-[#059669]'
-                  : 'bg-white border-[#DFEAE3]'
-              }`}
-            >
-              <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0 mt-0.5">
-                <Bell className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-semibold text-[#0F1D17] truncate">
-                    {notif.title}
-                  </h3>
-                  <span className="text-[10px] text-[#74887E] shrink-0">
-                    {notif.timestamp}
-                  </span>
-                </div>
-                <p className="text-xs text-[#485B52] mt-1 leading-relaxed">
-                  {notif.body}
-                </p>
-              </div>
-            </button>
-          ))}
+        {/* Summary & Bulk Action Row */}
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-semibold text-content-secondary">
+            {isBn
+              ? `${filteredNotifications.length}টি নোটিফিকেশন`
+              : `Showing ${filteredNotifications.length} ${
+                  filteredNotifications.length === 1 ? 'update' : 'updates'
+                }`}
+          </span>
+          <div className="flex items-center gap-3">
+            {unreadNotificationCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllNotificationsRead}
+                className="text-xs font-semibold text-content-primary hover:underline flex items-center gap-1"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>{isBn ? 'সব পঠিত করুন' : 'Mark all read'}</span>
+              </button>
+            )}
+            {hasReadNotifications && (
+              <button
+                type="button"
+                onClick={clearReadNotifications}
+                className="text-xs font-medium text-content-muted hover:text-promo-accent transition-colors"
+              >
+                {isBn ? 'পঠিত মুছুন' : 'Clear read'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Notification List or Empty State */}
+        {filteredNotifications.length === 0 ? (
+          <div className="bg-white rounded-xl border border-app-border p-8 text-center space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-app-subtle text-content-secondary flex items-center justify-center mx-auto">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-content-primary">
+                {notifFilter === 'unread'
+                  ? isBn
+                    ? 'কোনো অপঠিত নোটিফিকেশন নেই'
+                    : 'You’re All Caught Up'
+                  : isBn
+                  ? 'কোনো নোটিফিকেশন পাওয়া যায়নি'
+                  : 'No Notifications Found'}
+              </h3>
+              <p className="text-xs text-content-secondary max-w-[240px] mx-auto leading-relaxed">
+                {isBn
+                  ? 'আপনার অর্ডার শিপমেন্ট এবং ৩০ দিনের প্রাইস ড্রপ অ্যালার্ট এখানে তাৎক্ষণিক দেখা যাবে।'
+                  : 'Live customs clearance milestones and 30-day landed price drop alerts will appear here.'}
+              </p>
+            </div>
+            {notifFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setNotifFilter('all')}
+                className="px-4 py-2 rounded-lg bg-app-subtle hover:bg-slate-200 text-xs font-semibold text-content-primary transition-colors"
+              >
+                {isBn ? 'সব নোটিফিকেশন দেখুন' : 'Show All Notifications'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filteredNotifications.map((notif) => {
+              const { Icon, bg, categoryLabel, ctaLabel } = getNotifIconConfig(
+                notif.type,
+                notif.read
+              );
+              return (
+                <div
+                  key={notif.id}
+                  className={`rounded-xl border p-3.5 transition-all bg-white ${
+                    !notif.read
+                      ? 'border-app-borderStrong shadow-2xs'
+                      : 'border-app-border'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleNotificationClick(notif)}
+                      className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center shrink-0 mt-0.5 transition-colors`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex-1 min-w-0">
+                      {/* Metadata Kicker Row */}
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-content-secondary">
+                        <div className="flex items-center gap-1.5 min-w-0 truncate">
+                          <span
+                            className={`font-semibold ${
+                              !notif.read ? 'text-content-primary' : 'text-content-secondary'
+                            }`}
+                          >
+                            {categoryLabel}
+                          </span>
+                          <span aria-hidden="true">·</span>
+                          <span className="text-content-muted">{notif.timestamp}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {!notif.read && (
+                            <button
+                              type="button"
+                              title={isBn ? 'পঠিত হিসেবে চিহ্নিত করুন' : 'Mark as read'}
+                              onClick={() => markNotificationRead(notif.id)}
+                              className="text-[10px] font-semibold text-content-primary hover:underline px-1"
+                            >
+                              {isBn ? 'পঠিত' : 'Mark read'}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            aria-label="Delete notification"
+                            onClick={() => deleteNotification(notif.id)}
+                            className="p-1 text-content-muted hover:text-promo-accent rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Main Clickable Content */}
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationClick(notif)}
+                        className="w-full text-left mt-1 group"
+                      >
+                        <h3
+                          className={`text-xs leading-snug group-hover:underline ${
+                            !notif.read
+                              ? 'font-bold text-content-primary'
+                              : 'font-medium text-content-secondary'
+                          }`}
+                        >
+                          {notif.title}
+                        </h3>
+                        <p className="text-xs text-content-secondary mt-1 leading-relaxed">
+                          {notif.body}
+                        </p>
+
+                        {notif.targetScreen && (
+                          <div className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-semibold text-content-primary group-hover:translate-x-0.5 transition-transform">
+                            <span>{ctaLabel}</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -650,12 +857,12 @@ export const AccountSupportScreen: React.FC = () => {
   // 6. SHOPPING GUIDES / BLOG SCREEN
   if (currentScreen === 'guides') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
-        <div className="bg-gradient-to-br from-[#0F1D17] via-[#132A20] to-[#064E3B] text-white rounded-2xl p-4 border border-[#1E3F30]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+        <div className="bg-slate-900 text-white rounded-xl p-4 border border-slate-800">
           <h2 className="text-sm font-bold">
             Smarter Cross-Border Shopping Guides
           </h2>
-          <p className="text-xs text-[#A7C4B5] mt-1">
+          <p className="text-xs text-slate-300 mt-1">
             Learn how DeshiMart eliminates customs surprises and verifies factories.
           </p>
         </div>
@@ -664,28 +871,28 @@ export const AccountSupportScreen: React.FC = () => {
           {SHOPPING_GUIDES.map((guide) => (
             <article
               key={guide.id}
-              className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5"
+              className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
             >
-              <div className="flex items-center gap-2 text-[11px] text-[#485B52]">
-                <span className="font-semibold text-[#059669]">{guide.category}</span>
+              <div className="flex items-center gap-2 text-[11px] text-content-secondary">
+                <span className="font-semibold text-content-primary">{guide.category}</span>
                 <span>·</span>
                 <span>{guide.date}</span>
                 <span>·</span>
                 <span>{guide.readTime}</span>
               </div>
-              <h3 className="text-sm font-bold text-[#0F1D17]">
+              <h3 className="text-sm font-semibold text-content-primary">
                 {guide.title}
               </h3>
-              <p className="text-xs text-[#485B52] leading-relaxed">
+              <p className="text-xs text-content-secondary leading-relaxed">
                 {guide.summary}
               </p>
               <ul className="space-y-1.5 pt-1">
                 {guide.bulletPoints.map((bp, i) => (
                   <li
                     key={i}
-                    className="text-xs text-[#374740] flex items-start gap-2"
+                    className="text-xs text-content-secondary flex items-start gap-2"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#059669] mt-1.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
                     <span>{bp}</span>
                   </li>
                 ))}
@@ -700,10 +907,10 @@ export const AccountSupportScreen: React.FC = () => {
   // 7. SETTINGS & CURRENCY / LANGUAGE SCREEN
   if (currentScreen === 'settings') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Currency Selection */}
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5">
-          <h2 className="text-xs font-semibold text-[#0F1D17]">
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-2.5">
+          <h2 className="text-sm font-semibold text-content-primary">
             Landed Cost Display Currency
           </h2>
           <div className="space-y-2">
@@ -715,14 +922,14 @@ export const AccountSupportScreen: React.FC = () => {
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
                 currency === 'BDT'
-                  ? 'bg-[#F2F9F5] border-[#059669]'
-                  : 'bg-white border-[#DFEAE3]'
+                  ? 'bg-app-subtle border-content-primary'
+                  : 'bg-white border-app-border'
               }`}
             >
-              <span className="text-xs font-semibold text-[#0F1D17]">
+              <span className="text-xs font-semibold text-content-primary">
                 BDT (৳) — Bangladeshi Taka
               </span>
-              <span className="text-xs font-mono-num font-semibold text-[#059669]">
+              <span className="text-xs tabular-nums font-semibold text-content-primary">
                 Bangladesh
               </span>
             </button>
@@ -735,23 +942,23 @@ export const AccountSupportScreen: React.FC = () => {
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
                 currency === 'USD'
-                  ? 'bg-[#F2F9F5] border-[#059669]'
-                  : 'bg-white border-[#DFEAE3]'
+                  ? 'bg-app-subtle border-content-primary'
+                  : 'bg-white border-app-border'
               }`}
             >
-              <span className="text-xs font-semibold text-[#0F1D17]">
+              <span className="text-xs font-semibold text-content-primary">
                 USD ($) — US Dollar
               </span>
-              <span className="text-xs font-mono-num font-medium text-[#485B52]">
-                Global ($1 = ৳120)
+              <span className="text-xs tabular-nums font-medium text-content-secondary">
+                Global ($1 = ৳ 120)
               </span>
             </button>
           </div>
         </div>
 
         {/* Language Selection */}
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5">
-          <h2 className="text-xs font-semibold text-[#0F1D17]">App Language</h2>
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-2.5">
+          <h2 className="text-sm font-semibold text-content-primary">App Language</h2>
           <div className="space-y-2">
             <button
               type="button"
@@ -761,12 +968,12 @@ export const AccountSupportScreen: React.FC = () => {
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
                 language === 'EN'
-                  ? 'bg-[#F2F9F5] border-[#059669]'
-                  : 'bg-white border-[#DFEAE3]'
+                  ? 'bg-app-subtle border-content-primary'
+                  : 'bg-white border-app-border'
               }`}
             >
-              <span className="text-xs font-semibold text-[#0F1D17]">English</span>
-              <span className="text-xs text-[#059669] font-medium">
+              <span className="text-xs font-semibold text-content-primary">English</span>
+              <span className="text-xs text-content-secondary font-medium">
                 Plus Jakarta Sans
               </span>
             </button>
@@ -779,14 +986,14 @@ export const AccountSupportScreen: React.FC = () => {
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left ${
                 language === 'BN'
-                  ? 'bg-[#F2F9F5] border-[#059669]'
-                  : 'bg-white border-[#DFEAE3]'
+                  ? 'bg-app-subtle border-content-primary'
+                  : 'bg-white border-app-border'
               }`}
             >
-              <span className="text-xs font-semibold text-[#0F1D17]">
+              <span className="text-xs font-semibold text-content-primary">
                 বাংলা (Bengali)
               </span>
-              <span className="text-xs text-[#059669] font-medium">
+              <span className="text-xs text-content-secondary font-medium">
                 Noto Sans Bengali
               </span>
             </button>
@@ -794,17 +1001,17 @@ export const AccountSupportScreen: React.FC = () => {
         </div>
 
         {/* App Preferences */}
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
-          <h2 className="text-xs font-semibold text-[#0F1D17]">
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-content-primary">
             App Preferences
           </h2>
-          <label className="flex items-center justify-between text-xs font-medium text-[#374740] cursor-pointer">
+          <label className="flex items-center justify-between text-xs font-medium text-content-secondary cursor-pointer">
             <span>High-Contrast Outdoor Legibility</span>
             <input
               type="checkbox"
               checked={darkMode}
               onChange={(e) => setDarkMode(e.target.checked)}
-              className="w-4 h-4 accent-[#059669]"
+              className="w-4 h-4 accent-slate-900"
             />
           </label>
         </div>
@@ -812,7 +1019,7 @@ export const AccountSupportScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('home')}
-          className="w-full h-12 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs transition-colors"
+          className="w-full h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm transition-colors"
         >
           Save Changes
         </button>
@@ -823,22 +1030,22 @@ export const AccountSupportScreen: React.FC = () => {
   // 8. HELP & SUPPORT SCREEN
   if (currentScreen === 'support') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
-          <h2 className="text-sm font-bold text-[#0F1D17]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-content-primary">
             How can we help you today?
           </h2>
           <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => setChatOpen(true)}
-              className="p-3 rounded-2xl bg-gradient-to-br from-[#0F1D17] to-[#064E3B] text-white flex flex-col items-center text-center gap-1"
+              className="p-3 rounded-xl bg-slate-900 text-white flex flex-col items-center text-center gap-1"
             >
-              <MessageCircle className="w-5 h-5 text-[#34D399]" />
+              <MessageCircle className="w-5 h-5 text-emerald-400" />
               <span className="text-xs font-semibold">
                 24/7 Live Chat
               </span>
-              <span className="text-[10px] text-[#A7C4B5]">Replies in &lt; 2m</span>
+              <span className="text-[10px] text-slate-300">Replies in &lt; 2m</span>
             </button>
 
             <button
@@ -846,13 +1053,13 @@ export const AccountSupportScreen: React.FC = () => {
               onClick={() =>
                 showToast('Calling DeshiMart Dhaka Support: +880 1712 345678')
               }
-              className="p-3 rounded-2xl bg-[#F5F8F6] border border-[#DFEAE3] flex flex-col items-center text-center gap-1"
+              className="p-3 rounded-xl bg-app-subtle border border-app-border flex flex-col items-center text-center gap-1"
             >
-              <PhoneCall className="w-5 h-5 text-[#059669]" />
-              <span className="text-xs font-semibold text-[#0F1D17]">
+              <PhoneCall className="w-5 h-5 text-content-primary" />
+              <span className="text-xs font-semibold text-content-primary">
                 Call Support
               </span>
-              <span className="text-[10px] font-mono-num text-[#485B52]">
+              <span className="text-[10px] tabular-nums text-content-secondary">
                 +880 1712 345678
               </span>
             </button>
@@ -860,20 +1067,20 @@ export const AccountSupportScreen: React.FC = () => {
         </div>
 
         {/* Frequently Asked Questions */}
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
-          <h3 className="text-xs font-semibold text-[#0F1D17]">
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-content-primary">
             Frequently Asked Questions
           </h3>
           <div className="space-y-2.5">
             {SUPPORT_FAQS.map((faq) => (
               <div
                 key={faq.question}
-                className="p-3 rounded-xl bg-[#F5F8F6] border border-[#EAF0EC] space-y-1"
+                className="p-3 rounded-lg bg-app-subtle border border-app-border space-y-1"
               >
-                <h4 className="text-xs font-semibold text-[#0F1D17]">
+                <h4 className="text-xs font-semibold text-content-primary">
                   {faq.question}
                 </h4>
-                <p className="text-xs text-[#485B52] leading-relaxed">
+                <p className="text-xs text-content-secondary leading-relaxed">
                   {faq.answer}
                 </p>
               </div>
@@ -890,28 +1097,28 @@ export const AccountSupportScreen: React.FC = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setChatOpen(false)}
-                className="absolute inset-0 bg-[#0F1D17]/55 backdrop-blur-[1px]"
+                className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]"
               />
               <motion.div
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl flex flex-col h-[420px] border-t border-[#DFEAE3]"
+                className="relative z-10 w-full bg-white rounded-t-2xl p-4 shadow-2xl flex flex-col h-[420px] border-t border-app-border"
               >
-                <div className="flex items-center justify-between pb-3 border-b border-[#EAF0EC]">
+                <div className="flex items-center justify-between pb-3 border-b border-app-border">
                   <div>
-                    <h3 className="text-xs font-bold text-[#0F1D17]">
+                    <h3 className="text-xs font-bold text-content-primary">
                       DeshiMart Live Support (Dhaka Hub)
                     </h3>
-                    <span className="text-[10px] text-[#059669] font-medium">
+                    <span className="text-[10px] text-status-success font-medium">
                       Online · Customs & Order Specialist
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setChatOpen(false)}
-                    className="text-xs font-semibold text-[#74887E] px-2 py-1"
+                    className="text-xs font-semibold text-content-muted px-2 py-1"
                   >
                     Close
                   </button>
@@ -921,10 +1128,10 @@ export const AccountSupportScreen: React.FC = () => {
                   {chatMessages.map((m, idx) => (
                     <div
                       key={idx}
-                      className={`max-w-[82%] p-3 rounded-2xl text-xs leading-relaxed ${
+                      className={`max-w-[82%] p-3 rounded-xl text-xs leading-relaxed ${
                         m.sender === 'user'
-                          ? 'ml-auto bg-[#0F1D17] text-white'
-                          : 'bg-[#F2F9F5] border border-[#CBE4D6] text-[#0F1D17]'
+                          ? 'ml-auto bg-content-primary text-white'
+                          : 'bg-app-subtle border border-app-border text-content-primary'
                       }`}
                     >
                       {m.text}
@@ -938,12 +1145,12 @@ export const AccountSupportScreen: React.FC = () => {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask about your order or customs duty..."
-                    className="flex-1 h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                    className="flex-1 h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                   />
                   <button
                     type="submit"
                     aria-label="Send message"
-                    className="w-10 h-10 rounded-xl bg-[#059669] text-white flex items-center justify-center shrink-0"
+                    className="w-10 h-10 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -1015,11 +1222,11 @@ export const AccountSupportScreen: React.FC = () => {
   ];
 
   return (
-    <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+    <div className="p-4 space-y-4 pb-6 bg-app-bg">
       {/* Profile Hero Card */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 flex items-center justify-between">
+      <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0F1D17] to-[#059669] text-white font-bold text-sm flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-content-primary text-white font-bold text-sm flex items-center justify-center">
             {user.fullName
               .split(' ')
               .map((n) => n[0])
@@ -1028,11 +1235,11 @@ export const AccountSupportScreen: React.FC = () => {
               .toUpperCase()}
           </div>
           <div>
-            <h2 className="text-sm font-bold text-[#0F1D17]">
+            <h2 className="text-sm font-bold text-content-primary">
               {user.fullName}
             </h2>
-            <p className="text-xs text-[#485B52]">{user.email}</p>
-            <p className="font-mono-num text-[11px] text-[#374740] font-medium mt-0.5">
+            <p className="text-xs text-content-secondary">{user.email}</p>
+            <p className="tabular-nums text-xs text-content-secondary font-medium mt-0.5">
               {user.phone}
             </p>
           </div>
@@ -1047,7 +1254,7 @@ export const AccountSupportScreen: React.FC = () => {
               setEditPhone(user.phone);
               setEditProfileOpen(true);
             }}
-            className="w-9 h-9 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-[#374740] hover:text-[#0F1D17] flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-lg bg-app-subtle border border-app-border text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors"
           >
             <Edit3 className="w-4 h-4" />
           </button>
@@ -1055,7 +1262,7 @@ export const AccountSupportScreen: React.FC = () => {
             type="button"
             aria-label="Account settings"
             onClick={() => navigateTo('settings')}
-            className="w-9 h-9 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-[#374740] hover:text-[#0F1D17] flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-lg bg-app-subtle border border-app-border text-content-secondary hover:text-content-primary flex items-center justify-center transition-colors"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -1063,7 +1270,7 @@ export const AccountSupportScreen: React.FC = () => {
       </div>
 
       {/* Interactive Tap List Rows */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] divide-y divide-[#EAF0EC] overflow-hidden">
+      <div className="bg-white rounded-xl border border-app-border divide-y divide-app-border overflow-hidden">
         {accountLinks.map((row) => {
           const Icon = row.icon;
           return (
@@ -1071,22 +1278,22 @@ export const AccountSupportScreen: React.FC = () => {
               key={row.label}
               type="button"
               onClick={() => navigateTo(row.screen)}
-              className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#F5F8F6] transition-colors text-left"
+              className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-app-subtle text-content-primary flex items-center justify-center shrink-0">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#0F1D17] truncate">
+                  <p className="text-sm font-medium text-content-primary truncate">
                     {row.label}
                   </p>
-                  <p className="text-[11px] text-[#485B52] truncate">
+                  <p className="text-xs text-content-secondary truncate">
                     {row.subtitle}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#74887E] shrink-0" />
+              <ChevronRight className="w-4 h-4 text-content-muted shrink-0" />
             </button>
           );
         })}
@@ -1096,7 +1303,7 @@ export const AccountSupportScreen: React.FC = () => {
       <button
         type="button"
         onClick={logoutUser}
-        className="w-full h-11 rounded-2xl bg-white border border-[#DFEAE3] text-rose-600 font-semibold text-xs flex items-center justify-center gap-2 hover:bg-rose-50 transition-colors"
+        className="w-full h-11 rounded-xl bg-white border border-app-border text-promo-accent font-semibold text-xs flex items-center justify-center gap-2 hover:bg-promo-subtle transition-colors"
       >
         <LogOut className="w-4 h-4" />
         <span>{language === 'BN' ? 'লগ আউট করুন' : 'Sign Out'}</span>
@@ -1111,7 +1318,7 @@ export const AccountSupportScreen: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setEditProfileOpen(false)}
-              className="absolute inset-0 bg-[#0F1D17]/55 backdrop-blur-[1px]"
+              className="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]"
             />
             <motion.form
               initial={{ y: '100%' }}
@@ -1119,14 +1326,14 @@ export const AccountSupportScreen: React.FC = () => {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
               onSubmit={handleSaveProfile}
-              className="relative z-10 w-full bg-white rounded-t-3xl p-5 shadow-2xl space-y-3 border-t border-[#DFEAE3]"
+              className="relative z-10 w-full bg-white rounded-t-2xl p-5 shadow-2xl space-y-3 border-t border-app-border"
             >
-              <div className="w-10 h-1 bg-[#C5D8CE] rounded-full mx-auto -mt-1" />
-              <h3 className="text-sm font-bold text-[#0F1D17]">
+              <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto -mt-1" />
+              <h3 className="text-sm font-bold text-content-primary">
                 {language === 'BN' ? 'প্রোফাইল আপডেট করুন' : 'Edit Profile Details'}
               </h3>
               <div>
-                <label className="block text-xs font-medium text-[#374740] mb-1">
+                <label className="block text-xs font-medium text-content-secondary mb-1">
                   Full Name
                 </label>
                 <input
@@ -1134,11 +1341,11 @@ export const AccountSupportScreen: React.FC = () => {
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#374740] mb-1">
+                <label className="block text-xs font-medium text-content-secondary mb-1">
                   Email Address
                 </label>
                 <input
@@ -1146,11 +1353,11 @@ export const AccountSupportScreen: React.FC = () => {
                   required
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#374740] mb-1">
+                <label className="block text-xs font-medium text-content-secondary mb-1">
                   Phone Number (Bangladesh)
                 </label>
                 <input
@@ -1158,20 +1365,20 @@ export const AccountSupportScreen: React.FC = () => {
                   required
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] font-mono-num text-xs text-[#0F1D17]"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
                 />
               </div>
               <div className="flex gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setEditProfileOpen(false)}
-                  className="flex-1 h-11 rounded-xl border border-[#DFEAE3] text-xs font-semibold text-[#374740]"
+                  className="flex-1 h-11 rounded-lg border border-app-border text-xs font-semibold text-content-primary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 h-11 rounded-xl bg-[#059669] text-white text-xs font-semibold"
+                  className="flex-1 h-11 rounded-lg bg-brand-primary text-white text-xs font-semibold"
                 >
                   Save Profile
                 </button>

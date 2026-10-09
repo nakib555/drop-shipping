@@ -98,12 +98,11 @@ export const BottomTabBar: React.FC = () => {
     },
   ];
 
-  // 8pt Grid: h-16 (64px), px-2 (8px), gap-1 (4px)
   return (
     <nav
       role="navigation"
       aria-label="Primary Bottom Navigation"
-      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-[#DFEAE3] shadow-[0_-4px_16px_-6px_rgba(15,29,23,0.06)] grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
+      className="z-50 h-16 bg-white/95 backdrop-blur border-t border-app-border flex items-center justify-around px-2 shrink-0 select-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -116,43 +115,38 @@ export const BottomTabBar: React.FC = () => {
             aria-current={isActive ? 'page' : undefined}
             whileTap={{ scale: 0.94 }}
             onClick={() => navigateTo(tab.id)}
-            className="group relative h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+            className={`group relative min-w-[56px] min-h-[44px] py-1.5 px-2 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+              isActive
+                ? 'text-brand-primary text-[11px] font-semibold'
+                : 'text-content-secondary hover:text-content-primary text-[11px] font-medium'
+            }`}
           >
-            {/* Top hairline active indicator */}
+            {/* Active top indicator bar */}
             {isActive && (
               <motion.span
                 layoutId="bottom-tab-top-line"
                 transition={{ type: 'spring', stiffness: 440, damping: 34 }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2.5px] rounded-full bg-[#059669]"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-brand-primary"
               />
             )}
 
-            {/* Icon Container with Material 3 / Apple HIG Active Capsule */}
-            <div className="relative flex items-center justify-center w-12 h-7 rounded-full">
-              {isActive && (
-                <motion.span
-                  layoutId="bottom-tab-pill"
-                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                  className="absolute inset-0 rounded-full bg-[#ECFDF5] border border-[#A7F3D0]/70"
-                />
-              )}
-
+            <div className="relative flex items-center justify-center">
               <Icon
-                className={`relative z-10 w-[17px] h-[17px] transition-all duration-150 ${
+                className={`w-5 h-5 transition-colors ${
                   isActive
-                    ? 'text-[#059669] stroke-[2.3]'
-                    : 'text-[#485B52] group-hover:text-[#0F1D17] stroke-[1.85]'
+                    ? 'text-brand-primary stroke-[2.25]'
+                    : 'text-content-secondary group-hover:text-content-primary stroke-[1.85]'
                 }`}
               />
 
-              {/* Numeric Badge */}
+              {/* Crimson Badge per DESIGN_SYSTEM_SPEC.md Section 5.5 */}
               {typeof tab.badge === 'number' && tab.badge > 0 && (
                 <motion.span
                   key={tab.badge}
                   initial={{ scale: 0.6 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1 right-1 z-20 min-w-[16px] h-4 px-1 rounded-full bg-[#059669] text-white font-mono-num text-[10px] leading-4 font-semibold flex items-center justify-center ring-2 ring-white shadow-2xs"
+                  className="absolute -top-1 -right-2.5 bg-promo-accent text-white text-[10px] font-bold tabular-nums h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white"
                 >
                   {tab.badge}
                 </motion.span>
@@ -160,18 +154,12 @@ export const BottomTabBar: React.FC = () => {
 
               {/* Subtle Unread Dot on Account Tab */}
               {tab.hasDot && (
-                <span className="absolute top-0.5 right-2.5 z-20 w-2 h-2 rounded-full bg-[#059669] ring-2 ring-white" />
+                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-promo-accent ring-2 ring-white" />
               )}
             </div>
 
             {/* Destination Label */}
-            <span
-              className={`text-[10px] leading-3 tracking-tight whitespace-nowrap transition-colors ${
-                isActive
-                  ? 'font-bold text-[#0F1D17]'
-                  : 'font-medium text-[#485B52] group-hover:text-[#0F1D17]'
-              }`}
-            >
+            <span className="leading-3.5 whitespace-nowrap">
               {language === 'BN' ? tab.labelBn : tab.label}
             </span>
           </motion.button>

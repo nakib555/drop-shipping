@@ -44,9 +44,9 @@ export const SellerCompareScreen: React.FC = () => {
         highlight: true,
       },
       {
-        label: 'DropScore',
-        valA: `${prodA.dropScore.toFixed(1)} / 10`,
-        valB: `${prodB.dropScore.toFixed(1)} / 10`,
+        label: 'Customer Rating',
+        valA: `${prodA.rating.toFixed(1)} ★ (${prodA.reviewCount})`,
+        valB: `${prodB.rating.toFixed(1)} ★ (${prodB.reviewCount})`,
       },
       {
         label: 'Display / Build',
@@ -76,13 +76,13 @@ export const SellerCompareScreen: React.FC = () => {
     ];
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Product Selectors */}
         <div className="grid grid-cols-2 gap-3">
           {[prodA, prodB].map((prod, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-2xl border border-[#DFEAE3] p-3 flex flex-col items-center text-center"
+              className="bg-white rounded-xl border border-app-border p-3 flex flex-col items-center text-center"
             >
               <select
                 aria-label={`Select Product ${idx + 1}`}
@@ -93,7 +93,7 @@ export const SellerCompareScreen: React.FC = () => {
                     idx === 0 ? [newId, prev[1]] : [prev[0], newId]
                   );
                 }}
-                className="w-full mb-2 text-[11px] font-medium text-[#0F1D17] bg-[#F5F8F6] border border-[#DFEAE3] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#059669]"
+                className="w-full mb-2 text-[11px] font-medium text-content-primary bg-app-subtle border border-app-border rounded-lg px-2 py-1.5 focus:outline-none focus:border-app-borderStrong"
               >
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -106,12 +106,12 @@ export const SellerCompareScreen: React.FC = () => {
                 src={prod.image}
                 alt={prod.name}
                 referrerPolicy="no-referrer"
-                className="w-20 h-20 rounded-xl object-contain bg-[#F8FAF9] p-1.5 border border-[#EAF0EC] mb-2"
+                className="w-20 h-20 rounded-lg object-contain bg-slate-50 p-1.5 border border-app-border mb-2"
               />
-              <h3 className="text-xs font-semibold text-[#0F1D17] line-clamp-1">
+              <h3 className="text-xs font-medium text-content-primary line-clamp-1">
                 {prod.name}
               </h3>
-              <span className="font-mono-num text-sm font-semibold text-[#059669] mt-0.5">
+              <span className="tabular-nums text-sm font-bold text-content-primary mt-0.5">
                 {formatPrice(prod.totalLandedBdt)}
               </span>
             </div>
@@ -119,35 +119,35 @@ export const SellerCompareScreen: React.FC = () => {
         </div>
 
         {/* Comparison Table */}
-        <div className="bg-white rounded-2xl border border-[#DFEAE3] overflow-hidden divide-y divide-[#EAF0EC]">
+        <div className="bg-white rounded-xl border border-app-border overflow-hidden divide-y divide-app-border">
           {specRows.map((row) => (
             <div key={row.label} className="p-3 text-xs">
-              <span className="block text-[10px] font-medium text-[#74887E] text-center mb-1">
+              <span className="block text-[11px] font-medium text-content-muted text-center mb-1">
                 {row.label}
               </span>
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div
                   className={`font-medium ${
                     row.highlight
-                      ? 'font-mono-num text-[#0F1D17] font-semibold'
-                      : 'text-[#374740]'
+                      ? 'tabular-nums text-content-primary font-bold'
+                      : 'text-content-secondary'
                   }`}
                 >
                   {row.valA === 'No' ? (
-                    <X className="w-4 h-4 text-rose-500 mx-auto" />
+                    <X className="w-4 h-4 text-promo-accent mx-auto" />
                   ) : (
                     row.valA
                   )}
                 </div>
                 <div
-                  className={`font-medium border-l border-[#EAF0EC] ${
+                  className={`font-medium border-l border-app-border ${
                     row.highlight
-                      ? 'font-mono-num text-[#0F1D17] font-semibold'
-                      : 'text-[#374740]'
+                      ? 'tabular-nums text-content-primary font-bold'
+                      : 'text-content-secondary'
                   }`}
                 >
                   {row.valB === 'No' ? (
-                    <X className="w-4 h-4 text-rose-500 mx-auto" />
+                    <X className="w-4 h-4 text-promo-accent mx-auto" />
                   ) : (
                     row.valB
                   )}
@@ -162,7 +162,7 @@ export const SellerCompareScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => addToCart(prodA.id, 1)}
-            className="h-11 rounded-xl bg-[#0F1D17] text-white text-xs font-semibold flex items-center justify-center gap-1.5"
+            className="h-12 rounded-lg bg-white border border-app-borderStrong text-content-primary hover:bg-slate-50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodA.name.split(' ')[0]}</span>
@@ -170,7 +170,7 @@ export const SellerCompareScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => addToCart(prodB.id, 1)}
-            className="h-11 rounded-xl bg-[#059669] text-white text-xs font-semibold flex items-center justify-center gap-1.5"
+            className="h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodB.name.split(' ')[0]}</span>
@@ -192,21 +192,21 @@ export const SellerCompareScreen: React.FC = () => {
   });
 
   return (
-    <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+    <div className="p-4 space-y-4 pb-6 bg-app-bg">
       {/* Product Selector Header */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-3.5 flex items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-app-border p-3.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={selectedProduct.image}
             alt={selectedProduct.name}
             referrerPolicy="no-referrer"
-            className="w-12 h-12 rounded-xl object-contain bg-[#F8FAF9] p-1 border border-[#EAF0EC] shrink-0"
+            className="w-12 h-12 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
           />
           <div className="min-w-0">
-            <h2 className="text-xs font-semibold text-[#0F1D17] truncate">
+            <h2 className="text-sm font-medium text-content-primary truncate">
               {selectedProduct.name}
             </h2>
-            <p className="text-[11px] text-[#485B52]">
+            <p className="text-xs text-content-secondary">
               Select your preferred cross-border route
             </p>
           </div>
@@ -214,7 +214,7 @@ export const SellerCompareScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('spec_compare')}
-          className="px-2.5 py-1.5 rounded-lg bg-[#F5F8F6] border border-[#DFEAE3] text-[11px] font-medium text-[#374740] hover:text-[#0F1D17] shrink-0"
+          className="px-2.5 py-1.5 rounded-lg bg-app-subtle border border-app-border text-xs font-medium text-content-primary hover:bg-slate-200/70 shrink-0"
         >
           Compare 2 Items
         </button>
@@ -234,10 +234,10 @@ export const SellerCompareScreen: React.FC = () => {
             key={tab.id}
             type="button"
             onClick={() => setRouteFilter(tab.id)}
-            className={`h-8 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`h-9 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
               routeFilter === tab.id
-                ? 'bg-[#0F1D17] text-white'
-                : 'bg-white text-[#485B52] border border-[#DFEAE3] hover:border-[#A7C4B5]'
+                ? 'bg-content-primary text-white'
+                : 'bg-white text-content-secondary border border-app-border hover:border-app-borderStrong'
             }`}
           >
             {tab.label}
@@ -255,34 +255,34 @@ export const SellerCompareScreen: React.FC = () => {
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
-              className={`rounded-2xl p-2.5 border text-center flex flex-col justify-between transition-all ${
+              className={`rounded-xl p-2.5 border text-center flex flex-col justify-between transition-all ${
                 isSelected
-                  ? 'bg-[#F2F9F5] border-2 border-[#059669]'
-                  : 'bg-white border-[#DFEAE3] hover:border-[#A7C4B5]'
+                  ? 'bg-app-subtle border-2 border-content-primary'
+                  : 'bg-white border-app-border hover:border-app-borderStrong'
               }`}
             >
               <div>
-                <span className="inline-block text-[10px] font-medium text-[#059669] mb-1">
+                <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-content-secondary mb-1">
                   {rt.badge}
                 </span>
-                <h3 className="text-xs font-semibold text-[#0F1D17] leading-tight">
+                <h3 className="text-xs font-semibold text-content-primary leading-tight">
                   {rt.name}
                 </h3>
-                <p className="text-[10px] text-[#485B52] mt-0.5 truncate">
+                <p className="text-[11px] text-content-secondary mt-0.5 truncate">
                   {rt.originCountry}
                 </p>
               </div>
 
-              <div className="my-3 py-2 border-y border-[#EAF0EC]">
-                <span className="block font-mono-num text-sm font-semibold text-[#0F1D17]">
+              <div className="my-3 py-2 border-y border-app-border">
+                <span className="block tabular-nums text-sm font-bold text-content-primary">
                   {formatPrice(rt.totalLandedBdt)}
                 </span>
-                <span className="block text-[10px] text-[#485B52] mt-1">
+                <span className="block text-[11px] text-content-secondary mt-1">
                   {rt.deliveryDays}
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-1 text-[11px] font-mono-num font-medium text-[#374740]">
+              <div className="flex items-center justify-center gap-1 text-[11px] tabular-nums font-medium text-content-primary">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 <span>{rt.rating.toFixed(1)}</span>
               </div>
@@ -306,10 +306,10 @@ export const SellerCompareScreen: React.FC = () => {
                   selectRouteForProduct(selectedProduct.id, rt.id);
                 }
               }}
-              className={`rounded-2xl p-3.5 border transition-colors cursor-pointer bg-white ${
+              className={`rounded-xl p-3.5 border transition-colors cursor-pointer bg-white ${
                 isSelected
-                  ? 'border-2 border-[#059669]'
-                  : 'border-[#DFEAE3]'
+                  ? 'border-2 border-content-primary'
+                  : 'border-app-border'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -317,41 +317,41 @@ export const SellerCompareScreen: React.FC = () => {
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center ${
                       isSelected
-                        ? 'bg-[#059669] text-white'
-                        : 'border border-[#C5D8CE]'
+                        ? 'bg-content-primary text-white'
+                        : 'border border-slate-300'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                   </div>
-                  <span className="text-xs font-semibold text-[#0F1D17]">
+                  <span className="text-xs font-semibold text-content-primary">
                     {rt.name}
                   </span>
-                  <span className="text-[11px] text-[#485B52]">
+                  <span className="text-xs text-content-secondary">
                     · {rt.originCountry}
                   </span>
                 </div>
-                <span className="font-mono-num text-xs font-medium text-[#059669]">
-                  {rt.reliabilityScore.toFixed(1)}/10
+                <span className="tabular-nums text-xs font-semibold text-content-primary">
+                  {rt.onTimeRate} On-Time
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-[11px] text-[#485B52] bg-[#F5F8F6] border border-[#EAF0EC] p-2.5 rounded-xl">
+              <div className="grid grid-cols-3 gap-2 text-xs text-content-secondary bg-app-subtle border border-app-border p-2.5 rounded-lg">
                 <div>
-                  <span className="block text-[10px]">Base + Ship</span>
-                  <span className="font-mono-num font-semibold text-[#0F1D17]">
+                  <span className="block text-[10px] text-content-muted">Base + Ship</span>
+                  <span className="tabular-nums font-semibold text-content-primary">
                     {formatPrice(rt.basePriceBdt + rt.shippingBdt)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px]">Duty + VAT</span>
-                  <span className="font-mono-num font-semibold text-[#0F1D17]">
+                  <span className="block text-[10px] text-content-muted">Duty + VAT</span>
+                  <span className="tabular-nums font-semibold text-content-primary">
                     {formatPrice(rt.dutyBdt + rt.vatBdt)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px]">On-Time Rate</span>
-                  <span className="font-mono-num font-semibold text-[#059669]">
-                    {rt.onTimeRate}
+                  <span className="block text-[10px] text-content-muted">Landed Total</span>
+                  <span className="tabular-nums font-bold text-content-primary">
+                    {formatPrice(rt.totalLandedBdt)}
                   </span>
                 </div>
               </div>
@@ -361,20 +361,20 @@ export const SellerCompareScreen: React.FC = () => {
       </div>
 
       {/* Guarantee Summary */}
-      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-[#0F1D17] mb-1">
+      <div className="bg-white rounded-xl border border-app-border p-4 space-y-2">
+        <h3 className="text-xs font-semibold text-content-primary mb-1">
           Included on All 3 Routes
         </h3>
-        <div className="flex items-center gap-2 text-xs text-[#374740]">
-          <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-content-secondary">
+          <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
           <span>True Landed Price (Zero extra customs charge on arrival)</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#374740]">
-          <Truck className="w-4 h-4 text-[#059669] shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-content-secondary">
+          <Truck className="w-4 h-4 text-status-transit shrink-0" />
           <span>Live milestone tracking from export hub to Dhaka</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#374740]">
-          <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-content-secondary">
+          <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
           <span>Pre-shipment physical quality inspection</span>
         </div>
       </div>
@@ -382,7 +382,7 @@ export const SellerCompareScreen: React.FC = () => {
       <button
         type="button"
         onClick={() => navigateTo('product_detail', { productId: selectedProduct.id })}
-        className="w-full h-11 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs transition-colors"
+        className="w-full h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm transition-colors"
       >
         Confirm Selected Route
       </button>
