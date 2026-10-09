@@ -65,25 +65,25 @@ export const CheckoutFlowScreen: React.FC = () => {
   // STEP 1: Checkout - Shipping Address & Method
   if (currentScreen === 'checkout_shipping') {
     return (
-      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F8FAFC]">
+      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F5F8F6]">
         <div className="space-y-4">
           {/* Step Progress Bar */}
           <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold">
-            <div className="py-1.5 rounded-lg bg-slate-900 text-white">
+            <div className="py-1.5 rounded-lg bg-[#0F1D17] text-white">
               1. Shipping
             </div>
-            <div className="py-1.5 rounded-lg bg-white text-slate-400 border border-slate-200/80">
+            <div className="py-1.5 rounded-lg bg-white text-[#74887E] border border-[#DFEAE3]">
               2. Payment
             </div>
-            <div className="py-1.5 rounded-lg bg-white text-slate-400 border border-slate-200/80">
+            <div className="py-1.5 rounded-lg bg-white text-[#74887E] border border-[#DFEAE3]">
               3. Review
             </div>
           </div>
 
           {/* Saved Shipping Addresses */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
+          <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold text-slate-900">
+              <h2 className="text-xs font-semibold text-[#0F1D17]">
                 Delivery Address
               </h2>
               <button
@@ -106,24 +106,24 @@ export const CheckoutFlowScreen: React.FC = () => {
                     onClick={() => setSelectedAddressId(addr.id)}
                     className={`w-full p-3 rounded-xl border text-left flex items-start gap-3 transition-colors ${
                       isSelected
-                        ? 'bg-slate-50 border-slate-900'
-                        : 'bg-white border-slate-200/80'
+                        ? 'bg-[#F2F9F5] border-[#059669]'
+                        : 'bg-white border-[#DFEAE3] hover:border-[#A7C4B5]'
                     }`}
                   >
                     <MapPin className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-900">
+                        <span className="text-xs font-semibold text-[#0F1D17]">
                           {addr.fullName}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-500">
+                        <span className="text-[10px] font-medium text-[#485B52]">
                           {addr.label}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-[#485B52] mt-0.5">
                         {addr.address}
                       </p>
-                      <p className="font-mono-num text-[11px] text-slate-700 mt-0.5">
+                      <p className="font-mono-num text-[11px] text-[#374740] mt-0.5">
                         {addr.phone}
                       </p>
                     </div>
@@ -136,10 +136,10 @@ export const CheckoutFlowScreen: React.FC = () => {
             {showNewAddressForm && (
               <form
                 onSubmit={handleSaveNewAddress}
-                className="pt-3 border-t border-slate-100 space-y-2.5"
+                className="pt-3 border-t border-[#EAF0EC] space-y-2.5"
               >
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  <label className="block text-[11px] font-medium text-[#374740] mb-1">
                     Full Name
                   </label>
                   <input
@@ -147,11 +147,11 @@ export const CheckoutFlowScreen: React.FC = () => {
                     required
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  <label className="block text-[11px] font-medium text-[#374740] mb-1">
                     Phone Number
                   </label>
                   <input
@@ -159,11 +159,11 @@ export const CheckoutFlowScreen: React.FC = () => {
                     required
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono-num text-slate-900"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs font-mono-num text-[#0F1D17] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  <label className="block text-[11px] font-medium text-[#374740] mb-1">
                     Address (Area, Road, House)
                   </label>
                   <input
@@ -171,12 +171,12 @@ export const CheckoutFlowScreen: React.FC = () => {
                     required
                     value={newStreet}
                     onChange={(e) => setNewStreet(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    <label className="block text-[11px] font-medium text-[#374740] mb-1">
                       City
                     </label>
                     <input
@@ -184,11 +184,11 @@ export const CheckoutFlowScreen: React.FC = () => {
                       required
                       value={newCity}
                       onChange={(e) => setNewCity(e.target.value)}
-                      className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900"
+                      className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs text-[#0F1D17] focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    <label className="block text-[11px] font-medium text-[#374740] mb-1">
                       Postal Code
                     </label>
                     <input
@@ -196,13 +196,13 @@ export const CheckoutFlowScreen: React.FC = () => {
                       required
                       value={newZip}
                       onChange={(e) => setNewZip(e.target.value)}
-                      className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono-num text-slate-900"
+                      className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs font-mono-num text-[#0F1D17] focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full h-10 rounded-xl bg-slate-900 text-white text-xs font-semibold"
+                  className="w-full h-10 rounded-xl bg-[#0F1D17] text-white text-xs font-semibold"
                 >
                   Save Address
                 </button>
@@ -211,8 +211,8 @@ export const CheckoutFlowScreen: React.FC = () => {
           </div>
 
           {/* Shipping Method Selector */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2.5">
-            <h2 className="text-xs font-semibold text-slate-900">
+          <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5">
+            <h2 className="text-xs font-semibold text-[#0F1D17]">
               Delivery Speed
             </h2>
 
@@ -221,8 +221,8 @@ export const CheckoutFlowScreen: React.FC = () => {
               onClick={() => setShippingMethod('standard')}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 shippingMethod === 'standard'
-                  ? 'bg-slate-50 border-slate-900'
-                  : 'bg-white border-slate-200/80'
+                  ? 'bg-[#F2F9F5] border-[#059669]'
+                  : 'bg-white border-[#DFEAE3]'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -230,7 +230,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                   className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                     shippingMethod === 'standard'
                       ? 'border-[#059669] bg-[#059669]'
-                      : 'border-slate-300'
+                      : 'border-[#C5D8CE]'
                   }`}
                 >
                   {shippingMethod === 'standard' && (
@@ -238,10 +238,10 @@ export const CheckoutFlowScreen: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <span className="block text-xs font-semibold text-slate-900">
+                  <span className="block text-xs font-semibold text-[#0F1D17]">
                     Standard Shipping (7–14 days)
                   </span>
-                  <span className="block text-[11px] text-slate-500">
+                  <span className="block text-[11px] text-[#485B52]">
                     Pre-cleared customs + eCourier doorstep
                   </span>
                 </div>
@@ -254,8 +254,8 @@ export const CheckoutFlowScreen: React.FC = () => {
               onClick={() => setShippingMethod('express')}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 shippingMethod === 'express'
-                  ? 'bg-slate-50 border-slate-900'
-                  : 'bg-white border-slate-200/80'
+                  ? 'bg-[#F2F9F5] border-[#059669]'
+                  : 'bg-white border-[#DFEAE3]'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -263,7 +263,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                   className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                     shippingMethod === 'express'
                       ? 'border-[#059669] bg-[#059669]'
-                      : 'border-slate-300'
+                      : 'border-[#C5D8CE]'
                   }`}
                 >
                   {shippingMethod === 'express' && (
@@ -271,15 +271,15 @@ export const CheckoutFlowScreen: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <span className="block text-xs font-semibold text-slate-900">
+                  <span className="block text-xs font-semibold text-[#0F1D17]">
                     Express Air Priority (3–7 days)
                   </span>
-                  <span className="block text-[11px] text-slate-500">
+                  <span className="block text-[11px] text-[#485B52]">
                     Direct Singapore/Hong Kong Air Charter
                   </span>
                 </div>
               </div>
-              <span className="font-mono-num text-xs font-semibold text-slate-900">
+              <span className="font-mono-num text-xs font-semibold text-[#0F1D17]">
                 +{formatPrice(800)}
               </span>
             </button>
@@ -304,6 +304,8 @@ export const CheckoutFlowScreen: React.FC = () => {
       title: string;
       subtitle: string;
       badge: string;
+      accentBg: string;
+      accentText: string;
       icon: React.FC<{ className?: string }>;
     }[] = [
       {
@@ -311,20 +313,26 @@ export const CheckoutFlowScreen: React.FC = () => {
         title: 'Cash on Delivery (COD)',
         subtitle: 'Pay in cash when your parcel arrives at your door',
         badge: 'Most Popular',
+        accentBg: 'bg-[#ECFDF5] border-[#A7F3D0]',
+        accentText: 'text-[#059669]',
         icon: Banknote,
       },
       {
         id: 'bkash',
         title: 'bKash / Nagad',
         subtitle: 'Instant Bangladesh mobile wallet payment',
-        badge: 'Instant',
+        badge: 'Instant MFS',
+        accentBg: 'bg-[#FDF2F8] border-[#FBCFE8]',
+        accentText: 'text-[#E2136E]',
         icon: Smartphone,
       },
       {
         id: 'card',
         title: 'Credit / Debit Card',
         subtitle: 'Visa, MasterCard, AMEX (3D Secure)',
-        badge: 'Card',
+        badge: 'SSLCommerz',
+        accentBg: 'bg-[#F0F9FF] border-[#BAE6FD]',
+        accentText: 'text-[#0284C7]',
         icon: CreditCard,
       },
       {
@@ -332,22 +340,24 @@ export const CheckoutFlowScreen: React.FC = () => {
         title: 'PayPal Global',
         subtitle: 'International buyer protection supported',
         badge: 'USD/Global',
+        accentBg: 'bg-[#FFFBEB] border-[#FDE68A]',
+        accentText: 'text-[#B45309]',
         icon: Wallet,
       },
     ];
 
     return (
-      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F8FAFC]">
+      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F5F8F6]">
         <div className="space-y-4">
           {/* Step Progress Bar */}
           <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold">
-            <div className="py-1.5 rounded-lg bg-slate-200/70 text-slate-700">
+            <div className="py-1.5 rounded-lg bg-[#E9F1EC] text-[#374740]">
               1. Shipping ✓
             </div>
-            <div className="py-1.5 rounded-lg bg-slate-900 text-white">
+            <div className="py-1.5 rounded-lg bg-[#0F1D17] text-white">
               2. Payment
             </div>
-            <div className="py-1.5 rounded-lg bg-white text-slate-400 border border-slate-200/80">
+            <div className="py-1.5 rounded-lg bg-white text-[#74887E] border border-[#DFEAE3]">
               3. Review
             </div>
           </div>
@@ -363,30 +373,30 @@ export const CheckoutFlowScreen: React.FC = () => {
                   onClick={() => setPaymentMethod(opt.id)}
                   className={`w-full p-3.5 rounded-2xl border flex items-center justify-between text-left transition-all bg-white ${
                     isSelected
-                      ? 'border-2 border-slate-900'
-                      : 'border-slate-200/80'
+                      ? 'border-2 border-[#059669]'
+                      : 'border-[#DFEAE3] hover:border-[#A7C4B5]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
                         isSelected
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-100 text-slate-700'
+                          ? 'bg-[#0F1D17] text-white border-[#0F1D17]'
+                          : `${opt.accentBg} ${opt.accentText}`
                       }`}
                     >
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="block text-xs font-semibold text-slate-900">
+                      <span className="block text-xs font-semibold text-[#0F1D17]">
                         {opt.title}
                       </span>
-                      <span className="block text-[11px] text-slate-500">
+                      <span className="block text-[11px] text-[#485B52]">
                         {opt.subtitle}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-medium text-[#059669] shrink-0">
+                  <span className={`text-[10px] font-medium shrink-0 ${opt.accentText}`}>
                     {opt.badge}
                   </span>
                 </button>
@@ -396,19 +406,19 @@ export const CheckoutFlowScreen: React.FC = () => {
 
           {/* Contextual Payment Details Form */}
           {paymentMethod === 'bkash' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2.5">
-              <label className="block text-xs font-semibold text-slate-900">
+            <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5">
+              <label className="block text-xs font-semibold text-[#0F1D17]">
                 bKash / Nagad Account Number
               </label>
               <input
                 type="tel"
                 value={bkashNumber}
                 onChange={(e) => setBkashNumber(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 font-mono-num text-xs text-slate-900"
+                className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] font-mono-num text-xs text-[#0F1D17] focus:outline-none focus:border-[#059669]"
               />
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[#485B52]">
                 Amount to authorize:{' '}
-                <strong className="font-mono-num text-slate-900">
+                <strong className="font-mono-num text-[#0F1D17]">
                   {formatPrice(cartTotals.totalBdt)}
                 </strong>
               </p>
@@ -416,39 +426,39 @@ export const CheckoutFlowScreen: React.FC = () => {
           )}
 
           {paymentMethod === 'card' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
+            <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                <label className="block text-[11px] font-medium text-[#374740] mb-1">
                   Card Number
                 </label>
                 <input
                   type="text"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 font-mono-num text-xs text-slate-900"
+                  className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] font-mono-num text-xs text-[#0F1D17]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  <label className="block text-[11px] font-medium text-[#374740] mb-1">
                     Expiry Date
                   </label>
                   <input
                     type="text"
                     value={cardExpiry}
                     onChange={(e) => setCardExpiry(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 font-mono-num text-xs text-slate-900"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] font-mono-num text-xs text-[#0F1D17]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  <label className="block text-[11px] font-medium text-[#374740] mb-1">
                     CVV
                   </label>
                   <input
                     type="password"
                     value={cardCvv}
                     onChange={(e) => setCardCvv(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 font-mono-num text-xs text-slate-900"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] font-mono-num text-xs text-[#0F1D17]"
                   />
                 </div>
               </div>
@@ -457,7 +467,7 @@ export const CheckoutFlowScreen: React.FC = () => {
         </div>
 
         <div className="space-y-2.5">
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#485B52]">
             <Lock className="w-3.5 h-3.5 text-[#059669]" />
             <span>Your payment is 256-bit SSL encrypted & protected</span>
           </div>
@@ -483,12 +493,12 @@ export const CheckoutFlowScreen: React.FC = () => {
     };
 
     return (
-      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F8FAFC]">
+      <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F5F8F6]">
         <div className="space-y-4">
           {/* Shipping Address Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4">
+          <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-slate-900">
+              <span className="text-xs font-semibold text-[#0F1D17]">
                 Delivery Address
               </span>
               <button
@@ -499,19 +509,19 @@ export const CheckoutFlowScreen: React.FC = () => {
                 Change
               </button>
             </div>
-            <p className="text-xs font-semibold text-slate-900">
+            <p className="text-xs font-semibold text-[#0F1D17]">
               {activeAddress?.fullName}
             </p>
-            <p className="text-xs text-slate-500">{activeAddress?.address}</p>
-            <p className="font-mono-num text-[11px] text-slate-500 mt-0.5">
+            <p className="text-xs text-[#485B52]">{activeAddress?.address}</p>
+            <p className="font-mono-num text-[11px] text-[#485B52] mt-0.5">
               {activeAddress?.phone}
             </p>
           </div>
 
           {/* Payment Method Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4">
+          <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-slate-900">
+              <span className="text-xs font-semibold text-[#0F1D17]">
                 Payment Method
               </span>
               <button
@@ -522,14 +532,14 @@ export const CheckoutFlowScreen: React.FC = () => {
                 Change
               </button>
             </div>
-            <p className="text-xs font-medium text-slate-700">
+            <p className="text-xs font-medium text-[#374740]">
               {paymentLabels[paymentMethod]}
             </p>
           </div>
 
           {/* Itemized Order Summary */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-2.5">
-            <h3 className="text-xs font-semibold text-slate-900">
+          <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-2.5">
+            <h3 className="text-xs font-semibold text-[#0F1D17]">
               Items ({cart.reduce((s, i) => s + i.quantity, 0)})
             </h3>
             <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
@@ -550,18 +560,18 @@ export const CheckoutFlowScreen: React.FC = () => {
                         src={prod.image}
                         alt={prod.name}
                         referrerPolicy="no-referrer"
-                        className="w-10 h-10 rounded-lg object-cover bg-slate-50 shrink-0"
+                        className="w-10 h-10 rounded-lg object-cover bg-[#F8FAF9] border border-[#EAF0EC] shrink-0"
                       />
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">
+                        <p className="font-semibold text-[#0F1D17] truncate">
                           {prod.name} × {item.quantity}
                         </p>
-                        <p className="text-[10px] text-slate-500 truncate">
+                        <p className="text-[10px] text-[#485B52] truncate">
                           {item.selectedColor} · {rt?.name || 'Global Direct'}
                         </p>
                       </div>
                     </div>
-                    <span className="font-mono-num font-semibold text-slate-900 shrink-0">
+                    <span className="font-mono-num font-semibold text-[#0F1D17] shrink-0">
                       {formatPrice(unitBdt * item.quantity)}
                     </span>
                   </div>
@@ -569,10 +579,10 @@ export const CheckoutFlowScreen: React.FC = () => {
               })}
             </div>
 
-            <div className="pt-2.5 border-t border-slate-100 space-y-1 text-xs">
-              <div className="flex justify-between text-slate-500">
+            <div className="pt-2.5 border-t border-[#EAF0EC] space-y-1 text-xs">
+              <div className="flex justify-between text-[#485B52]">
                 <span>Factory Price + Air Freight + Duty/VAT</span>
-                <span className="font-mono-num font-medium text-slate-900">
+                <span className="font-mono-num font-medium text-[#0F1D17]">
                   {formatPrice(
                     cartTotals.baseItemsBdt +
                       cartTotals.freightBdt +
@@ -596,7 +606,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                   </span>
                 </div>
               )}
-              <div className="flex justify-between text-slate-500">
+              <div className="flex justify-between text-[#485B52]">
                 <span>
                   {shippingMethod === 'express'
                     ? 'Express Air Priority'
@@ -608,7 +618,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                     : formatPrice(cartTotals.shippingBdt)}
                 </span>
               </div>
-              <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-sm font-semibold text-slate-900">
+              <div className="pt-2 border-t border-[#EAF0EC] flex justify-between items-center text-sm font-semibold text-[#0F1D17]">
                 <span>Total Payable</span>
                 <span className="font-mono-num text-base text-[#059669]">
                   {formatPrice(cartTotals.totalBdt)}
@@ -629,7 +639,7 @@ export const CheckoutFlowScreen: React.FC = () => {
           >
             Place Order · {formatPrice(cartTotals.totalBdt)}
           </button>
-          <p className="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1">
+          <p className="text-center text-[11px] text-[#485B52] flex items-center justify-center gap-1">
             <Lock className="w-3 h-3 text-[#059669]" />
             <span>Customs pre-cleared · Zero extra charges on delivery</span>
           </p>
@@ -645,7 +655,7 @@ export const CheckoutFlowScreen: React.FC = () => {
         initial={{ scale: 0.3, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-        className="w-18 h-18 rounded-full bg-emerald-50 text-[#059669] flex items-center justify-center mb-4 border border-emerald-200/60"
+        className="w-18 h-18 rounded-full bg-[#ECFDF5] text-[#059669] flex items-center justify-center mb-4 border border-[#CBE4D6]"
       >
         <CheckCircle2 className="w-10 h-10" />
       </motion.div>
@@ -654,7 +664,7 @@ export const CheckoutFlowScreen: React.FC = () => {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.2 }}
-        className="text-xl font-semibold text-slate-900"
+        className="text-xl font-semibold text-[#0F1D17]"
       >
         Order Confirmed
       </motion.h1>
@@ -662,10 +672,10 @@ export const CheckoutFlowScreen: React.FC = () => {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.16, duration: 0.2 }}
-        className="text-xs text-slate-500 mt-1"
+        className="text-xs text-[#485B52] mt-1"
       >
         Your order{' '}
-        <strong className="font-mono-num text-slate-900">
+        <strong className="font-mono-num text-[#0F1D17]">
           #{selectedOrder?.id || 'DM123456'}
         </strong>{' '}
         has been confirmed and customs pre-cleared.
@@ -675,17 +685,17 @@ export const CheckoutFlowScreen: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.22, duration: 0.22 }}
-        className="my-6 w-full bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-2"
+        className="my-6 w-full bg-[#F2F9F5] rounded-2xl p-4 border border-[#CBE4D6] space-y-2"
       >
-        <span className="block text-xs text-slate-500">Estimated Delivery</span>
+        <span className="block text-xs text-[#374740]">Estimated Delivery</span>
         <span className="block font-mono-num text-lg font-semibold text-[#059669]">
           {selectedOrder?.estimatedDelivery || '7 – 14 days'}
         </span>
-        <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 text-[#059669] flex items-center justify-center mx-auto my-2 animate-float-soft">
+        <div className="w-12 h-12 rounded-2xl bg-white border border-[#CBE4D6] text-[#059669] flex items-center justify-center mx-auto my-2 animate-float-soft">
           <Package className="w-6 h-6" />
         </div>
-        <p className="text-[11px] text-slate-500">
-          Courier: <strong className="text-slate-900 font-semibold">eCourier Bangladesh</strong>
+        <p className="text-[11px] text-[#374740]">
+          Courier: <strong className="text-[#0F1D17] font-semibold">eCourier Bangladesh</strong>
         </p>
       </motion.div>
 
@@ -704,7 +714,7 @@ export const CheckoutFlowScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('home')}
-          className="w-full h-10 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+          className="w-full h-10 rounded-xl border border-[#DFEAE3] text-xs font-semibold text-[#374740] hover:bg-[#F5F8F6] transition-colors"
         >
           Continue Shopping
         </button>

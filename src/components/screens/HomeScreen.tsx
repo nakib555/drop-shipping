@@ -154,7 +154,8 @@ export const HomeScreen: React.FC = () => {
     }
     if (smartFilters.under2000Bdt && p.totalLandedBdt > 2000) return false;
     if (smartFilters.arrivesThisWeek && !p.arrivesThisWeek) return false;
-    if (smartFilters.verifiedOnly && !p.verifiedSupplier) return false;
+    if (smartFilters.verifiedOnly && (!p.verifiedSupplier || p.dropScore < 8.5))
+      return false;
     return true;
   });
 
@@ -228,11 +229,11 @@ export const HomeScreen: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4 space-y-5 pb-6 bg-[#F8FAFC]">
+    <div className="p-4 space-y-5 pb-6 bg-[#F5F8F6]">
       {/* 1. Search Bar + Scan Button */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#74887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
@@ -245,14 +246,14 @@ export const HomeScreen: React.FC = () => {
                 ? 'পণ্য, ব্র্যান্ড বা লিংক খুঁজুন...'
                 : 'Search global products or paste URL...'
             }
-            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200/90 text-xs leading-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 transition-colors"
+            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-[#DFEAE3] text-xs leading-4 text-[#0F1D17] placeholder:text-[#74887E] focus:outline-none focus:border-[#059669] transition-colors"
           />
         </div>
         <button
           type="button"
           aria-label="Visual Search or Paste Link"
           onClick={() => navigateTo('visual_scan')}
-          className="h-10 px-3.5 rounded-xl bg-white border border-slate-200/90 text-slate-700 hover:text-slate-900 hover:border-slate-300 flex items-center gap-1.5 text-xs leading-4 font-medium shrink-0 transition-colors"
+          className="h-10 px-3.5 rounded-xl bg-white border border-[#DFEAE3] text-[#0F1D17] hover:border-[#A7C4B5] flex items-center gap-1.5 text-xs leading-4 font-semibold shrink-0 transition-colors"
         >
           <Camera className="w-4 h-4 text-[#059669]" />
           <span>{language === 'BN' ? 'স্ক্যান' : 'Scan'}</span>
@@ -266,7 +267,7 @@ export const HomeScreen: React.FC = () => {
         onMouseLeave={() => setIsHeroPaused(false)}
         onTouchStart={() => setIsHeroPaused(true)}
         onTouchEnd={() => setIsHeroPaused(false)}
-        className="relative overflow-hidden rounded-2xl bg-[#0F172A] text-white p-4 select-none"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0B1913] via-[#0F241C] to-[#132E24] border border-[#1E3B2E] text-white p-4 select-none shadow-sm"
       >
         <AnimatePresence mode="wait" custom={heroDirection} initial={false}>
           <motion.div
@@ -293,7 +294,7 @@ export const HomeScreen: React.FC = () => {
             className="flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing"
           >
             <div className="flex-1 min-w-0 space-y-2">
-              <p className="text-[11px] leading-4 text-emerald-400 font-medium">
+              <p className="text-[11px] leading-4 text-[#34D399] font-medium">
                 {activeSlide.kicker}
               </p>
 
@@ -301,7 +302,7 @@ export const HomeScreen: React.FC = () => {
                 {activeSlide.title}
               </h2>
 
-              <p className="text-xs leading-4 text-slate-300">
+              <p className="text-xs leading-4 text-[#C2D6CC]">
                 {activeSlide.subtitle}
               </p>
 
@@ -316,7 +317,7 @@ export const HomeScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={activeSlide.secondaryAction}
-                  className="h-8 px-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 font-medium text-[11px] leading-4 transition-colors whitespace-nowrap"
+                  className="h-8 px-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-[#E2EFE8] font-medium text-[11px] leading-4 transition-colors whitespace-nowrap"
                 >
                   {activeSlide.secondaryLabel}
                 </button>
@@ -348,7 +349,7 @@ export const HomeScreen: React.FC = () => {
                 <span className="block font-mono-num text-xs leading-4 font-bold text-white">
                   {formatPrice(heroProduct.totalLandedBdt)}
                 </span>
-                <span className="block text-[10px] leading-3 text-slate-300 mt-0.5">
+                <span className="block text-[10px] leading-3 text-[#A7F3D0] mt-0.5">
                   Landed
                 </span>
               </div>
@@ -368,13 +369,13 @@ export const HomeScreen: React.FC = () => {
                   aria-label={`Slide ${idx + 1}`}
                   onClick={() => goToHeroSlide(idx)}
                   className={`h-1.5 rounded-full transition-all duration-200 ${
-                    active ? 'w-6 bg-emerald-400' : 'w-1.5 bg-white/25 hover:bg-white/40'
+                    active ? 'w-6 bg-[#34D399]' : 'w-1.5 bg-white/25 hover:bg-white/40'
                   }`}
                 />
               );
             })}
           </div>
-          <span className="text-[10px] font-mono-num text-slate-400">
+          <span className="text-[10px] font-mono-num text-[#94B0A3]">
             0{heroIndex + 1} / 0{heroSlides.length} · Swipe
           </span>
         </div>
@@ -385,13 +386,15 @@ export const HomeScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('price_tracker')}
-          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors group"
+          className="p-3 rounded-2xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors group"
         >
-          <TrendingDown className="w-4 h-4 text-[#059669] mb-2 group-hover:scale-105 transition-transform" />
-          <span className="block text-xs leading-4 font-semibold text-slate-900">
+          <div className="w-7 h-7 rounded-lg bg-[#ECFDF5] text-[#059669] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+            <TrendingDown className="w-4 h-4" />
+          </div>
+          <span className="block text-xs leading-4 font-semibold text-[#0F1D17]">
             {language === 'BN' ? 'প্রাইস হিস্ট্রি' : 'Price History'}
           </span>
-          <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
+          <span className="block text-[10px] leading-3.5 text-[#5C7066] mt-0.5">
             30-day landed lows
           </span>
         </button>
@@ -399,13 +402,15 @@ export const HomeScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('seller_compare')}
-          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors group"
+          className="p-3 rounded-2xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors group"
         >
-          <Scale className="w-4 h-4 text-[#059669] mb-2 group-hover:scale-105 transition-transform" />
-          <span className="block text-xs leading-4 font-semibold text-slate-900">
+          <div className="w-7 h-7 rounded-lg bg-[#FFFBEB] text-[#D97706] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+            <Scale className="w-4 h-4" />
+          </div>
+          <span className="block text-xs leading-4 font-semibold text-[#0F1D17]">
             {language === 'BN' ? '৩ রুট তুলনা' : '3-Route Compare'}
           </span>
-          <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
+          <span className="block text-[10px] leading-3.5 text-[#5C7066] mt-0.5">
             CN vs. BD vs. Air
           </span>
         </button>
@@ -413,13 +418,15 @@ export const HomeScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('orders')}
-          className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-slate-300 text-left transition-colors group"
+          className="p-3 rounded-2xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-left transition-colors group"
         >
-          <Truck className="w-4 h-4 text-[#059669] mb-2 group-hover:scale-105 transition-transform" />
-          <span className="block text-xs leading-4 font-semibold text-slate-900">
+          <div className="w-7 h-7 rounded-lg bg-[#F0F9FF] text-[#0284C7] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+            <Truck className="w-4 h-4" />
+          </div>
+          <span className="block text-xs leading-4 font-semibold text-[#0F1D17]">
             {language === 'BN' ? 'লাইভ ট্র্যাকিং' : 'Live Tracking'}
           </span>
-          <span className="block text-[10px] leading-3.5 text-slate-500 mt-1">
+          <span className="block text-[10px] leading-3.5 text-[#5C7066] mt-0.5">
             Customs & courier
           </span>
         </button>
@@ -430,10 +437,10 @@ export const HomeScreen: React.FC = () => {
         <section className="space-y-2.5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm leading-5 font-semibold text-slate-900">
+              <h2 className="text-sm leading-5 font-semibold text-[#0F1D17]">
                 {language === 'BN' ? 'ফ্ল্যাশ ল্যান্ডেড ড্রপস' : 'Flash Landed Drops'}
               </h2>
-              <p className="text-[11px] leading-4 text-slate-500">
+              <p className="text-[11px] leading-4 text-[#5C7066]">
                 {language === 'BN'
                   ? 'ডানে-বামে সোয়াইপ করে সেরা ডিল দেখুন'
                   : 'Swipe horizontally · Verified factory discounts'}
@@ -444,7 +451,7 @@ export const HomeScreen: React.FC = () => {
                 type="button"
                 aria-label="Slide left"
                 onClick={() => scrollDealsSlider('left')}
-                className="w-7 h-7 rounded-lg bg-white border border-slate-200/90 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
+                className="w-7 h-7 rounded-lg bg-white border border-[#DFEAE3] flex items-center justify-center text-[#485B52] hover:text-[#0F1D17] transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -452,7 +459,7 @@ export const HomeScreen: React.FC = () => {
                 type="button"
                 aria-label="Slide right"
                 onClick={() => scrollDealsSlider('right')}
-                className="w-7 h-7 rounded-lg bg-white border border-slate-200/90 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
+                className="w-7 h-7 rounded-lg bg-white border border-[#DFEAE3] flex items-center justify-center text-[#485B52] hover:text-[#0F1D17] transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -468,9 +475,9 @@ export const HomeScreen: React.FC = () => {
                 key={`flash-${deal.id}`}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigateTo('product_detail', { productId: deal.id })}
-                className="w-[210px] shrink-0 snap-start bg-white rounded-2xl border border-slate-200/80 p-2.5 flex items-center gap-2.5 cursor-pointer hover:border-slate-300 transition-colors"
+                className="w-[214px] shrink-0 snap-start bg-white rounded-2xl border border-[#DFEAE3] p-2.5 flex items-center gap-2.5 cursor-pointer hover:border-[#A7C4B5] transition-colors"
               >
-                <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-[#F8FAF9] border border-[#EAF0EC] overflow-hidden shrink-0">
                   <img
                     src={deal.image}
                     alt={deal.name}
@@ -482,17 +489,17 @@ export const HomeScreen: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 text-[10px] text-[#059669] font-mono-num font-semibold">
                     <span>-{deal.discountPercent}%</span>
-                    <span>·</span>
-                    <span className="inline-flex items-center gap-0.5 text-slate-600">
-                      <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                    <span className="text-[#A7C4B5]">·</span>
+                    <span className="inline-flex items-center gap-0.5 text-[#485B52]">
+                      <Star className="w-2.5 h-2.5 fill-[#F59E0B] text-[#F59E0B]" />
                       {deal.rating.toFixed(1)}
                     </span>
                   </div>
-                  <h3 className="text-xs font-semibold text-slate-900 truncate mt-0.5">
+                  <h3 className="text-xs font-semibold text-[#0F1D17] truncate mt-0.5">
                     {language === 'BN' ? deal.nameBn : deal.name}
                   </h3>
                   <div className="flex items-center justify-between mt-1.5">
-                    <span className="font-mono-num text-xs font-bold text-slate-900">
+                    <span className="font-mono-num text-xs font-bold text-[#0F1D17]">
                       {formatPrice(deal.totalLandedBdt)}
                     </span>
                     <button
@@ -502,7 +509,7 @@ export const HomeScreen: React.FC = () => {
                         e.stopPropagation();
                         addToCart(deal.id, 1);
                       }}
-                      className="w-6 h-6 rounded-md bg-slate-900 hover:bg-[#059669] text-white flex items-center justify-center transition-colors"
+                      className="w-6 h-6 rounded-md bg-[#0F1D17] hover:bg-[#059669] text-white flex items-center justify-center transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -518,10 +525,10 @@ export const HomeScreen: React.FC = () => {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm leading-5 font-semibold text-slate-900">
+            <h2 className="text-sm leading-5 font-semibold text-[#0F1D17]">
               {language === 'BN' ? 'ভেরিফাইড গ্লোবাল ক্যাটালগ' : 'Verified Global Catalog'}
             </h2>
-            <p className="text-[11px] leading-4 text-slate-500">
+            <p className="text-[11px] leading-4 text-[#5C7066]">
               {language === 'BN'
                 ? 'সকল মূল্যে শিপিং, ডিউটি ও ভ্যাট অন্তর্ভুক্ত'
                 : 'Every price includes shipping, 10% duty & 15% VAT'}
@@ -530,7 +537,7 @@ export const HomeScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('categories')}
-            className="text-xs leading-4 font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1 shrink-0"
+            className="text-xs leading-4 font-semibold text-[#059669] hover:text-[#047857] flex items-center gap-1 shrink-0"
           >
             <span>{language === 'BN' ? 'বিভাগসমূহ' : 'Departments'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -545,26 +552,34 @@ export const HomeScreen: React.FC = () => {
               setHomeCategory('all');
               setVisibleLimit(PAGE_SIZE);
             }}
-            className={`relative h-8 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
+            className={`relative h-9 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
               homeCategory === 'all'
-                ? 'text-white border-slate-900'
-                : 'bg-white border-slate-200/90 text-slate-700 hover:border-slate-300'
+                ? 'text-white border-[#0F1D17]'
+                : 'bg-white border-[#DFEAE3] text-[#33473E] hover:border-[#A7C4B5]'
             }`}
           >
             {homeCategory === 'all' && (
               <motion.span
                 layoutId="homeActiveDeptPill"
                 transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                className="absolute inset-0 rounded-xl bg-slate-900"
+                className="absolute inset-0 rounded-xl bg-[#0F1D17]"
               />
             )}
-            <span className="relative z-10">
-              {language === 'BN' ? 'সব পণ্য' : 'All'}
+            <span className="relative z-10 inline-flex items-center gap-1">
+              <span>{language === 'BN' ? 'সব পণ্য' : 'All'}</span>
+              <span
+                className={`font-mono-num text-[11px] ${
+                  homeCategory === 'all' ? 'text-[#34D399]' : 'text-[#74887E]'
+                }`}
+              >
+                · {products.length}
+              </span>
             </span>
           </button>
 
           {CATEGORIES.map((cat) => {
             const active = homeCategory === cat.id;
+            const deptCount = products.filter((p) => p.category === cat.id).length;
             return (
               <button
                 key={cat.id}
@@ -573,21 +588,28 @@ export const HomeScreen: React.FC = () => {
                   setHomeCategory(active ? 'all' : cat.id);
                   setVisibleLimit(PAGE_SIZE);
                 }}
-                className={`relative h-8 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
+                className={`relative h-9 px-3.5 rounded-xl text-xs leading-4 font-medium whitespace-nowrap shrink-0 transition-colors border ${
                   active
-                    ? 'text-white border-slate-900'
-                    : 'bg-white border-slate-200/90 text-slate-700 hover:border-slate-300'
+                    ? 'text-white border-[#0F1D17]'
+                    : 'bg-white border-[#DFEAE3] text-[#33473E] hover:border-[#A7C4B5]'
                 }`}
               >
                 {active && (
                   <motion.span
                     layoutId="homeActiveDeptPill"
                     transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                    className="absolute inset-0 rounded-xl bg-slate-900"
+                    className="absolute inset-0 rounded-xl bg-[#0F1D17]"
                   />
                 )}
-                <span className="relative z-10">
-                  {language === 'BN' ? cat.nameBn : cat.name}
+                <span className="relative z-10 inline-flex items-center gap-1.5">
+                  <span>{language === 'BN' ? cat.nameBn : cat.name}</span>
+                  <span
+                    className={`font-mono-num text-[11px] ${
+                      active ? 'text-[#34D399]' : 'text-[#74887E]'
+                    }`}
+                  >
+                    · {deptCount}
+                  </span>
                 </span>
               </button>
             );
@@ -604,10 +626,10 @@ export const HomeScreen: React.FC = () => {
                 under2000Bdt: !prev.under2000Bdt,
               }))
             }
-            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-8 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.under2000Bdt
-                ? 'bg-[#059669] text-white'
-                : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
+                ? 'bg-[#059669] text-white font-semibold'
+                : 'bg-[#E4EDE8] text-[#33473E] hover:bg-[#D5E3DC]'
             }`}
           >
             Under {formatPrice(2000)}
@@ -621,10 +643,10 @@ export const HomeScreen: React.FC = () => {
                 arrivesThisWeek: !prev.arrivesThisWeek,
               }))
             }
-            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-8 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.arrivesThisWeek
-                ? 'bg-[#059669] text-white'
-                : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
+                ? 'bg-[#059669] text-white font-semibold'
+                : 'bg-[#E4EDE8] text-[#33473E] hover:bg-[#D5E3DC]'
             }`}
           >
             Arrives this week
@@ -638,10 +660,10 @@ export const HomeScreen: React.FC = () => {
                 lowestLandedCost: !prev.lowestLandedCost,
               }))
             }
-            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-8 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.lowestLandedCost
-                ? 'bg-[#059669] text-white'
-                : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
+                ? 'bg-[#059669] text-white font-semibold'
+                : 'bg-[#E4EDE8] text-[#33473E] hover:bg-[#D5E3DC]'
             }`}
           >
             Lowest landed price
@@ -655,10 +677,10 @@ export const HomeScreen: React.FC = () => {
                 verifiedOnly: !prev.verifiedOnly,
               }))
             }
-            className={`h-7 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
+            className={`h-8 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 transition-colors ${
               smartFilters.verifiedOnly
-                ? 'bg-[#059669] text-white'
-                : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
+                ? 'bg-[#059669] text-white font-semibold'
+                : 'bg-[#E4EDE8] text-[#33473E] hover:bg-[#D5E3DC]'
             }`}
           >
             Verified only
@@ -702,19 +724,19 @@ export const HomeScreen: React.FC = () => {
                   aria-live="polite"
                   className="pt-3 space-y-2.5"
                 >
-                  <div className="flex items-center justify-between text-[11px] leading-4 text-slate-500 px-0.5">
+                  <div className="flex items-center justify-between text-[11px] leading-4 text-[#5C7066] px-0.5">
                     <span>
                       Showing{' '}
-                      <strong className="font-mono-num text-slate-900 font-semibold">
+                      <strong className="font-mono-num text-[#0F1D17] font-semibold">
                         {slicedProducts.length}
                       </strong>{' '}
                       of{' '}
-                      <strong className="font-mono-num text-slate-900 font-semibold">
+                      <strong className="font-mono-num text-[#0F1D17] font-semibold">
                         {displayedProducts.length}
                       </strong>{' '}
                       items
                     </span>
-                    <span className="font-mono-num text-slate-400">
+                    <span className="font-mono-num text-[#74887E]">
                       {Math.round(
                         (slicedProducts.length / displayedProducts.length) * 100
                       )}
@@ -722,7 +744,7 @@ export const HomeScreen: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="w-full h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
+                  <div className="w-full h-1.5 rounded-full bg-[#DFEAE3] overflow-hidden">
                     <div
                       className="h-full bg-[#059669] rounded-full transition-all duration-300"
                       style={{
@@ -741,7 +763,7 @@ export const HomeScreen: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleLoadMore}
-                        className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs leading-4 font-semibold text-slate-900 flex items-center justify-center gap-2 transition-colors shadow-2xs"
+                        className="w-full h-10 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-xs leading-4 font-semibold text-[#0F1D17] flex items-center justify-center gap-2 transition-colors shadow-2xs"
                       >
                         <span>
                           Load More Items (
@@ -750,7 +772,7 @@ export const HomeScreen: React.FC = () => {
                       </button>
                     )
                   ) : (
-                    <p className="text-center text-[11px] leading-4 text-slate-400 py-1">
+                    <p className="text-center text-[11px] leading-4 text-[#74887E] py-1">
                       All {displayedProducts.length} items loaded
                     </p>
                   )}
@@ -758,11 +780,11 @@ export const HomeScreen: React.FC = () => {
               )}
             </>
           ) : (
-            <div className="bg-white rounded-2xl p-6 text-center border border-slate-200/80">
-              <p className="text-xs leading-4 font-semibold text-slate-900">
+            <div className="bg-white rounded-2xl p-6 text-center border border-[#DFEAE3]">
+              <p className="text-xs leading-4 font-semibold text-[#0F1D17]">
                 No matching global products found
               </p>
-              <p className="text-[11px] leading-4 text-slate-500 mt-1">
+              <p className="text-[11px] leading-4 text-[#5C7066] mt-1">
                 Try clearing your search or Under {formatPrice(2000)} filter.
               </p>
               <button
@@ -776,7 +798,7 @@ export const HomeScreen: React.FC = () => {
                     arrivesThisWeek: false,
                   }));
                 }}
-                className="mt-3 h-9 px-4 rounded-lg bg-slate-900 text-white text-xs leading-4 font-medium"
+                className="mt-3 h-9 px-4 rounded-lg bg-[#0F1D17] text-white text-xs leading-4 font-medium"
               >
                 Reset Filters
               </button>
@@ -789,13 +811,13 @@ export const HomeScreen: React.FC = () => {
       {recentlyViewedProducts.length > 0 && (
         <section
           aria-label="Recently Viewed Products"
-          className="space-y-2.5 pt-1 border-t border-slate-200/70"
+          className="space-y-2.5 pt-1 border-t border-[#DFEAE3]"
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-xs leading-4 font-semibold text-slate-900">
+            <h2 className="text-xs leading-4 font-semibold text-[#0F1D17]">
               {language === 'BN' ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed'}
             </h2>
-            <span className="text-[11px] leading-4 text-slate-400 font-mono-num">
+            <span className="text-[11px] leading-4 text-[#74887E] font-mono-num">
               {recentlyViewedProducts.length} items
             </span>
           </div>
@@ -814,16 +836,16 @@ export const HomeScreen: React.FC = () => {
                     navigateTo('product_detail', { productId: item.id });
                   }
                 }}
-                className="w-40 shrink-0 snap-start bg-white rounded-2xl border border-slate-200/80 p-2.5 flex items-center gap-2.5 hover:border-slate-300 transition-colors cursor-pointer"
+                className="w-40 shrink-0 snap-start bg-white rounded-2xl border border-[#DFEAE3] p-2.5 flex items-center gap-2.5 hover:border-[#A7C4B5] transition-colors cursor-pointer"
               >
                 <img
                   src={item.image}
                   alt={item.name}
                   referrerPolicy="no-referrer"
-                  className="w-11 h-11 rounded-xl object-contain bg-white p-1 border border-slate-100 shrink-0"
+                  className="w-11 h-11 rounded-xl object-contain bg-[#F8FAF9] p-1 border border-[#EAF0EC] shrink-0"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] leading-3.5 font-semibold text-slate-900 truncate">
+                  <p className="text-[11px] leading-3.5 font-semibold text-[#0F1D17] truncate">
                     {language === 'BN' ? item.nameBn : item.name}
                   </p>
                   <p className="font-mono-num text-xs leading-4 font-bold text-[#059669] mt-0.5">

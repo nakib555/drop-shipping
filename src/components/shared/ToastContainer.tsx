@@ -19,12 +19,12 @@ export const ToastContainer: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#0B3D2E] text-white text-xs font-medium shadow-lg border border-white/10"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#0F1D17] text-white text-xs font-medium shadow-lg border border-[#243B30]"
           >
             {toast.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-[#00C853] shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
             ) : (
-              <Info className="w-4 h-4 text-[#00C853] shrink-0" />
+              <Info className="w-4 h-4 text-[#34D399] shrink-0" />
             )}
             <span className="truncate">{toast.text}</span>
           </motion.div>

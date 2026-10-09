@@ -11,6 +11,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     currentScreen,
     selectedProductId,
     language,
+    darkMode,
   } = useDeshiMart();
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
@@ -23,10 +24,14 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <div
       lang={language === 'BN' ? 'bn' : 'en'}
-      className="h-dvh w-full overflow-hidden bg-[#F1F5F9] text-[#0F172A] flex items-center justify-center sm:p-4"
+      className="h-dvh w-full overflow-hidden bg-[radial-gradient(120%_90%_at_50%_10%,#12281F_0%,#0B1612_60%,#070E0B_100%)] text-[#0F1D17] flex items-center justify-center sm:p-4"
     >
       {/* Clean Mobile Viewport Container (Edge-to-edge on mobile, subtle centered viewport on larger screens) */}
-      <div className="relative w-full max-w-[430px] h-dvh sm:h-[92dvh] sm:max-h-[860px] bg-[#F8FAFC] sm:rounded-3xl sm:shadow-[0_12px_40px_-10px_rgba(15,23,42,0.12)] sm:border sm:border-slate-200/90 flex flex-col overflow-hidden shrink-0">
+      <div
+        className={`relative w-full max-w-[430px] h-dvh sm:h-[92dvh] sm:max-h-[860px] bg-[#F5F8F6] sm:rounded-3xl sm:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.55)] sm:border sm:border-[#243B30] flex flex-col overflow-hidden shrink-0 ${
+          darkMode ? 'contrast-105' : ''
+        }`}
+      >
         {/* Fixed Top App Bar */}
         <TopAppBar />
 

@@ -6,14 +6,35 @@
     --font-bn: 'Noto Sans Bengali', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', 'Noto Sans Bengali', monospace;
 
-    /* DeshiMart Flow Brand Tokens */
-    --g: #2f8a4d;
-    --g2: #1b5e34;
-    --g3: #134a28;
-    --ink: #1c2a22;
-    --mut: #7b8a81;
+    /* DeshiMart Flow Brand & Architectural Color Tokens */
+    --g: #059669;
+    --g2: #047857;
+    --g3: #064E3B;
+    --ink: #0F1D17;
+    --mut: #485B52;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* DeshiMart Retail Surface & Ink Palette */
+    --dm-canvas: #F5F8F6;
+    --dm-surface: #FFFFFF;
+    --dm-surface-subtle: #EFF4F1;
+    --dm-surface-dark: #0B1913;
+    --dm-ink: #0F1D17;
+    --dm-ink-secondary: #485B52;
+    --dm-ink-muted: #74887E;
+    --dm-border: #DFEAE3;
+    --dm-border-hover: #A7C4B5;
+    --dm-divider: #EAF0EC;
+    --dm-emerald: #059669;
+    --dm-emerald-hover: #047857;
+    --dm-emerald-deep: #065F46;
+    --dm-emerald-tint: #ECFDF5;
+    --dm-emerald-soft: #F2F9F5;
+    --dm-emerald-border: #CBE4D6;
+    --dm-amber: #D97706;
+    --dm-rose: #E11D48;
+    --dm-sky: #0284C7;
 
     /* Strict 8pt Grid Spacing System (8px base unit / 4px half-step) */
     --grid-half: 4px;
@@ -152,7 +173,7 @@
   text-align: center;
   background: radial-gradient(
     120% 70% at 50% 18%,
-    #2f8a4d 0%,
+    var(--g) 0%,
     var(--g2) 55%,
     var(--g3) 100%
   );
@@ -471,8 +492,8 @@ svg.dm-flow-il {
   font-weight: 600;
   font-size: 14px;
   width: 100%;
-  background: linear-gradient(180deg, #3d9459, #2a7a46);
-  box-shadow: 0 8px 18px rgba(47, 138, 77, 0.28);
+  background: linear-gradient(180deg, #059669, #047857);
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.28);
   transition: transform 0.15s;
 }
 

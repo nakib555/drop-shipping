@@ -92,11 +92,35 @@ export const ProductDetailScreen: React.FC = () => {
     setActiveInfoModal(null);
   };
 
-  const viewTransformClasses = [
-    'scale-100 rotate-0',
-    'scale-110 -rotate-2',
-    'scale-105 rotate-2',
-  ];
+  const galleryImages =
+    selectedProduct.gallery && selectedProduct.gallery.length > 0
+      ? selectedProduct.gallery
+      : [selectedProduct.image];
+
+  const activeImageSrc =
+    galleryImages[activeImageView] || selectedProduct.image;
+
+  const hasDistinctGalleryImages = galleryImages.length > 1;
+
+  const viewTransformClasses = hasDistinctGalleryImages
+    ? ['scale-100 rotate-0', 'scale-100 rotate-0', 'scale-100 rotate-0']
+    : ['scale-100 rotate-0', 'scale-110 -rotate-2', 'scale-105 rotate-2'];
+
+  const resolvedHsCode =
+    selectedProduct.hsCode ||
+    (selectedProduct.category === 'electronics'
+      ? '8517.62.00'
+      : selectedProduct.category === 'fashion'
+      ? '6203.42.00'
+      : selectedProduct.category === 'home_living'
+      ? '8516.71.00'
+      : selectedProduct.category === 'beauty_health'
+      ? '3304.99.00'
+      : selectedProduct.category === 'sports_outdoor'
+      ? '9506.91.00'
+      : selectedProduct.category === 'toys_games'
+      ? '9503.00.00'
+      : '8525.89.00');
 
   // Clean Single-Surface Product Detail Architecture (No Nested Card Clutter)
   return (
@@ -104,14 +128,14 @@ export const ProductDetailScreen: React.FC = () => {
       <div className="p-4 space-y-5">
         {/* 1. Product Image Showcase + 3-Angle Selector */}
         <div className="space-y-2">
-          <div className="relative w-full aspect-square max-h-64 rounded-2xl bg-white border border-slate-200/80 p-4 overflow-hidden flex items-center justify-center">
+          <div className="relative w-full aspect-square max-h-64 rounded-2xl bg-[#F8FAF9] border border-[#DFEAE3] p-4 overflow-hidden flex items-center justify-center">
             {!imgError ? (
               <motion.img
                 key={`${selectedProduct.id}-${activeImageView}`}
                 initial={{ opacity: 0.6, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.16 }}
-                src={selectedProduct.image}
+                src={activeImageSrc}
                 alt={selectedProduct.name}
                 referrerPolicy="no-referrer"
                 onError={() => setImgError(true)}
@@ -119,8 +143,8 @@ export const ProductDetailScreen: React.FC = () => {
               />
             ) : (
               <div className="flex flex-col items-center justify-center p-6 text-center">
-                <Package className="w-10 h-10 text-slate-400 mb-2" />
-                <span className="text-xs leading-4 font-medium text-slate-700">
+                <Package className="w-10 h-10 text-[#74887E] mb-2" />
+                <span className="text-xs leading-4 font-medium text-[#374740]">
                   {selectedProduct.name}
                 </span>
               </div>
@@ -130,23 +154,28 @@ export const ProductDetailScreen: React.FC = () => {
           <div className="flex items-center justify-center gap-2">
             {(['Studio', 'Detail', 'Profile'] as const).map((label, idx) => {
               const isSelected = activeImageView === idx;
+              const thumbSrc = galleryImages[idx] || selectedProduct.image;
               return (
                 <button
                   key={label}
                   type="button"
                   onClick={() => setActiveImageView(idx as 0 | 1 | 2)}
-                  className={`w-12 h-12 rounded-xl bg-white border overflow-hidden p-1.5 transition-all ${
+                  className={`w-12 h-12 rounded-xl bg-[#F8FAF9] border overflow-hidden p-1.5 transition-all ${
                     isSelected
-                      ? 'border-slate-900'
-                      : 'border-slate-200 opacity-65 hover:opacity-100'
+                      ? 'border-[#0F1D17] ring-1 ring-[#0F1D17]/10'
+                      : 'border-[#DFEAE3] opacity-65 hover:opacity-100'
                   }`}
                 >
                   <img
-                    src={selectedProduct.image}
+                    src={thumbSrc}
                     alt={`${selectedProduct.name} ${label}`}
                     referrerPolicy="no-referrer"
                     className={`w-full h-full object-contain rounded-lg ${
-                      idx === 1 ? 'scale-125' : idx === 2 ? 'scale-110 rotate-3' : ''
+                      !hasDistinctGalleryImages && idx === 1
+                        ? 'scale-125'
+                        : !hasDistinctGalleryImages && idx === 2
+                        ? 'scale-110 rotate-3'
+                        : ''
                     }`}
                   />
                 </button>
@@ -157,10 +186,15 @@ export const ProductDetailScreen: React.FC = () => {
 
         {/* 2. Product Title, Unboxed Metadata, Landed Price & DropScore */}
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-xs leading-4 text-slate-500">
-            <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+          <div className="flex items-center justify-between text-xs leading-4 text-[#485B52]">
+            <span className="flex items-center gap-1.5 text-[#0F1D17] font-medium">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
               {selectedProduct.originLabel}
+              {selectedProduct.corridorTag && (
+                <span className="font-mono-num text-[11px] text-[#059669]">
+                  ({selectedProduct.corridorTag})
+                </span>
+              )}
             </span>
             <div className="flex items-center gap-2.5">
               <span>{activeRoute?.deliveryDays || '7–12 days'} delivery</span>
@@ -171,7 +205,7 @@ export const ProductDetailScreen: React.FC = () => {
                   navigator.clipboard?.writeText(window.location.href);
                   showToast(`Copied verified link for ${selectedProduct.name}`);
                 }}
-                className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium"
+                className="inline-flex items-center gap-1 text-[#374740] hover:text-[#0F1D17] font-medium"
               >
                 <Share2 className="w-3.5 h-3.5 text-[#059669]" />
                 <span>Share</span>
@@ -180,19 +214,19 @@ export const ProductDetailScreen: React.FC = () => {
           </div>
 
           <div>
-            <h1 className="text-lg leading-6 font-semibold text-slate-900">
+            <h1 className="text-lg leading-6 font-semibold text-[#0F1D17]">
               {language === 'BN' ? selectedProduct.nameBn : selectedProduct.name}
             </h1>
-            <p className="text-xs leading-4 text-slate-500 mt-1">
+            <p className="text-xs leading-4 text-[#485B52] mt-1">
               {selectedProduct.subtitle}
             </p>
           </div>
 
           {/* Unboxed Rating & Price History Link */}
-          <div className="flex items-center justify-between text-xs leading-4 text-slate-500">
+          <div className="flex items-center justify-between text-xs leading-4 text-[#485B52]">
             <div className="flex items-center gap-1.5">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span className="font-mono-num font-semibold text-slate-900">
+              <span className="font-mono-num font-semibold text-[#0F1D17]">
                 {selectedProduct.rating.toFixed(1)}
               </span>
               <span>·</span>
@@ -210,10 +244,10 @@ export const ProductDetailScreen: React.FC = () => {
 
           {/* Primary Landed Price Callout (Zero-Pill Unboxed Metadata) */}
           <div className="flex items-baseline gap-2 pt-1">
-            <span className="font-mono-num text-2xl leading-8 font-semibold text-slate-900">
+            <span className="font-mono-num text-2xl leading-8 font-semibold text-[#0F1D17]">
               {formatPrice(totalLandedBdt)}
             </span>
-            <span className="font-mono-num text-xs leading-4 text-slate-400 line-through">
+            <span className="font-mono-num text-xs leading-4 text-[#74887E] line-through">
               {formatPrice(selectedProduct.originalLandedBdt)}
             </span>
             <span className="text-xs leading-4 font-mono-num font-medium text-[#059669]">
@@ -228,10 +262,10 @@ export const ProductDetailScreen: React.FC = () => {
           />
 
           {/* Unboxed Feature Highlights */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs leading-4 text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs leading-4 text-[#74887E]">
             {selectedProduct.highlights.map((hl, idx) => (
               <React.Fragment key={hl}>
-                <span className="text-slate-700">{hl}</span>
+                <span className="text-[#374740]">{hl}</span>
                 {idx < selectedProduct.highlights.length - 1 && (
                   <span aria-hidden="true">·</span>
                 )}
@@ -241,15 +275,15 @@ export const ProductDetailScreen: React.FC = () => {
         </div>
 
         {/* 3. Transparent Landed Cost Breakdown */}
-        <section className="pt-4 border-t border-slate-100 space-y-2.5">
+        <section className="pt-4 border-t border-[#EAF0EC] space-y-2.5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xs leading-4 font-semibold text-slate-900">
+              <h2 className="text-xs leading-4 font-semibold text-[#0F1D17]">
                 {language === 'BN'
                   ? 'ল্যান্ডেড প্রাইস ব্রেকডাউন'
                   : 'True Landed Cost Breakdown'}
               </h2>
-              <p className="text-[11px] leading-4 text-slate-500 mt-0.5">
+              <p className="text-[11px] leading-4 text-[#485B52] mt-0.5">
                 {activeRoute?.name} · {activeRoute?.originCountry}
               </p>
             </div>
@@ -263,39 +297,39 @@ export const ProductDetailScreen: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 text-xs leading-4 pt-1">
-            <div className="flex justify-between text-slate-500">
+            <div className="flex justify-between text-[#485B52]">
               <span>{language === 'BN' ? 'পণ্যের মূল দাম' : 'Factory Price'}</span>
-              <span className="font-mono-num text-slate-900">
+              <span className="font-mono-num text-[#0F1D17]">
                 {formatPrice(baseBdt)}
               </span>
             </div>
-            <div className="flex justify-between text-slate-500">
+            <div className="flex justify-between text-[#485B52]">
               <span>
                 {language === 'BN'
                   ? `শিপিং (${activeRoute?.deliveryDays})`
                   : `International Shipping (${activeRoute?.deliveryDays})`}
               </span>
-              <span className="font-mono-num text-slate-900">
+              <span className="font-mono-num text-[#0F1D17]">
                 {formatPrice(shippingBdt)}
               </span>
             </div>
-            <div className="flex justify-between text-slate-500">
+            <div className="flex justify-between text-[#485B52]">
               <span>
                 {language === 'BN'
                   ? 'ইমপোর্ট ডিউটি (১০%)'
                   : 'Customs Import Duty (10%)'}
               </span>
-              <span className="font-mono-num text-slate-900">
+              <span className="font-mono-num text-[#0F1D17]">
                 {formatPrice(dutyBdt)}
               </span>
             </div>
-            <div className="flex justify-between text-slate-500">
+            <div className="flex justify-between text-[#485B52]">
               <span>{language === 'BN' ? 'ভ্যাট (১৫%)' : 'Bangladesh VAT (15%)'}</span>
-              <span className="font-mono-num text-slate-900">
+              <span className="font-mono-num text-[#0F1D17]">
                 {formatPrice(vatBdt)}
               </span>
             </div>
-            <div className="pt-2.5 mt-1 border-t border-slate-100 flex justify-between items-center font-semibold text-slate-900">
+            <div className="pt-2.5 mt-1 border-t border-[#EAF0EC] flex justify-between items-center font-semibold text-[#0F1D17]">
               <span>
                 {language === 'BN'
                   ? 'সর্বমোট ল্যান্ডেড প্রাইস'
@@ -307,17 +341,11 @@ export const ProductDetailScreen: React.FC = () => {
             </div>
 
             {/* Official Bangladesh NBR Customs HS-Code Tariff Classification */}
-            <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between text-[11px] leading-4 text-slate-600">
+            <div className="mt-2 p-2.5 rounded-xl bg-[#F2F9F5] border border-[#CBE4D6] flex items-center justify-between text-[11px] leading-4 text-[#374740]">
               <span>
                 NBR Customs HS-Code:{' '}
-                <strong className="font-mono-num text-slate-900 font-semibold">
-                  {selectedProduct.category === 'electronics'
-                    ? '8517.62.00'
-                    : selectedProduct.category === 'fashion'
-                    ? '6203.42.00'
-                    : selectedProduct.category === 'home_living'
-                    ? '9405.42.00'
-                    : '3304.99.00'}
+                <strong className="font-mono-num text-[#0F1D17] font-semibold">
+                  {resolvedHsCode}
                 </strong>
               </span>
               <span className="text-[#059669] font-medium">Pre-Cleared CIF</span>
@@ -326,11 +354,11 @@ export const ProductDetailScreen: React.FC = () => {
         </section>
 
         {/* 4. Variant Selection (Color & Size) */}
-        <section className="pt-4 border-t border-slate-100 space-y-3">
+        <section className="pt-4 border-t border-[#EAF0EC] space-y-3">
           <div>
-            <span className="block text-xs leading-4 font-medium text-slate-500 mb-2">
+            <span className="block text-xs leading-4 font-medium text-[#485B52] mb-2">
               {language === 'BN' ? 'রঙ: ' : 'Color: '}
-              <strong className="text-slate-900 font-semibold">{selectedColor}</strong>
+              <strong className="text-[#0F1D17] font-semibold">{selectedColor}</strong>
             </span>
             <div className="flex flex-wrap items-center gap-2">
               {selectedProduct.colors.map((c) => {
@@ -342,8 +370,8 @@ export const ProductDetailScreen: React.FC = () => {
                     onClick={() => setSelectedColor(c.name)}
                     className={`h-8 px-3 rounded-lg border flex items-center gap-2 text-xs leading-4 font-medium transition-colors ${
                       active
-                        ? 'border-slate-900 bg-slate-900 text-white'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        ? 'border-[#0F1D17] bg-[#0F1D17] text-white'
+                        : 'border-[#DFEAE3] bg-white text-[#374740] hover:border-[#A7C4B5]'
                     }`}
                   >
                     <span
@@ -359,8 +387,8 @@ export const ProductDetailScreen: React.FC = () => {
 
           {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
             <div className="pt-1">
-              <span className="block text-xs leading-4 font-medium text-slate-500 mb-2">
-                Size (EU): <strong className="text-slate-900 font-semibold">{selectedSize}</strong>
+              <span className="block text-xs leading-4 font-medium text-[#485B52] mb-2">
+                Size (EU): <strong className="text-[#0F1D17] font-semibold">{selectedSize}</strong>
               </span>
               <div className="flex items-center gap-2">
                 {selectedProduct.sizes.map((sz) => (
@@ -370,8 +398,8 @@ export const ProductDetailScreen: React.FC = () => {
                     onClick={() => setSelectedSize(sz)}
                     className={`w-10 h-10 rounded-lg font-mono-num text-xs leading-4 font-semibold border transition-colors ${
                       selectedSize === sz
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                        ? 'bg-[#0F1D17] text-white border-[#0F1D17]'
+                        : 'bg-white text-[#374740] border-[#DFEAE3] hover:border-[#A7C4B5]'
                     }`}
                   >
                     {sz}
@@ -382,7 +410,7 @@ export const ProductDetailScreen: React.FC = () => {
           )}
 
           {/* Unboxed Guarantee Metadata */}
-          <div className="pt-1 text-[11px] leading-4 text-slate-500 flex items-center gap-1.5">
+          <div className="pt-1 text-[11px] leading-4 text-[#485B52] flex items-center gap-1.5">
             <span>Worldwide Air Freight</span>
             <span aria-hidden="true">·</span>
             <span>30-Day Dhaka Return</span>
@@ -392,9 +420,9 @@ export const ProductDetailScreen: React.FC = () => {
         </section>
 
         {/* 5. Technical Specifications List */}
-        <section className="pt-4 border-t border-slate-100 space-y-2">
+        <section className="pt-4 border-t border-[#EAF0EC] space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs leading-4 font-semibold text-slate-900">
+            <h3 className="text-xs leading-4 font-semibold text-[#0F1D17]">
               {language === 'BN' ? 'স্পেসিফিকেশন' : 'Specifications'}
             </h3>
             <button
@@ -405,11 +433,11 @@ export const ProductDetailScreen: React.FC = () => {
               {language === 'BN' ? 'তুলনা করুন →' : 'Compare Specs →'}
             </button>
           </div>
-          <div className="divide-y divide-slate-100 text-xs leading-4">
+          <div className="divide-y divide-[#EAF0EC] text-xs leading-4">
             {specRows.map((row) => (
               <div key={row.label} className="py-2 flex items-center justify-between gap-4">
-                <span className="text-slate-500">{row.label}</span>
-                <span className="font-medium text-slate-900 text-right">
+                <span className="text-[#485B52]">{row.label}</span>
+                <span className="font-medium text-[#0F1D17] text-right">
                   {row.value}
                 </span>
               </div>
@@ -418,17 +446,17 @@ export const ProductDetailScreen: React.FC = () => {
         </section>
 
         {/* 6. Verified Supplier & Warranty Row */}
-        <section className="pt-4 border-t border-slate-100 space-y-3">
+        <section className="pt-4 border-t border-[#EAF0EC] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-lg bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
                 <Store className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs leading-4 font-semibold text-slate-900">
+                <h3 className="text-xs leading-4 font-semibold text-[#0F1D17]">
                   {selectedProduct.supplierName}
                 </h3>
-                <p className="text-[11px] leading-4 text-slate-500 mt-0.5">
+                <p className="text-[11px] leading-4 text-[#485B52] mt-0.5">
                   On-time {activeRoute?.onTimeRate || '98%'} · Return{' '}
                   {activeRoute?.returnRate || '2%'}
                 </p>
@@ -446,17 +474,17 @@ export const ProductDetailScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveInfoModal('warranty')}
-            className="w-full pt-2 border-t border-slate-100 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 hover:text-slate-900"
+            className="w-full pt-2 border-t border-[#EAF0EC] flex items-center justify-between text-xs leading-4 font-medium text-[#374740] hover:text-[#0F1D17]"
           >
             <span>{selectedProduct.specs.warranty}</span>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
+            <ChevronRight className="w-4 h-4 text-[#74887E]" />
           </button>
         </section>
 
         {/* 7. Verified Buyer Reviews */}
-        <section className="pt-4 border-t border-slate-100 space-y-2">
+        <section className="pt-4 border-t border-[#EAF0EC] space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs leading-4 font-semibold text-slate-900">
+            <h3 className="text-xs leading-4 font-semibold text-[#0F1D17]">
               {language === 'BN'
                 ? `ক্রেতা রিভিউ (${selectedProduct.reviewCount})`
                 : `Buyer Reviews (${selectedProduct.reviewCount})`}
@@ -472,36 +500,36 @@ export const ProductDetailScreen: React.FC = () => {
           </div>
 
           {selectedProduct.reviews.length > 0 ? (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[#EAF0EC]">
               {selectedProduct.reviews.map((rev) => (
                 <div key={rev.id} className="py-2.5 space-y-1">
                   <div className="flex items-center justify-between text-xs leading-4">
-                    <span className="font-semibold text-slate-900">
-                      {rev.author} <span className="text-slate-400 font-normal">· Verified</span>
+                    <span className="font-semibold text-[#0F1D17]">
+                      {rev.author} <span className="text-[#059669] font-medium">· Verified</span>
                     </span>
-                    <span className="text-[11px] text-slate-400">{rev.date}</span>
+                    <span className="text-[11px] text-[#74887E]">{rev.date}</span>
                   </div>
-                  <p className="text-xs leading-4 text-slate-600">{rev.comment}</p>
+                  <p className="text-xs leading-4 text-[#374740]">{rev.comment}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs leading-4 text-slate-500">
+            <p className="text-xs leading-4 text-[#485B52]">
               98% positive feedback from verified Bangladesh cross-border buyers.
             </p>
           )}
         </section>
 
         {/* 8. Related Global Products */}
-        <section className="pt-4 border-t border-slate-100 space-y-3">
+        <section className="pt-4 border-t border-[#EAF0EC] space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs leading-4 font-semibold text-slate-900">
+            <h3 className="text-xs leading-4 font-semibold text-[#0F1D17]">
               {language === 'BN' ? 'সম্পর্কিত পণ্য' : 'Related Products'}
             </h3>
             <button
               type="button"
               onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-              className="text-xs leading-4 font-medium text-slate-500 hover:text-slate-900"
+              className="text-xs leading-4 font-medium text-[#059669] hover:underline"
             >
               {language === 'BN' ? 'সব দেখুন' : 'View All'}
             </button>
@@ -515,7 +543,7 @@ export const ProductDetailScreen: React.FC = () => {
       </div>
 
       {/* Sticky Bottom Purchase Bar (Single Emerald Primary CTA) */}
-      <div className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-3 flex items-center gap-2">
+      <div className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-md border-t border-[#DFEAE3] p-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() =>
@@ -527,9 +555,9 @@ export const ProductDetailScreen: React.FC = () => {
               activeRoute?.id
             )
           }
-          className="h-11 px-4 rounded-xl border border-slate-200 text-slate-900 hover:bg-slate-50 font-semibold text-xs leading-4 flex items-center justify-center gap-1.5 transition-colors shrink-0"
+          className="h-11 px-4 rounded-xl border border-[#DFEAE3] text-[#0F1D17] hover:bg-[#F5F8F6] font-semibold text-xs leading-4 flex items-center justify-center gap-1.5 transition-colors shrink-0"
         >
-          <ShoppingCart className="w-4 h-4" />
+          <ShoppingCart className="w-4 h-4 text-[#059669]" />
           <span>{language === 'BN' ? 'ব্যাগে দিন' : 'Add to Bag'}</span>
         </button>
         <button
@@ -562,24 +590,24 @@ export const ProductDetailScreen: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveInfoModal(null)}
-              className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+              className="absolute inset-0 bg-[#0F1D17]/55 backdrop-blur-xs"
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-              className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-3"
+              className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-3 border-t border-[#DFEAE3]"
             >
-              <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-[#C5D8CE] rounded-full mx-auto" />
 
             {activeInfoModal === 'review' ? (
               <form onSubmit={handleReviewSubmit} className="space-y-3">
-                <h3 className="text-sm leading-5 font-semibold text-slate-900">
+                <h3 className="text-sm leading-5 font-semibold text-[#0F1D17]">
                   {language === 'BN' ? 'আপনার রিভিউ দিন' : 'Write a Verified Review'}
                 </h3>
                 <div>
-                  <span className="block text-xs leading-4 font-medium text-slate-500 mb-1">
+                  <span className="block text-xs leading-4 font-medium text-[#485B52] mb-1">
                     Rating
                   </span>
                   <div className="flex items-center gap-1">
@@ -594,7 +622,7 @@ export const ProductDetailScreen: React.FC = () => {
                           className={`w-6 h-6 ${
                             star <= reviewRating
                               ? 'fill-amber-400 text-amber-400'
-                              : 'text-slate-300'
+                              : 'text-[#C5D8CE]'
                           }`}
                         />
                       </button>
@@ -602,7 +630,7 @@ export const ProductDetailScreen: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs leading-4 font-medium text-slate-700 mb-1">
+                  <label className="block text-xs leading-4 font-medium text-[#374740] mb-1">
                     Your Experience
                   </label>
                   <textarea
@@ -611,14 +639,14 @@ export const ProductDetailScreen: React.FC = () => {
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
                     placeholder="Share your experience with product quality and landed delivery..."
-                    className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 text-slate-900 focus:outline-none focus:border-slate-900"
+                    className="w-full p-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs leading-4 text-[#0F1D17] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setActiveInfoModal(null)}
-                    className="flex-1 h-10 rounded-xl border border-slate-200 text-xs leading-4 font-semibold text-slate-600"
+                    className="flex-1 h-10 rounded-xl border border-[#DFEAE3] text-xs leading-4 font-semibold text-[#374740]"
                   >
                     Cancel
                   </button>
@@ -633,11 +661,11 @@ export const ProductDetailScreen: React.FC = () => {
             ) : activeInfoModal === 'supplier' ? (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
                     <Store className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm leading-5 font-semibold text-slate-900">
+                    <h3 className="text-sm leading-5 font-semibold text-[#0F1D17]">
                       {selectedProduct.supplierName}
                     </h3>
                     <p className="text-xs leading-4 text-[#059669] font-medium">
@@ -645,21 +673,21 @@ export const ProductDetailScreen: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-2 border-y border-slate-100 text-xs leading-4">
-                  <span className="text-slate-500">
+                <div className="flex items-center justify-between py-2 border-y border-[#EAF0EC] text-xs leading-4">
+                  <span className="text-[#485B52]">
                     Catalog:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#0F1D17]">
                       {selectedProduct.supplierProductsCount}
                     </strong>
                   </span>
-                  <span className="text-slate-500">
+                  <span className="text-[#485B52]">
                     Followers:{' '}
-                    <strong className="font-mono-num text-slate-900">
+                    <strong className="font-mono-num text-[#0F1D17]">
                       {selectedProduct.supplierFollowers}
                     </strong>
                   </span>
                 </div>
-                <p className="text-xs leading-4 text-slate-600">
+                <p className="text-xs leading-4 text-[#374740]">
                   All shipments from {selectedProduct.supplierName} undergo physical QC verification before boarding air freight.
                 </p>
                 <button
@@ -668,7 +696,7 @@ export const ProductDetailScreen: React.FC = () => {
                     setActiveInfoModal(null);
                     navigateTo('supplier_store');
                   }}
-                  className="w-full h-10 rounded-xl bg-slate-900 text-white text-xs leading-4 font-semibold"
+                  className="w-full h-10 rounded-xl bg-[#0F1D17] text-white text-xs leading-4 font-semibold"
                 >
                   Open Supplier Storefront
                 </button>
@@ -676,24 +704,24 @@ export const ProductDetailScreen: React.FC = () => {
             ) : (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
                     <ShieldCheck className="w-5 h-5 text-[#059669]" />
                   </div>
                   <div>
-                    <h3 className="text-sm leading-5 font-semibold text-slate-900">
+                    <h3 className="text-sm leading-5 font-semibold text-[#0F1D17]">
                       Warranty & Return Protection
                     </h3>
-                    <p className="text-xs leading-4 text-slate-500">
+                    <p className="text-xs leading-4 text-[#485B52]">
                       Up to 30 days return · 1 year local warranty
                     </p>
                   </div>
                 </div>
-                <div className="divide-y divide-slate-100 text-xs leading-4 text-slate-900">
+                <div className="divide-y divide-[#EAF0EC] text-xs leading-4 text-[#0F1D17]">
                   <div className="py-2 flex items-start gap-2.5">
                     <RefreshCcw className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold block">Easy Local Return Process</span>
-                      <span className="text-slate-500">
+                      <span className="text-[#485B52]">
                         Drop off at our Dhaka hub or schedule free eCourier pickup within 30 days.
                       </span>
                     </div>
@@ -702,7 +730,7 @@ export const ProductDetailScreen: React.FC = () => {
                     <Clock className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold block">24-Hour bKash / Card Refund</span>
-                      <span className="text-slate-500">
+                      <span className="text-[#485B52]">
                         Refunds are processed within 24 hours of return inspection.
                       </span>
                     </div>
@@ -711,7 +739,7 @@ export const ProductDetailScreen: React.FC = () => {
                     <MessageSquare className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold block">24/7 Claims Support</span>
-                      <span className="text-slate-500">
+                      <span className="text-[#485B52]">
                         Dedicated Bengali & English warranty support team.
                       </span>
                     </div>
@@ -723,7 +751,7 @@ export const ProductDetailScreen: React.FC = () => {
                     setActiveInfoModal(null);
                     showToast('Verified guarantee active on your order', 'info');
                   }}
-                  className="w-full h-10 rounded-xl bg-slate-900 text-white text-xs leading-4 font-semibold"
+                  className="w-full h-10 rounded-xl bg-[#0F1D17] text-white text-xs leading-4 font-semibold"
                 >
                   Close
                 </button>

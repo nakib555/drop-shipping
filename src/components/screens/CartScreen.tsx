@@ -36,25 +36,25 @@ export const CartScreen: React.FC = () => {
 
   if (cart.length === 0) {
     return (
-      <div className="flex-1 p-6 flex flex-col items-center justify-center text-center bg-white">
+      <div className="flex-1 p-6 flex flex-col items-center justify-center text-center bg-[#F5F8F6]">
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.2 }}
-          className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mb-4"
+          className="w-16 h-16 rounded-2xl bg-[#ECFDF5] border border-[#CBE4D6] text-[#059669] flex items-center justify-center mb-4"
         >
           <ShoppingBag className="w-8 h-8" />
         </motion.div>
-        <h2 className="text-base font-bold text-slate-900">
+        <h2 className="text-base font-bold text-[#0F1D17]">
           Your Shopping Bag is Empty
         </h2>
-        <p className="text-xs text-slate-500 mt-1 max-w-[240px]">
+        <p className="text-xs text-[#485B52] mt-1 max-w-[240px]">
           Explore verified global products with customs duty & VAT included upfront.
         </p>
         <button
           type="button"
           onClick={() => navigateTo('home')}
-          className="mt-5 px-5 h-10 rounded-xl bg-slate-900 text-white text-xs font-semibold"
+          className="mt-5 px-5 h-10 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold transition-colors"
         >
           Explore Catalog
         </button>
@@ -63,39 +63,39 @@ export const CartScreen: React.FC = () => {
   }
 
   return (
-    <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F8FAFC]">
+    <div className="p-4 space-y-4 pb-6 flex-1 flex flex-col justify-between bg-[#F5F8F6]">
       <div className="space-y-3.5">
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs leading-4 text-slate-500">
+          <span className="text-xs leading-4 text-[#485B52]">
             Prices include shipping, 10% duty & 15% VAT
           </span>
           <button
             type="button"
             onClick={clearCart}
-            className="text-xs leading-4 font-medium text-slate-500 hover:text-rose-600"
+            className="text-xs leading-4 font-medium text-[#74887E] hover:text-rose-600"
           >
             Clear
           </button>
         </div>
 
         {/* 1. Smart Global Hub Parcel Consolidation Toggle (Saves 25% on International Freight) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 flex items-start justify-between gap-3">
+        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-3.5 flex items-start justify-between gap-3">
           <div className="flex items-start gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0 mt-0.5">
               <Boxes className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h3 className="text-xs leading-4 font-semibold text-slate-900">
+                <h3 className="text-xs leading-4 font-semibold text-[#0F1D17]">
                   Global Hub Parcel Consolidation
                 </h3>
                 {consolidateParcel && cartCount >= 2 && (
-                  <span className="text-[10px] leading-3.5 font-mono-num font-semibold text-[#059669] bg-emerald-50 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] leading-3.5 font-mono-num font-semibold text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded">
                     -{formatPrice(cartTotals.consolidationSavingsBdt)}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] leading-4 text-slate-500 mt-0.5">
+              <p className="text-[11px] leading-4 text-[#485B52] mt-0.5">
                 {cartCount >= 2
                   ? 'Combines your items into 1 pre-cleared export box to save 25% on international air freight.'
                   : 'Add 2+ items to combine into 1 export parcel and save 25% on air freight.'}
@@ -118,7 +118,7 @@ export const CartScreen: React.FC = () => {
               );
             }}
             className={`w-11 h-6 rounded-full transition-colors p-0.5 shrink-0 mt-1 ${
-              consolidateParcel ? 'bg-[#059669]' : 'bg-slate-200'
+              consolidateParcel ? 'bg-[#059669]' : 'bg-[#C5D8CE]'
             }`}
           >
             <div
@@ -130,7 +130,7 @@ export const CartScreen: React.FC = () => {
         </div>
 
         {/* 2. Itemized Bag List with AnimatePresence */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 divide-y divide-slate-100 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#DFEAE3] divide-y divide-[#EAF0EC] overflow-hidden">
           <AnimatePresence initial={false}>
             {cart.map((item) => {
               const prod = products.find((p) => p.id === item.productId);
@@ -157,7 +157,7 @@ export const CartScreen: React.FC = () => {
                     onClick={() =>
                       navigateTo('product_detail', { productId: prod.id })
                     }
-                    className="w-16 h-16 rounded-xl object-contain bg-white p-1.5 border border-slate-100 cursor-pointer shrink-0"
+                    className="w-16 h-16 rounded-xl object-contain bg-[#F8FAF9] p-1.5 border border-[#EAF0EC] cursor-pointer shrink-0"
                   />
 
                   <div className="flex-1 min-w-0">
@@ -166,7 +166,7 @@ export const CartScreen: React.FC = () => {
                         onClick={() =>
                           navigateTo('product_detail', { productId: prod.id })
                         }
-                        className="text-xs font-semibold text-slate-900 truncate cursor-pointer"
+                        className="text-xs font-semibold text-[#0F1D17] truncate cursor-pointer hover:text-[#059669]"
                       >
                         {prod.name}
                       </h3>
@@ -174,40 +174,40 @@ export const CartScreen: React.FC = () => {
                         type="button"
                         aria-label={`Remove ${prod.name}`}
                         onClick={() => removeFromCart(prod.id)}
-                        className="text-slate-400 hover:text-rose-500 p-1 -mr-1"
+                        className="text-[#74887E] hover:text-rose-500 p-1 -mr-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                    <p className="text-[11px] text-[#485B52] mt-0.5 truncate">
                       {item.selectedColor}
                       {item.selectedSize ? ` · EU ${item.selectedSize}` : ''} ·{' '}
                       <span>{route?.name || 'Global Direct'}</span>
                     </p>
 
                     <div className="flex items-center justify-between mt-2">
-                      <span className="font-mono-num text-sm font-bold text-slate-900">
+                      <span className="font-mono-num text-sm font-bold text-[#0F1D17]">
                         {formatPrice(unitLanded * item.quantity)}
                       </span>
 
-                      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/80 rounded-lg p-1">
+                      <div className="flex items-center gap-2 bg-[#F5F8F6] border border-[#DFEAE3] rounded-lg p-1">
                         <button
                           type="button"
                           aria-label="Decrease quantity"
                           onClick={() => updateCartQuantity(prod.id, -1)}
-                          className="w-7 h-7 rounded-md bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs"
+                          className="w-7 h-7 rounded-md bg-white text-[#0F1D17] hover:bg-[#EEF4F0] flex items-center justify-center transition-colors shadow-2xs"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="font-mono-num text-xs font-semibold text-slate-900 min-w-[18px] text-center">
+                        <span className="font-mono-num text-xs font-semibold text-[#0F1D17] min-w-[18px] text-center">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           aria-label="Increase quantity"
                           onClick={() => updateCartQuantity(prod.id, 1)}
-                          className="w-7 h-7 rounded-md bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs"
+                          className="w-7 h-7 rounded-md bg-white text-[#0F1D17] hover:bg-[#EEF4F0] flex items-center justify-center transition-colors shadow-2xs"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -221,9 +221,9 @@ export const CartScreen: React.FC = () => {
         </div>
 
         {/* 3. Promo / Voucher Code & bKash Cashback Engine */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 space-y-2.5">
+        <div className="bg-white rounded-2xl border border-[#DFEAE3] p-3.5 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs leading-4 font-semibold text-slate-900 flex items-center gap-1.5">
+            <span className="text-xs leading-4 font-semibold text-[#0F1D17] flex items-center gap-1.5">
               <Tag className="w-3.5 h-3.5 text-[#059669]" />
               <span>Promo Voucher & MFS Offer</span>
             </span>
@@ -253,11 +253,11 @@ export const CartScreen: React.FC = () => {
               value={voucherInput}
               onChange={(e) => setVoucherInput(e.target.value)}
               placeholder="Enter voucher code (e.g. DESHI10)"
-              className="flex-1 h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-4 uppercase text-slate-900 placeholder:normal-case placeholder:text-slate-400 focus:outline-none focus:border-slate-900"
+              className="flex-1 h-9 px-3 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3] text-xs leading-4 uppercase text-[#0F1D17] placeholder:normal-case placeholder:text-[#74887E] focus:outline-none focus:border-[#059669]"
             />
             <button
               type="submit"
-              className="h-9 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs leading-4 font-semibold shrink-0 transition-colors"
+              className="h-9 px-3.5 rounded-xl bg-[#0F1D17] hover:bg-[#059669] text-white text-xs leading-4 font-semibold shrink-0 transition-colors"
             >
               Apply
             </button>
@@ -282,13 +282,13 @@ export const CartScreen: React.FC = () => {
                   }
                   className={`h-7 px-2.5 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 inline-flex items-center gap-1 border transition-colors ${
                     active
-                      ? 'bg-emerald-50 border-[#059669] text-[#059669]'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                      ? 'bg-[#ECFDF5] border-[#059669] text-[#059669]'
+                      : 'bg-[#F5F8F6] border-[#DFEAE3] text-[#374740] hover:border-[#A7C4B5]'
                   }`}
                 >
                   {active && <CheckCircle2 className="w-3 h-3 shrink-0" />}
                   <span className="font-mono-num font-semibold">{v.code}</span>
-                  <span className="text-slate-400">·</span>
+                  <span className="text-[#74887E]">·</span>
                   <span>{v.desc}</span>
                 </button>
               );
@@ -298,23 +298,23 @@ export const CartScreen: React.FC = () => {
       </div>
 
       {/* 4. Itemized Landed Cost Summary & Proceed to Checkout */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
+      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
         <div className="space-y-1.5 text-xs">
-          <div className="flex justify-between text-slate-500">
+          <div className="flex justify-between text-[#485B52]">
             <span>Factory Items Price ({cartCount} items)</span>
-            <span className="font-mono-num text-slate-900">
+            <span className="font-mono-num text-[#0F1D17]">
               {formatPrice(cartTotals.baseItemsBdt)}
             </span>
           </div>
-          <div className="flex justify-between text-slate-500">
+          <div className="flex justify-between text-[#485B52]">
             <span>International Air Freight</span>
-            <span className="font-mono-num text-slate-900">
+            <span className="font-mono-num text-[#0F1D17]">
               {formatPrice(cartTotals.freightBdt)}
             </span>
           </div>
-          <div className="flex justify-between text-slate-500">
+          <div className="flex justify-between text-[#485B52]">
             <span>BD Customs Duty (10%) & VAT (15%)</span>
-            <span className="font-mono-num text-slate-900">
+            <span className="font-mono-num text-[#0F1D17]">
               {formatPrice(cartTotals.dutyAndVatBdt)}
             </span>
           </div>
@@ -337,12 +337,12 @@ export const CartScreen: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-between text-slate-500">
+          <div className="flex justify-between text-[#485B52]">
             <span>Local Doorstep Delivery (eCourier)</span>
             <span className="font-medium text-[#059669]">Free</span>
           </div>
 
-          <div className="pt-2.5 border-t border-slate-100 flex justify-between items-center text-sm font-semibold text-slate-900">
+          <div className="pt-2.5 border-t border-[#EAF0EC] flex justify-between items-center text-sm font-semibold text-[#0F1D17]">
             <span>Total Landed Payable</span>
             <span className="font-mono-num text-base font-bold text-[#059669]">
               {formatPrice(cartTotals.subtotalBdt)}
@@ -350,7 +350,7 @@ export const CartScreen: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-slate-600 pt-1">
+        <div className="flex items-center gap-2 text-[11px] text-[#374740] pt-1">
           <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0" />
           <span>NBR customs pre-cleared · Zero extra fees on arrival</span>
         </div>

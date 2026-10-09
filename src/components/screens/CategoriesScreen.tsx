@@ -54,83 +54,7 @@ export const CategoriesScreen: React.FC = () => {
     automotive: Car,
   };
 
-  // Screen 1: Clean Single-Grid Category Directory with Live API Counts
-  if (currentScreen === 'categories') {
-    const visibleCategories = CATEGORIES.filter((c) =>
-      c.name.toLowerCase().includes(catSearch.toLowerCase())
-    );
-
-    return (
-      <div className="p-4 space-y-4 pb-6 bg-[#F8FAFC]">
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={catSearch}
-            onChange={(e) => setCatSearch(e.target.value)}
-            placeholder="Search departments..."
-            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200 text-xs leading-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900"
-          />
-        </div>
-
-        {/* All Global Products Banner */}
-        <button
-          type="button"
-          onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-          className="w-full p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between text-left hover:bg-slate-800 transition-colors"
-        >
-          <div>
-            <span className="text-[11px] leading-4 text-emerald-400 font-medium block">
-              Full Cross-Border Catalog
-            </span>
-            <h2 className="text-sm leading-5 font-semibold mt-0.5">
-              {language === 'BN' ? 'সকল গ্লোবাল পণ্য দেখুন' : 'Browse All Global Products'}
-            </h2>
-            <p className="text-xs leading-4 text-slate-300 mt-0.5 font-mono-num">
-              {products.length} verified items · Duty & VAT included
-            </p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
-        </button>
-
-        {/* Clean 2-Column Department Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          {visibleCategories.map((cat, idx) => {
-            const Icon = iconMap[cat.id] || Cpu;
-            const liveCount = products.filter((p) => p.category === cat.id).length;
-            return (
-              <motion.button
-                key={cat.id}
-                type="button"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.03, duration: 0.18 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() =>
-                  navigateTo('category_products', { categoryId: cat.id })
-                }
-                className="bg-white rounded-2xl p-4 border border-slate-200/80 flex flex-col items-start text-left hover:border-slate-300 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mb-3 group-hover:bg-[#059669] group-hover:text-white transition-colors">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-xs leading-4 font-semibold text-slate-900">
-                  {language === 'BN' ? cat.nameBn : cat.name}
-                </h3>
-                <div className="mt-1 text-[11px] leading-4 text-slate-500 flex items-center gap-1">
-                  <span className="font-mono-num">{liveCount} items</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{cat.deliveryRange}</span>
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  // Screen 2: Category Product Listing + Animated Filter Sheet
+  // Compute filtered & paginated products before any early return so all Hooks run unconditionally
   const filtered = products
     .filter((p) => {
       if (selectedCategoryId !== 'all' && p.category !== selectedCategoryId) {
@@ -145,6 +69,8 @@ export const CategoriesScreen: React.FC = () => {
       }
       if (smartFilters.inStockOnly && !p.inStock) return false;
       if (smartFilters.dealsOnly && p.discountPercent <= 0) return false;
+      if (smartFilters.verifiedOnly && (!p.verifiedSupplier || p.dropScore < 8.5))
+        return false;
       if (p.totalLandedBdt > smartFilters.maxPriceBdt) return false;
       return true;
     })
@@ -218,24 +144,129 @@ export const CategoriesScreen: React.FC = () => {
     };
   }, []);
 
+  // Screen 1: Clean Single-Grid Category Directory with Live API Counts
+  if (currentScreen === 'categories') {
+    const visibleCategories = CATEGORIES.filter((c) =>
+      c.name.toLowerCase().includes(catSearch.toLowerCase())
+    );
+
+    return (
+      <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
+        <div className="relative">
+          <Search className="w-4 h-4 text-[#74887E] absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={catSearch}
+            onChange={(e) => setCatSearch(e.target.value)}
+            placeholder="Search departments..."
+            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-[#DFEAE3] text-xs leading-4 text-[#0F1D17] placeholder:text-[#74887E] focus:outline-none focus:border-[#059669]"
+          />
+        </div>
+
+        {/* All Global Products Banner */}
+        <button
+          type="button"
+          onClick={() => navigateTo('category_products', { categoryId: 'all' })}
+          className="w-full p-4 rounded-2xl bg-gradient-to-br from-[#0B1913] via-[#0F241C] to-[#132E24] border border-[#1E3B2E] text-white flex items-center justify-between text-left hover:opacity-95 transition-opacity"
+        >
+          <div>
+            <span className="text-[11px] leading-4 text-[#34D399] font-medium block">
+              Full Cross-Border Catalog
+            </span>
+            <h2 className="text-sm leading-5 font-semibold mt-0.5">
+              {language === 'BN' ? 'সকল গ্লোবাল পণ্য দেখুন' : 'Browse All Global Products'}
+            </h2>
+            <p className="text-xs leading-4 text-[#C2D6CC] mt-0.5 font-mono-num">
+              {products.length} verified items · Duty & VAT included
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#34D399] shrink-0" />
+        </button>
+
+        {/* Clean 2-Column Department Cards with Studio Flagship Showcase */}
+        <div className="grid grid-cols-2 gap-3">
+          {visibleCategories.map((cat, idx) => {
+            const Icon = iconMap[cat.id] || Cpu;
+            const liveCount = products.filter((p) => p.category === cat.id).length;
+            const flagshipItem = products.find((p) => p.category === cat.id);
+            const thumbSrc = cat.featuredImage || flagshipItem?.image;
+
+            return (
+              <motion.button
+                key={cat.id}
+                type="button"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.03, duration: 0.18 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() =>
+                  navigateTo('category_products', { categoryId: cat.id })
+                }
+                className="bg-white rounded-2xl p-3.5 border border-[#DFEAE3] flex flex-col justify-between text-left hover:border-[#A7C4B5] transition-colors group"
+              >
+                <div className="w-full flex items-center justify-between gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center group-hover:bg-[#059669] group-hover:text-white transition-colors shrink-0">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  {thumbSrc && (
+                    <div className="w-12 h-12 rounded-xl bg-[#F8FAF9] border border-[#EAF0EC] overflow-hidden shrink-0">
+                      <img
+                        src={thumbSrc}
+                        alt={cat.name}
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full">
+                  <h3 className="text-xs leading-4 font-semibold text-[#0F1D17] truncate">
+                    {language === 'BN' ? cat.nameBn : cat.name}
+                  </h3>
+                  {cat.subtitle && (
+                    <p className="text-[10px] leading-3.5 text-[#5C7066] truncate mt-0.5">
+                      {cat.subtitle}
+                    </p>
+                  )}
+                  <div className="mt-2 pt-2 border-t border-[#EAF0EC] text-[11px] leading-4 text-[#485B52] flex items-center justify-between gap-1">
+                    <span className="font-mono-num font-semibold text-[#0F1D17]">
+                      {liveCount} items
+                    </span>
+                    <span className="text-[10px] text-[#059669] font-medium">
+                      {cat.deliveryRange}
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Screen 2: Category Product Listing + Animated Filter Sheet
+
   return (
-    <div className="p-4 space-y-4 pb-6 bg-[#F8FAFC]">
+    <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
       {/* Search + Filter Drawer Trigger */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#74887E] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={catSearch}
             onChange={(e) => setCatSearch(e.target.value)}
             placeholder="Search in catalog..."
-            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-slate-200 text-xs leading-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900"
+            className="w-full h-10 pl-9 pr-3 rounded-xl bg-white border border-[#DFEAE3] text-xs leading-4 text-[#0F1D17] placeholder:text-[#74887E] focus:outline-none focus:border-[#059669]"
           />
         </div>
         <button
           type="button"
           onClick={() => setFilterSheetOpen(true)}
-          className="h-10 px-3 rounded-xl bg-white border border-slate-200 text-xs leading-4 font-medium text-slate-700 flex items-center gap-2 hover:border-slate-300"
+          className="h-10 px-3 rounded-xl bg-white border border-[#DFEAE3] text-xs leading-4 font-medium text-[#374740] flex items-center gap-2 hover:border-[#A7C4B5]"
         >
           <SlidersHorizontal className="w-4 h-4 text-[#059669]" />
           <span>Filters</span>
@@ -249,29 +280,29 @@ export const CategoriesScreen: React.FC = () => {
           onClick={() => setSelectedCategoryId('all')}
           className={`relative h-10 px-3.5 rounded-xl text-xs leading-4 font-semibold whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 justify-center transition-colors border ${
             selectedCategoryId === 'all'
-              ? 'text-white border-slate-900'
-              : 'bg-white text-slate-700 border-slate-200/90 hover:border-slate-300'
+              ? 'text-white border-[#0F1D17]'
+              : 'bg-white text-[#374740] border-[#DFEAE3] hover:border-[#A7C4B5]'
           }`}
         >
           {selectedCategoryId === 'all' && (
             <motion.span
               layoutId="catActiveSlidePill"
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 rounded-xl bg-slate-900"
+              className="absolute inset-0 rounded-xl bg-[#0F1D17]"
             />
           )}
           <span className="relative z-10">{language === 'BN' ? 'সব পণ্য' : 'All'}</span>
           <span
             aria-hidden="true"
             className={`relative z-10 ${
-              selectedCategoryId === 'all' ? 'text-slate-400' : 'text-slate-300'
+              selectedCategoryId === 'all' ? 'text-[#5C7066]' : 'text-[#C5D8CE]'
             }`}
           >
             ·
           </span>
           <span
             className={`relative z-10 font-mono-num text-[11px] leading-4 ${
-              selectedCategoryId === 'all' ? 'text-emerald-400' : 'text-slate-400'
+              selectedCategoryId === 'all' ? 'text-[#34D399]' : 'text-[#74887E]'
             }`}
           >
             {products.length}
@@ -288,20 +319,20 @@ export const CategoriesScreen: React.FC = () => {
               onClick={() => setSelectedCategoryId(c.id)}
               className={`relative h-10 px-3.5 rounded-xl text-xs leading-4 font-semibold whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 justify-center transition-colors border ${
                 isSelected
-                  ? 'text-white border-slate-900'
-                  : 'bg-white text-slate-700 border-slate-200/90 hover:border-slate-300'
+                  ? 'text-white border-[#0F1D17]'
+                  : 'bg-white text-[#374740] border-[#DFEAE3] hover:border-[#A7C4B5]'
               }`}
             >
               {isSelected && (
                 <motion.span
                   layoutId="catActiveSlidePill"
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 rounded-xl bg-slate-900"
+                  className="absolute inset-0 rounded-xl bg-[#0F1D17]"
                 />
               )}
               <Icon
                 className={`relative z-10 w-3.5 h-3.5 ${
-                  isSelected ? 'text-emerald-400' : 'text-slate-400'
+                  isSelected ? 'text-[#34D399]' : 'text-[#74887E]'
                 }`}
               />
               <span className="relative z-10">
@@ -310,14 +341,14 @@ export const CategoriesScreen: React.FC = () => {
               <span
                 aria-hidden="true"
                 className={`relative z-10 ${
-                  isSelected ? 'text-slate-400' : 'text-slate-300'
+                  isSelected ? 'text-[#5C7066]' : 'text-[#C5D8CE]'
                 }`}
               >
                 ·
               </span>
               <span
                 className={`relative z-10 font-mono-num text-[11px] leading-4 ${
-                  isSelected ? 'text-emerald-400' : 'text-slate-400'
+                  isSelected ? 'text-[#34D399]' : 'text-[#74887E]'
                 }`}
               >
                 {count}
@@ -344,7 +375,7 @@ export const CategoriesScreen: React.FC = () => {
               className={`h-8 px-3 rounded-lg text-[11px] leading-4 font-medium whitespace-nowrap shrink-0 inline-flex items-center justify-center transition-colors ${
                 sortBy === tab.id
                   ? 'bg-[#059669] text-white'
-                  : 'bg-slate-200/70 text-slate-700 hover:bg-slate-200'
+                  : 'bg-[#E9F1EC] text-[#374740] hover:bg-[#DFEAE3]'
               }`}
             >
               {tab.label}
@@ -397,25 +428,25 @@ export const CategoriesScreen: React.FC = () => {
                 aria-live="polite"
                 className="pt-3 space-y-2.5"
               >
-                <div className="flex items-center justify-between text-[11px] leading-4 text-slate-500 px-0.5">
+                <div className="flex items-center justify-between text-[11px] leading-4 text-[#485B52] px-0.5">
                   <span>
                     Showing{' '}
-                    <strong className="font-mono-num text-slate-900 font-semibold">
+                    <strong className="font-mono-num text-[#0F1D17] font-semibold">
                       {slicedProducts.length}
                     </strong>{' '}
                     of{' '}
-                    <strong className="font-mono-num text-slate-900 font-semibold">
+                    <strong className="font-mono-num text-[#0F1D17] font-semibold">
                       {filtered.length}
                     </strong>{' '}
                     items
                   </span>
-                  <span className="font-mono-num text-slate-400">
+                  <span className="font-mono-num text-[#74887E]">
                     {Math.round((slicedProducts.length / filtered.length) * 100)}%
                     loaded
                   </span>
                 </div>
 
-                <div className="w-full h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-[#DFEAE3] overflow-hidden">
                   <div
                     className="h-full bg-[#059669] rounded-full transition-all duration-300"
                     style={{
@@ -432,7 +463,7 @@ export const CategoriesScreen: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleLoadMore}
-                      className="w-full h-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs leading-4 font-semibold text-slate-900 flex items-center justify-center gap-2 transition-colors shadow-2xs"
+                      className="w-full h-10 rounded-xl bg-white border border-[#DFEAE3] hover:border-[#A7C4B5] text-xs leading-4 font-semibold text-[#0F1D17] flex items-center justify-center gap-2 transition-colors shadow-2xs"
                     >
                       <span>
                         Load More Items ({filtered.length - visibleLimit}{' '}
@@ -441,7 +472,7 @@ export const CategoriesScreen: React.FC = () => {
                     </button>
                   )
                 ) : (
-                  <p className="text-center text-[11px] leading-4 text-slate-400 py-1">
+                  <p className="text-center text-[11px] leading-4 text-[#74887E] py-1">
                     All {filtered.length} items loaded
                   </p>
                 )}
@@ -449,8 +480,8 @@ export const CategoriesScreen: React.FC = () => {
             )}
           </>
         ) : (
-          <div className="bg-white rounded-2xl p-6 text-center border border-slate-200/80">
-            <p className="text-xs leading-4 font-semibold text-slate-900">
+          <div className="bg-white rounded-2xl p-6 text-center border border-[#DFEAE3]">
+            <p className="text-xs leading-4 font-semibold text-[#0F1D17]">
               No products in this filter range
             </p>
             <button
@@ -459,7 +490,7 @@ export const CategoriesScreen: React.FC = () => {
                 setSelectedCategoryId('all');
                 resetSmartFilters();
               }}
-              className="mt-3 h-9 px-4 rounded-lg bg-slate-900 text-white text-xs leading-4 font-medium"
+              className="mt-3 h-9 px-4 rounded-lg bg-[#0F1D17] text-white text-xs leading-4 font-medium"
             >
               Show All Products
             </button>
@@ -476,43 +507,43 @@ export const CategoriesScreen: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setFilterSheetOpen(false)}
-              className="absolute inset-0 bg-black/50 backdrop-blur-xs"
+              className="absolute inset-0 bg-[#0F1D17]/55 backdrop-blur-xs"
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-              className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-4"
+              className="relative z-10 w-full bg-white rounded-t-3xl p-4 shadow-2xl space-y-4 border-t border-[#DFEAE3]"
             >
-              <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-sm leading-5 font-semibold text-slate-900">
+              <div className="w-10 h-1 bg-[#C5D8CE] rounded-full mx-auto" />
+              <div className="flex items-center justify-between border-b border-[#EAF0EC] pb-3">
+                <h3 className="text-sm leading-5 font-semibold text-[#0F1D17]">
                   Filter Catalog
                 </h3>
                 <button
                   type="button"
                   onClick={() => setFilterSheetOpen(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#74887E] hover:bg-[#EEF4F0]"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Max Landed Price Range Slidebar (Up to 250,000 BDT) */}
-              <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 space-y-3">
+              <div className="p-3.5 rounded-2xl bg-[#F5F8F6] border border-[#DFEAE3] space-y-3">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs leading-4 font-medium text-slate-600">
+                  <span className="text-xs leading-4 font-medium text-[#485B52]">
                     Max Total Landed Price
                   </span>
-                  <span className="font-mono-num text-sm leading-5 font-bold text-slate-900">
+                  <span className="font-mono-num text-sm leading-5 font-bold text-[#0F1D17]">
                     {formatPrice(smartFilters.maxPriceBdt)}
                   </span>
                 </div>
 
                 {/* Tactile Range Slider Track */}
                 <div className="relative flex items-center h-7">
-                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-[#DFEAE3] overflow-hidden">
                     <div
                       className="h-full bg-[#059669] rounded-full transition-all duration-75"
                       style={{
@@ -577,8 +608,8 @@ export const CategoriesScreen: React.FC = () => {
                         }
                         className={`h-8 rounded-lg font-mono-num text-[11px] leading-4 font-semibold transition-colors ${
                           active
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-white border border-slate-200/80 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                            ? 'bg-[#0F1D17] text-white'
+                            : 'bg-white border border-[#DFEAE3] text-[#485B52] hover:border-[#A7C4B5] hover:text-[#0F1D17]'
                         }`}
                       >
                         {preset.label}
@@ -590,7 +621,7 @@ export const CategoriesScreen: React.FC = () => {
 
               {/* Toggles */}
               <div className="space-y-1 pt-1">
-                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
+                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-[#374740] cursor-pointer">
                   <span>In Stock & Ready to Ship Only</span>
                   <input
                     type="checkbox"
@@ -605,7 +636,7 @@ export const CategoriesScreen: React.FC = () => {
                   />
                 </label>
 
-                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
+                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-[#374740] cursor-pointer">
                   <span>Deals & Price Drops Only</span>
                   <input
                     type="checkbox"
@@ -620,7 +651,7 @@ export const CategoriesScreen: React.FC = () => {
                   />
                 </label>
 
-                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-slate-700 cursor-pointer">
+                <label className="min-h-[44px] px-1 flex items-center justify-between text-xs leading-4 font-medium text-[#374740] cursor-pointer">
                   <span>Verified Suppliers Only (DropScore 8.5+)</span>
                   <input
                     type="checkbox"
@@ -640,7 +671,7 @@ export const CategoriesScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={resetSmartFilters}
-                  className="min-h-[44px] rounded-xl border border-slate-200 text-xs leading-4 font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="min-h-[44px] rounded-xl border border-[#DFEAE3] text-xs leading-4 font-semibold text-[#374740] hover:bg-[#F5F8F6] transition-colors"
                 >
                   Reset
                 </button>

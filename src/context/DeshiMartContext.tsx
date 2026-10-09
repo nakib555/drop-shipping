@@ -152,8 +152,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [user, setUser] = useState(() => ({
-    fullName: 'John Doe',
-    email: 'john@example.com',
+    fullName: 'Tanvir Ahmed',
+    email: 'tanvir.ahmed@deshimart.bd',
     phone: '+880 1712 345678',
     isLoggedIn: true,
   }));
@@ -637,12 +637,12 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const loginUser = (emailOrPhone: string, fullName?: string) => {
     setUser({
-      fullName: fullName || 'John Doe',
-      email: emailOrPhone.includes('@') ? emailOrPhone : 'john@example.com',
+      fullName: fullName || 'Tanvir Ahmed',
+      email: emailOrPhone.includes('@') ? emailOrPhone : 'tanvir.ahmed@deshimart.bd',
       phone: emailOrPhone.includes('@') ? '+880 1712 345678' : emailOrPhone,
       isLoggedIn: true,
     });
-    showToast('Welcome to DeshiMart!');
+    showToast(`Welcome, ${fullName || 'Tanvir Ahmed'}!`);
     navigateTo('home');
   };
 

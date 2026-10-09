@@ -55,7 +55,7 @@ export const PriceTrackerScreen: React.FC = () => {
     activePointIndex !== null ? coords[activePointIndex] : coords[coords.length - 1];
 
   return (
-    <div className="p-4 space-y-4 pb-6 bg-[#F8FAFC]">
+    <div className="p-4 space-y-4 pb-6 bg-[#F5F8F6]">
       {/* Product Switcher Bar */}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
         {products.slice(0, 16).map((prod) => (
@@ -68,8 +68,8 @@ export const PriceTrackerScreen: React.FC = () => {
             }}
             className={`h-8 px-3 rounded-lg text-xs font-medium whitespace-nowrap border transition-colors ${
               prod.id === selectedProduct.id
-                ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-white text-slate-700 border-slate-200/80'
+                ? 'bg-[#0F1D17] text-white border-[#0F1D17]'
+                : 'bg-white text-[#374740] border-[#DFEAE3] hover:border-[#A7C4B5]'
             }`}
           >
             {prod.name}
@@ -78,23 +78,23 @@ export const PriceTrackerScreen: React.FC = () => {
       </div>
 
       {/* Product Summary Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={selectedProduct.image}
             alt={selectedProduct.name}
             referrerPolicy="no-referrer"
-            className="w-14 h-14 rounded-xl object-contain bg-white p-1 border border-slate-100 shrink-0"
+            className="w-14 h-14 rounded-xl object-contain bg-[#F8FAF9] p-1 border border-[#EAF0EC] shrink-0"
           />
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-slate-900 truncate">
+            <h2 className="text-sm font-semibold text-[#0F1D17] truncate">
               {selectedProduct.name}
             </h2>
             <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="font-mono-num text-base font-semibold text-slate-900">
+              <span className="font-mono-num text-base font-semibold text-[#0F1D17]">
                 {formatPrice(selectedProduct.totalLandedBdt)}
               </span>
-              <span className="font-mono-num text-xs text-slate-400 line-through">
+              <span className="font-mono-num text-xs text-[#74887E] line-through">
                 {formatPrice(selectedProduct.originalLandedBdt)}
               </span>
             </div>
@@ -104,25 +104,25 @@ export const PriceTrackerScreen: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[#059669] text-xs font-medium shrink-0 text-center">
+        <div className="px-2.5 py-1.5 rounded-xl bg-[#ECFDF5] border border-[#CBE4D6] text-[#059669] text-xs font-medium shrink-0 text-center">
           <TrendingDown className="w-4 h-4 mx-auto mb-0.5" />
           <span>Low Price</span>
         </div>
       </div>
 
       {/* Interactive SVG Price History Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3">
+      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xs font-semibold text-slate-900">
+            <h3 className="text-xs font-semibold text-[#0F1D17]">
               Landed Price History ({range})
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[#485B52]">
               Tap any data point to inspect historical landed cost
             </p>
           </div>
           {/* Timeframe Selector */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-[#F5F8F6] border border-[#EAF0EC] p-1 rounded-lg">
             {(['7D', '30D', '90D', '1Y'] as const).map((tf) => (
               <button
                 key={tf}
@@ -133,8 +133,8 @@ export const PriceTrackerScreen: React.FC = () => {
                 }}
                 className={`px-2 py-1 rounded-md text-[11px] font-mono-num font-semibold transition-colors ${
                   range === tf
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white text-[#0F1D17] shadow-2xs'
+                    : 'text-[#485B52] hover:text-[#0F1D17]'
                 }`}
               >
                 {tf}
@@ -145,9 +145,9 @@ export const PriceTrackerScreen: React.FC = () => {
 
         {/* Selected Point Readout */}
         {inspectedPoint && (
-          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-            <span className="text-slate-500">
-              Date: <strong className="text-slate-900 font-semibold">{inspectedPoint.dateLabel}</strong>
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#F2F9F5] border border-[#CBE4D6] text-xs">
+            <span className="text-[#374740]">
+              Date: <strong className="text-[#0F1D17] font-semibold">{inspectedPoint.dateLabel}</strong>
             </span>
             <span className="font-mono-num font-semibold text-[#059669]">
               Landed: {formatPrice(inspectedPoint.priceBdt)}
@@ -163,7 +163,7 @@ export const PriceTrackerScreen: React.FC = () => {
           >
             <defs>
               <linearGradient id="priceAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#059669" stopOpacity="0.22" />
+                <stop offset="0%" stopColor="#059669" stopOpacity="0.24" />
                 <stop offset="100%" stopColor="#059669" stopOpacity="0.0" />
               </linearGradient>
             </defs>
@@ -176,7 +176,7 @@ export const PriceTrackerScreen: React.FC = () => {
                 x2={svgWidth - padX}
                 y1={svgHeight * ratio}
                 y2={svgHeight * ratio}
-                stroke="#E2E8F0"
+                stroke="#DFEAE3"
                 strokeDasharray="3 3"
                 strokeWidth="1"
               />
@@ -215,7 +215,7 @@ export const PriceTrackerScreen: React.FC = () => {
                     cx={pt.x}
                     cy={pt.y}
                     r={isSelected ? 5 : 3.5}
-                    fill={isSelected ? '#0F172A' : '#FFFFFF'}
+                    fill={isSelected ? '#0F1D17' : '#FFFFFF'}
                     stroke="#059669"
                     strokeWidth="2.5"
                   />
@@ -223,7 +223,7 @@ export const PriceTrackerScreen: React.FC = () => {
                     x={pt.x}
                     y={svgHeight - 4}
                     textAnchor="middle"
-                    className="fill-slate-400 text-[9px] font-mono-num"
+                    className="fill-[#74887E] text-[9px] font-mono-num"
                   >
                     {pt.dateLabel}
                   </text>
@@ -234,17 +234,17 @@ export const PriceTrackerScreen: React.FC = () => {
         </div>
 
         {/* 30-Day Low & Verdict Summary */}
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <div className="p-2.5 rounded-xl bg-slate-50">
-            <span className="block text-[10px] text-slate-500">
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#EAF0EC]">
+          <div className="p-2.5 rounded-xl bg-[#F5F8F6] border border-[#EAF0EC]">
+            <span className="block text-[10px] text-[#485B52]">
               Lowest Price in 30 Days
             </span>
-            <span className="font-mono-num text-sm font-semibold text-slate-900">
+            <span className="font-mono-num text-sm font-semibold text-[#0F1D17]">
               {formatPrice(selectedProduct.lowest30dBdt)}
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-slate-50">
-            <span className="block text-[10px] text-slate-500">
+          <div className="p-2.5 rounded-xl bg-[#F2F9F5] border border-[#CBE4D6]">
+            <span className="block text-[10px] text-[#047857]">
               Price Assessment
             </span>
             <span className="text-xs font-semibold text-[#059669] flex items-center gap-1 mt-0.5">
@@ -256,14 +256,14 @@ export const PriceTrackerScreen: React.FC = () => {
       </div>
 
       {/* Price Drop Alert Toggle Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-[#DFEAE3] p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
             <Bell className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-slate-900">Price Drop Alert</h3>
-            <p className="text-[11px] text-slate-500">
+            <h3 className="text-xs font-semibold text-[#0F1D17]">Price Drop Alert</h3>
+            <p className="text-[11px] text-[#485B52]">
               Notify me when landed cost drops further
             </p>
           </div>
@@ -274,7 +274,7 @@ export const PriceTrackerScreen: React.FC = () => {
           aria-checked={isAlertEnabled}
           onClick={() => togglePriceAlert(selectedProduct.id)}
           className={`w-12 h-7 rounded-full p-1 transition-colors ${
-            isAlertEnabled ? 'bg-[#059669]' : 'bg-slate-300'
+            isAlertEnabled ? 'bg-[#059669]' : 'bg-[#C5D8CE]'
           }`}
         >
           <div
@@ -290,7 +290,7 @@ export const PriceTrackerScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('seller_compare')}
-          className="h-11 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-900 flex items-center justify-center gap-1.5 hover:bg-slate-50"
+          className="h-11 rounded-xl border border-[#DFEAE3] bg-white text-xs font-semibold text-[#0F1D17] flex items-center justify-center gap-1.5 hover:bg-[#F5F8F6]"
         >
           <Scale className="w-4 h-4 text-[#059669]" />
           <span>Compare Routes</span>

@@ -39,7 +39,18 @@ interface FakeStoreProduct {
   };
 }
 
-const SESSION_CACHE_KEY = 'deshimart_api_catalog_v2';
+const SESSION_CACHE_KEY = 'deshimart_api_catalog_v3';
+
+const CATEGORY_HS_CODES: Record<CategoryId, string> = {
+  all: '8517.62.00',
+  electronics: '8517.62.00',
+  fashion: '6203.42.00',
+  home_living: '8516.71.00',
+  beauty_health: '3304.99.00',
+  sports_outdoor: '9506.91.00',
+  toys_games: '9503.00.00',
+  automotive: '8525.89.00',
+};
 
 function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
   const cat = rawCategory.toLowerCase();
@@ -73,8 +84,7 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
   if (
     cat.includes('furniture') ||
     cat.includes('home-decoration') ||
-    cat.includes('kitchen') ||
-    cat.includes('groceries')
+    cat.includes('kitchen')
   ) {
     return 'home_living';
   }
@@ -108,11 +118,11 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
 }
 
 const ORIGIN_HUBS = [
-  { originLabel: 'China · Verified Factory', warehouse: 'Shenzhen Export Hub', supplier: 'Shenzhen Direct Co.' },
-  { originLabel: 'South Korea · Official Hub', warehouse: 'Incheon Air Hub', supplier: 'Seoul Global Trade' },
-  { originLabel: 'Singapore · Regional Hub', warehouse: 'Changi Logistics Hub', supplier: 'SingaPort Direct' },
-  { originLabel: 'Japan · Inspected Exporter', warehouse: 'Tokyo Narita Hub', supplier: 'Nihon Craft Exports' },
-  { originLabel: 'Malaysia · Direct Hub', warehouse: 'Kuala Lumpur Air Hub', supplier: 'Malay Global Hub' },
+  { originLabel: 'China · Verified Factory', corridorTag: 'Shenzhen Air', warehouse: 'Shenzhen Export Hub', supplier: 'Shenzhen Direct Co.' },
+  { originLabel: 'South Korea · Official Hub', corridorTag: 'Seoul Direct', warehouse: 'Incheon Air Hub', supplier: 'Seoul Global Trade' },
+  { originLabel: 'Singapore · Regional Hub', corridorTag: 'Singapore Hub', warehouse: 'Changi Logistics Hub', supplier: 'SingaPort Direct' },
+  { originLabel: 'Japan · Inspected Exporter', corridorTag: 'Tokyo Air', warehouse: 'Tokyo Narita Hub', supplier: 'Nihon Craft Exports' },
+  { originLabel: 'Malaysia · Direct Hub', corridorTag: 'KL Express', warehouse: 'Kuala Lumpur Air Hub', supplier: 'Malay Global Hub' },
 ];
 
 function buildNormalizedProduct(params: {
@@ -125,6 +135,7 @@ function buildNormalizedProduct(params: {
   rating: number;
   reviewCount: number;
   image: string;
+  gallery?: string[];
   brand: string;
   weightGrams: number;
   warranty: string;
@@ -142,6 +153,7 @@ function buildNormalizedProduct(params: {
     rating,
     reviewCount,
     image,
+    gallery,
     brand,
     weightGrams,
     warranty,
@@ -193,6 +205,9 @@ function buildNormalizedProduct(params: {
     subtitle: `${brand} · ${shortDesc}`,
     category,
     image,
+    gallery: gallery && gallery.length > 0 ? gallery : [image],
+    hsCode: CATEGORY_HS_CODES[category] || '8517.62.00',
+    corridorTag: hub.corridorTag,
     originLabel: hub.originLabel,
     verifiedSupplier: true,
     supplierName: brand && brand !== 'Global Direct' ? `${brand} Official Hub` : hub.supplier,
@@ -380,9 +395,15 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
 
   if (dummyResult.status === 'fulfilled' && dummyResult.value?.products) {
     dummyResult.value.products.forEach((item, idx) => {
+      if ((item.category || '').toLowerCase().includes('groceries')) {
+        return;
+      }
       const category = mapExternalCategory(item.category || '', item.title || '');
       const primaryImage =
         item.thumbnail || (Array.isArray(item.images) && item.images[0]) || '';
+      const rawGallery = Array.isArray(item.images)
+        ? Array.from(new Set([primaryImage, ...item.images].filter(Boolean))).slice(0, 4)
+        : [primaryImage];
 
       const reviews = Array.isArray(item.reviews)
         ? item.reviews.slice(0, 3).map((rv) => ({
@@ -406,6 +427,7 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
           rating: Number(item.rating) || 4.6,
           reviewCount: 45 + ((item.id * 17) % 420),
           image: primaryImage,
+          gallery: rawGallery,
           brand: item.brand || 'Global Direct',
           weightGrams: Math.max(120, Math.round((item.weight || 4) * 110)),
           warranty:

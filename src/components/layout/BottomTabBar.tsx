@@ -86,7 +86,7 @@ export const BottomTabBar: React.FC = () => {
   return (
     <nav
       aria-label="Primary Bottom Navigation"
-      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-slate-200/80 grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
+      className="z-30 h-16 bg-white/95 backdrop-blur-md border-t border-[#DFEAE3] grid grid-cols-5 items-center px-2 gap-1 shrink-0 select-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -100,8 +100,8 @@ export const BottomTabBar: React.FC = () => {
             onClick={() => navigateTo(tab.id)}
             className={`relative h-14 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors ${
               isActive
-                ? 'text-[#059669]'
-                : 'text-slate-500 hover:text-slate-900'
+                ? 'text-[#059669] bg-[#ECFDF5]/50'
+                : 'text-[#5C7066] hover:text-[#0F1D17]'
             }`}
           >
             {isActive && (
@@ -132,7 +132,7 @@ export const BottomTabBar: React.FC = () => {
             </div>
             <span
               className={`text-[10px] leading-3 tracking-tight whitespace-nowrap ${
-                isActive ? 'font-semibold text-slate-900' : 'font-normal text-slate-500'
+                isActive ? 'font-semibold text-[#0F1D17]' : 'font-medium text-[#5C7066]'
               }`}
             >
               {language === 'BN' ? tab.labelBn : tab.label}

@@ -100,7 +100,7 @@ export const TopAppBar: React.FC = () => {
 
   // 8pt Grid: h-14 (56px = 7*8), px-4 (16px = 2*8), gap-2 (8px), w-10 h-10 (40px)
   return (
-    <header className="sticky top-0 z-30 h-14 px-4 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between gap-2 shrink-0">
+    <header className="sticky top-0 z-30 h-14 px-4 bg-white/95 backdrop-blur-md border-b border-[#DFEAE3] flex items-center justify-between gap-2 shrink-0">
       {/* Left Zone */}
       <div className="flex items-center gap-2 min-w-0">
         {isHome ? (
@@ -109,7 +109,7 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label="Open navigation menu"
               onClick={() => setDrawerOpen(true)}
-              className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+              className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -118,10 +118,10 @@ export const TopAppBar: React.FC = () => {
               onClick={() => navigateTo('home')}
               className="flex items-center gap-2 text-left"
             >
-              <div className="w-7 h-7 rounded-lg bg-[#059669] text-white flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-[#059669] text-white flex items-center justify-center shadow-2xs">
                 <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
               </div>
-              <span className="text-base leading-5 font-bold tracking-tight text-slate-900">
+              <span className="text-base leading-5 font-bold tracking-tight text-[#0F1D17]">
                 DeshiMart
               </span>
             </button>
@@ -131,7 +131,7 @@ export const TopAppBar: React.FC = () => {
             type="button"
             aria-label="Go back"
             onClick={goBack}
-            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -140,7 +140,7 @@ export const TopAppBar: React.FC = () => {
 
       {/* Center Zone (Sub-screens) */}
       {!isHome && (
-        <h1 className="text-sm leading-5 font-semibold text-slate-900 truncate text-center flex-1">
+        <h1 className="text-sm leading-5 font-semibold text-[#0F1D17] truncate text-center flex-1">
           {getScreenTitle()}
         </h1>
       )}
@@ -152,11 +152,11 @@ export const TopAppBar: React.FC = () => {
             type="button"
             aria-label="Toggle wishlist"
             onClick={() => toggleWishlist(selectedProduct.id)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-[#0F1D17] hover:bg-[#EFF4F1] transition-colors"
           >
             <Heart
               className={`w-4 h-4 ${
-                isProductLiked ? 'fill-rose-500 text-rose-500' : 'text-slate-700'
+                isProductLiked ? 'fill-[#E11D48] text-[#E11D48]' : 'text-[#0F1D17]'
               }`}
             />
           </button>
@@ -167,7 +167,7 @@ export const TopAppBar: React.FC = () => {
             type="button"
             aria-label="Search products"
             onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-            className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors"
+            className="w-10 h-10 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] transition-colors"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -177,7 +177,7 @@ export const TopAppBar: React.FC = () => {
           type="button"
           aria-label="Notifications"
           onClick={() => navigateTo('notifications')}
-          className="relative w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors"
+          className="relative w-10 h-10 rounded-xl hover:bg-[#EFF4F1] flex items-center justify-center text-[#0F1D17] transition-colors"
         >
           <Bell className="w-4 h-4" />
           {unreadNotificationCount > 0 && (
@@ -189,7 +189,7 @@ export const TopAppBar: React.FC = () => {
           type="button"
           aria-label="Shopping bag"
           onClick={() => navigateTo('cart')}
-          className="relative w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors"
+          className="relative w-10 h-10 rounded-xl hover:bg-[#EFF4F1] text-[#0F1D17] flex items-center justify-center transition-colors"
         >
           <ShoppingCart className="w-4 h-4" />
           {cartCount > 0 && (

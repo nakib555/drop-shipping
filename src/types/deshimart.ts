@@ -44,9 +44,11 @@ export interface CategoryItem {
   id: CategoryId;
   name: string;
   nameBn: string;
+  subtitle?: string;
   productCount: number;
   deliveryRange: string;
   accentColor: string;
+  featuredImage?: string;
 }
 
 export interface SellerRoute {
@@ -90,6 +92,9 @@ export interface Product {
   subtitle: string;
   category: CategoryId;
   image: string;
+  gallery?: string[];
+  hsCode?: string;
+  corridorTag?: string;
   originLabel: string;
   verifiedSupplier: boolean;
   supplierName: string;
