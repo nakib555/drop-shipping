@@ -9,6 +9,7 @@ import {
   Settings,
   Share2,
   ShoppingBag,
+  ShoppingCart,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { CATEGORIES } from '../../data/catalogData';
@@ -74,15 +75,23 @@ export const TopAppBar: React.FC = () => {
       case 'spec_compare':
         return isBn ? 'স্পেসিফিকেশন তুলনা' : 'Spec Compare';
       case 'cart':
-        return isBn ? `শপিং ব্যাগ (${cartCount})` : `Shopping Bag (${cartCount})`;
+        return isBn
+          ? cartCount > 0
+            ? `আমার কার্ট (${cartCount})`
+            : 'আমার কার্ট'
+          : cartCount > 0
+          ? `My Cart (${cartCount})`
+          : 'My Cart';
       case 'checkout_shipping':
-        return isBn ? 'ডেলিভারি ঠিকানা (১/৩)' : 'Delivery Address (1/3)';
+        return isBn ? 'ডেলিভারি ঠিকানা (১/৪)' : 'Delivery Address (1/4)';
+      case 'checkout_delivery':
+        return isBn ? 'ডেলিভারি পদ্ধতি (২/৪)' : 'Delivery Method (2/4)';
       case 'checkout_payment':
-        return isBn ? 'পেমেন্ট মাধ্যম (২/৩)' : 'Payment Method (2/3)';
+        return isBn ? 'পেমেন্ট মাধ্যম (৩/৪)' : 'Payment Method (3/4)';
       case 'checkout_review':
-        return isBn ? 'অর্ডার রিভিউ (৩/৩)' : 'Review Order (3/3)';
+        return isBn ? 'অর্ডার রিভিউ (৪/৪)' : 'Order Review (4/4)';
       case 'order_success':
-        return isBn ? 'অর্ডার সফল' : 'Order Confirmed';
+        return isBn ? 'অর্ডার নিশ্চিতকরণ' : 'Order Confirmation';
       case 'orders':
         return isBn ? 'আমার অর্ডার' : 'My Orders';
       case 'order_tracking':
@@ -251,13 +260,13 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={
                 cartCount > 0
-                  ? `Shopping bag with ${cartCount} items`
-                  : 'Shopping bag'
+                  ? `Shopping cart with ${cartCount} items`
+                  : 'Shopping cart'
               }
               onClick={() => navigateTo('cart')}
               className="relative w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
-              <ShoppingBag className="w-4 h-4 stroke-[2]" />
+              <ShoppingCart className="w-4 h-4 stroke-[2]" />
               {cartCount > 0 && (
                 <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-brand-primary text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center">
                   {cartCount}
@@ -265,6 +274,28 @@ export const TopAppBar: React.FC = () => {
               )}
             </button>
           </>
+        )}
+
+        {currentScreen === 'cart' && (
+          <button
+            type="button"
+            aria-label={
+              wishlist.length > 0
+                ? `${isBn ? 'উইশলিস্ট' : 'Wishlist'} (${wishlist.length})`
+                : isBn
+                ? 'উইশলিস্ট'
+                : 'Wishlist'
+            }
+            onClick={() => navigateTo('wishlist')}
+            className="relative w-10 h-10 rounded-lg hover:bg-app-subtle flex items-center justify-center text-content-primary active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          >
+            <Heart className="w-4 h-4 stroke-[2]" />
+            {wishlist.length > 0 && (
+              <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full bg-brand-primary text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center">
+                {wishlist.length}
+              </span>
+            )}
+          </button>
         )}
 
         {isNotifications && unreadNotificationCount > 0 && (

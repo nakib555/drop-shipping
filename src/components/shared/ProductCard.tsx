@@ -50,7 +50,7 @@ export const ProductCardGhost: React.FC = () => {
   );
 };
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
   const {
     navigateTo,
     addToCart,
@@ -85,32 +85,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           navigateTo('product_detail', { productId: product.id });
         }
       }}
-      className="group relative bg-white border border-app-border rounded-2xl overflow-hidden flex flex-col justify-between hover:border-app-borderStrong transition-colors cursor-pointer text-left"
+      className="group relative bg-white border border-app-border rounded-xl overflow-hidden flex flex-col justify-between hover:border-app-borderStrong transition-colors cursor-pointer text-left"
     >
       {/* Clean 1:1 Image Container */}
       <div className="relative w-full aspect-square bg-slate-50 overflow-hidden flex items-center justify-center border-b border-app-border">
-        {/* Top-Right Wishlist Button */}
-        <motion.button
-          type="button"
-          whileTap={{ scale: 1.15 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist(product.id);
-          }}
-          className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors ${
-            isWishlisted
-              ? 'bg-brand-subtle border-brand-border text-brand-primary'
-              : 'bg-white/90 border-app-border text-content-secondary hover:text-brand-primary'
-          }`}
-        >
-          <Heart
-            className={`w-4 h-4 transition-transform duration-150 ${
-              isWishlisted ? 'fill-brand-primary text-brand-primary' : ''
+        {/* Top-Right Wishlist Button (Hidden in compact carousel cards to prevent icon clutter) */}
+        {!compact && (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 1.15 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(product.id);
+            }}
+            className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full backdrop-blur-xs flex items-center justify-center border transition-colors ${
+              isWishlisted
+                ? 'bg-brand-subtle border-brand-border text-brand-primary'
+                : 'bg-white/90 border-app-border text-content-secondary hover:text-brand-primary'
             }`}
-          />
-        </motion.button>
+          >
+            <Heart
+              className={`w-4 h-4 transition-transform duration-150 ${
+                isWishlisted ? 'fill-brand-primary text-brand-primary' : ''
+              }`}
+            />
+          </motion.button>
+        )}
 
         {!imgError ? (
           <>
@@ -145,14 +147,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       {/* Content Container */}
-      <div className="p-3 flex-1 flex flex-col justify-between">
+      <div className={`${compact ? 'p-2.5' : 'p-3'} flex-1 flex flex-col justify-between`}>
         <div>
           {/* Quiet Unboxed Origin & Delivery Metadata */}
           <p className="text-[11px] leading-4 text-content-secondary truncate">
-            {originMeta} ·{' '}
-            <span className="text-brand-primary font-medium">
-              {language === 'BN' ? 'ডিউটিসহ' : 'Duty Paid'}
-            </span>
+            {compact ? (
+              getCleanOriginName(product.originLabel)
+            ) : (
+              <>
+                {originMeta} ·{' '}
+                <span className="text-brand-primary font-medium">
+                  {language === 'BN' ? 'ডিউটিসহ' : 'Duty Paid'}
+                </span>
+              </>
+            )}
           </p>
 
           {/* Product Title */}
@@ -162,9 +170,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Clean Price & Quick-Add Row */}
-        <div className="mt-2.5 pt-2 border-t border-app-border flex items-center justify-between gap-2">
+        <div className="mt-2 pt-2 border-t border-app-border flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <span className="block tabular-nums text-content-primary font-bold text-[15px] leading-5 tracking-tight">
+            <span className="block tabular-nums text-content-primary font-bold text-[14px] leading-5 tracking-tight">
               {formatPrice(landedBdt)}
             </span>
             {product.discountPercent > 0 && (
@@ -174,28 +182,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
           </div>
 
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.92 }}
-            aria-label={`Add ${product.name} to bag`}
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product.id, 1);
-              setJustAdded(true);
-              setTimeout(() => setJustAdded(false), 750);
-            }}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
-              justAdded
-                ? 'bg-brand-primary text-white'
-                : 'bg-brand-subtle hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-border'
-            }`}
-          >
-            {justAdded ? (
-              <Check className="w-4 h-4 stroke-[2.5]" />
-            ) : (
-              <Plus className="w-4 h-4 stroke-[2]" />
-            )}
-          </motion.button>
+          {!compact && (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.92 }}
+              aria-label={`Add ${product.name} to cart`}
+              onClick={(e) => {
+                e.stopPropagation();
+                addToCart(product.id, 1);
+                setJustAdded(true);
+                setTimeout(() => setJustAdded(false), 750);
+              }}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                justAdded
+                  ? 'bg-brand-primary text-white'
+                  : 'bg-brand-subtle hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-border'
+              }`}
+            >
+              {justAdded ? (
+                <Check className="w-4 h-4 stroke-[2.5]" />
+              ) : (
+                <Plus className="w-4 h-4 stroke-[2]" />
+              )}
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>

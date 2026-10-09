@@ -41,6 +41,7 @@ const ScreenRouter: React.FC = () => {
     case 'cart':
       return <CartScreen />;
     case 'checkout_shipping':
+    case 'checkout_delivery':
     case 'checkout_payment':
     case 'checkout_review':
     case 'order_success':

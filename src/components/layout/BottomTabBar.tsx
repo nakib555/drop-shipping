@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import {
   Grid,
+  Heart,
   Home,
   Package,
   ShoppingCart,
@@ -15,16 +16,33 @@ export const BottomTabBar: React.FC = () => {
     currentScreen,
     navigateTo,
     cartCount,
-    orders,
+    wishlist,
     unreadNotificationCount,
     language,
   } = useDeshiMart();
 
-  const hiddenScreens: ScreenId[] = ['splash', 'onboarding', 'auth'];
+  const checkoutAndOnboardingScreens: ScreenId[] = [
+    'splash',
+    'onboarding',
+    'auth',
+    'checkout_shipping',
+    'checkout_delivery',
+    'checkout_payment',
+    'checkout_review',
+    'order_success',
+    'order_tracking',
+  ];
 
-  if (hiddenScreens.includes(currentScreen)) {
+  // Hide BottomTabBar on checkout/tracking screens and when Cart is populated (so sticky checkout CTA has full bottom clearance).
+  // Keep BottomTabBar visible on the Empty Cart screen.
+  if (
+    checkoutAndOnboardingScreens.includes(currentScreen) ||
+    (currentScreen === 'cart' && cartCount > 0)
+  ) {
     return null;
   }
+
+  const isEmptyCartScreen = currentScreen === 'cart' && cartCount === 0;
 
   const tabs: {
     id: ScreenId;
@@ -44,8 +62,8 @@ export const BottomTabBar: React.FC = () => {
     },
     {
       id: 'categories',
-      label: 'Catalog',
-      labelBn: 'ক্যাটালগ',
+      label: 'Categories',
+      labelBn: 'ক্যাটাগরি',
       icon: Grid,
       matchScreens: [
         'categories',
@@ -57,21 +75,31 @@ export const BottomTabBar: React.FC = () => {
         'spec_compare',
       ],
     },
-    {
-      id: 'orders',
-      label: 'Orders',
-      labelBn: 'অর্ডার',
-      icon: Package,
-      matchScreens: ['orders', 'order_tracking'],
-    },
+    isEmptyCartScreen
+      ? {
+          id: 'wishlist',
+          label: 'Wishlist',
+          labelBn: 'উইশলিস্ট',
+          icon: Heart,
+          matchScreens: ['wishlist'],
+          badge: wishlist.length,
+        }
+      : {
+          id: 'orders',
+          label: 'Orders',
+          labelBn: 'অর্ডার',
+          icon: Package,
+          matchScreens: ['orders', 'order_tracking'],
+        },
     {
       id: 'cart',
-      label: 'Bag',
-      labelBn: 'ব্যাগ',
+      label: 'Cart',
+      labelBn: 'কার্ট',
       icon: ShoppingCart,
       matchScreens: [
         'cart',
         'checkout_shipping',
+        'checkout_delivery',
         'checkout_payment',
         'checkout_review',
         'order_success',
@@ -80,19 +108,19 @@ export const BottomTabBar: React.FC = () => {
     },
     {
       id: 'account',
-      label: 'Account',
-      labelBn: 'অ্যাকাউন্ট',
+      label: 'Profile',
+      labelBn: 'প্রোফাইল',
       icon: User,
       matchScreens: [
         'account',
         'admin_dashboard',
         'addresses',
         'payment_methods',
-        'wishlist',
         'notifications',
         'support',
         'settings',
         'guides',
+        ...(isEmptyCartScreen ? [] : (['wishlist'] as ScreenId[])),
       ],
       hasDot: unreadNotificationCount > 0,
     },
@@ -102,7 +130,7 @@ export const BottomTabBar: React.FC = () => {
     <nav
       role="navigation"
       aria-label="Primary Bottom Navigation"
-      className="z-50 h-16 bg-white/95 backdrop-blur border-t border-app-border flex items-center justify-around px-2 shrink-0 select-none"
+      className="z-50 min-h-[60px] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur border-t border-app-border flex items-center justify-around px-2 shrink-0 select-none"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;

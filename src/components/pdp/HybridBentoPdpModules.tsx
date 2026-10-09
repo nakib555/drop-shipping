@@ -1,9 +1,9 @@
 import React from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Check,
   CheckCircle2,
   ChevronDown,
-  Heart,
   Maximize2,
   Minus,
   Package,
@@ -21,8 +21,10 @@ import { ProductCard } from '../shared/ProductCard';
 
 /* ============================================================================
    1. PRODUCT GALLERY MODULE (Section 4.B)
-   Primary visual anchor: full-bleed 4:3 stage, swipeable, pagination dots,
-   angle thumbnails, optional zoom trigger, and non-obstructing wishlist button.
+   Clean, noise-free visual anchor:
+   - Single zoom button in corner (Wishlist lives in TopAppBar, eliminating duplicate hearts)
+   - No promotional text badge overlapping the product image
+   - Angle thumbnails act as unified pagination (eliminating redundant dots + fraction counter)
    ============================================================================ */
 export interface PdpGalleryProps {
   product: Product;
@@ -30,8 +32,6 @@ export interface PdpGalleryProps {
   activeImageView: number;
   onSelectImageView: (index: number) => void;
   hasDistinctGalleryImages: boolean;
-  isWishlisted: boolean;
-  onToggleWishlist: () => void;
   onOpenZoom: () => void;
 }
 
@@ -41,8 +41,6 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
   activeImageView,
   onSelectImageView,
   hasDistinctGalleryImages,
-  isWishlisted,
-  onToggleWishlist,
   onOpenZoom,
 }) => {
   const [imgError, setImgError] = React.useState(false);
@@ -61,7 +59,7 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
   return (
     <section
       aria-label="Product Image Gallery"
-      className="relative w-full bg-slate-50/90 border-b border-app-border select-none"
+      className="relative w-full bg-slate-50/70 border-b border-app-border select-none"
       onTouchStart={(e) => {
         touchStartXRef.current = e.touches[0]?.clientX ?? null;
       }}
@@ -82,41 +80,15 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
         touchStartXRef.current = null;
       }}
     >
-      {/* Top-Left Product-Specific Promotional Badge (only when relevant) */}
-      {product.discountPercent >= 12 && (
-        <div className="absolute top-3 left-4 z-10 px-2.5 py-1 rounded-md bg-brand-primary text-white text-[11px] font-semibold tabular-nums">
-          -{product.discountPercent}% Landed Drop
-        </div>
-      )}
-
-      {/* Top-Right Non-Obstructing Floating Controls (Zoom + Wishlist) */}
-      <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Zoom product image"
-          onClick={onOpenZoom}
-          className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-xs border border-app-border text-content-secondary hover:text-content-primary active:scale-95 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-        >
-          <Maximize2 className="w-4 h-4 stroke-[2]" />
-        </button>
-        <button
-          type="button"
-          aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-          aria-pressed={isWishlisted}
-          onClick={onToggleWishlist}
-          className={`w-10 h-10 rounded-full backdrop-blur-xs border active:scale-95 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-            isWishlisted
-              ? 'bg-brand-subtle border-brand-border text-brand-primary'
-              : 'bg-white/90 border-app-border text-content-secondary hover:text-brand-primary'
-          }`}
-        >
-          <Heart
-            className={`w-4 h-4 stroke-[2] ${
-              isWishlisted ? 'fill-brand-primary text-brand-primary' : ''
-            }`}
-          />
-        </button>
-      </div>
+      {/* Subtle Zoom Button (Top-Right, non-obstructing) */}
+      <button
+        type="button"
+        aria-label="Zoom product image"
+        onClick={onOpenZoom}
+        className="absolute top-3 right-4 z-10 w-9 h-9 rounded-full bg-white/90 border border-app-border text-content-secondary hover:text-content-primary active:scale-95 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+      >
+        <Maximize2 className="w-4 h-4 stroke-[1.8]" />
+      </button>
 
       {/* Main Product Photography Stage */}
       <div
@@ -144,9 +116,9 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
         )}
       </div>
 
-      {/* Bottom Gallery Bar: Angle Thumbnails + Swipe Pagination Indicators */}
+      {/* Clean Angle Thumbnails Bar (Single unified gallery indicator) */}
       <div className="px-4 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {galleryImages.map((src, idx) => {
             const isSelected = activeImageView === idx;
             return (
@@ -158,8 +130,8 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
                 onClick={() => onSelectImageView(idx)}
                 className={`w-11 h-11 rounded-lg bg-white border p-1 overflow-hidden transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                   isSelected
-                    ? 'border-brand-primary ring-1 ring-brand-primary/20'
-                    : 'border-app-border opacity-75 hover:opacity-100'
+                    ? 'border-brand-primary ring-1 ring-brand-primary/15'
+                    : 'border-app-border opacity-70 hover:opacity-100'
                 }`}
               >
                 <img
@@ -179,27 +151,9 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
           })}
         </div>
 
-        {/* Pagination Indicator Dots & Counter */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {galleryImages.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                aria-label={`Go to image ${idx + 1}`}
-                onClick={() => onSelectImageView(idx)}
-                className={`h-1.5 rounded-full transition-all ${
-                  activeImageView === idx
-                    ? 'w-4 bg-brand-primary'
-                    : 'w-1.5 bg-slate-300'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-[11px] font-medium tabular-nums text-content-secondary">
-            {activeImageView + 1}/{galleryImages.length}
-          </span>
-        </div>
+        <span className="text-[11px] font-medium tabular-nums text-content-muted">
+          {activeImageView + 1} / {galleryImages.length}
+        </span>
       </div>
     </section>
   );
@@ -207,8 +161,7 @@ export const PdpImageGallery: React.FC<PdpGalleryProps> = ({
 
 /* ============================================================================
    2. CORE PRODUCT INFORMATION & PRICE BLOCK (Section 4.C)
-   Unboxed vertical hierarchy directly beneath the gallery:
-   Category breadcrumb -> 2-line title -> rating/review nav + stock -> prominent price.
+   Clean, unboxed vertical hierarchy directly beneath the gallery.
    ============================================================================ */
 export interface PdpCoreInfoBlockProps {
   product: Product;
@@ -221,7 +174,6 @@ export interface PdpCoreInfoBlockProps {
   onOpenPriceHistory: () => void;
   demoElectronicsProduct?: Product;
   demoFashionProduct?: Product;
-  demoHomeProduct?: Product;
   onSwitchDemoProduct: (productId: string) => void;
 }
 
@@ -236,13 +188,12 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
   onOpenPriceHistory,
   demoElectronicsProduct,
   demoFashionProduct,
-  demoHomeProduct,
   onSwitchDemoProduct,
 }) => {
   return (
-    <section aria-label="Core Product Information" className="space-y-3">
-      {/* 1. Category Breadcrumb + Reusable Category Template Switcher (Section 8.6) */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-app-border">
+    <section aria-label="Core Product Information" className="space-y-2.5">
+      {/* 1. Category Breadcrumb + Subtle 2-Tab Category Switcher */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs text-content-secondary min-w-0 truncate">
           <button
             type="button"
@@ -252,116 +203,93 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
             {categoryLabel}
           </button>
           <span aria-hidden="true" className="text-content-muted">
-            /
+            ·
           </span>
           <span className="truncate text-content-secondary">
             {product.originLabel.split('·')[0].trim()}
           </span>
         </div>
 
-        {/* Category Template Switcher (Demonstrating Electronics vs Fashion vs Home reusability) */}
-        <div
-          role="group"
-          aria-label="Switch product category demonstration"
-          className="flex items-center gap-0.5 bg-app-subtle p-0.5 rounded-lg border border-app-border shrink-0"
-        >
-          {demoElectronicsProduct && (
+        {/* Clean 2-Option Category Switcher (Electronics / Fashion) */}
+        {demoElectronicsProduct && demoFashionProduct && (
+          <div
+            role="group"
+            aria-label="Preview category layout"
+            className="flex items-center gap-1 text-[11px] shrink-0"
+          >
             <button
               type="button"
               onClick={() => onSwitchDemoProduct(demoElectronicsProduct.id)}
-              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              className={`px-2 py-0.5 rounded-md transition-colors ${
                 product.category === 'electronics'
-                  ? 'bg-white text-brand-primary font-semibold shadow-2xs'
-                  : 'text-content-secondary hover:text-content-primary'
+                  ? 'bg-brand-subtle text-brand-primary font-semibold'
+                  : 'text-content-muted hover:text-content-secondary'
               }`}
             >
               Electronics
             </button>
-          )}
-          {demoFashionProduct && (
             <button
               type="button"
               onClick={() => onSwitchDemoProduct(demoFashionProduct.id)}
-              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              className={`px-2 py-0.5 rounded-md transition-colors ${
                 product.category === 'fashion'
-                  ? 'bg-white text-brand-primary font-semibold shadow-2xs'
-                  : 'text-content-secondary hover:text-content-primary'
+                  ? 'bg-brand-subtle text-brand-primary font-semibold'
+                  : 'text-content-muted hover:text-content-secondary'
               }`}
             >
               Fashion
             </button>
-          )}
-          {demoHomeProduct && (
-            <button
-              type="button"
-              onClick={() => onSwitchDemoProduct(demoHomeProduct.id)}
-              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                product.category === 'home_living'
-                  ? 'bg-white text-brand-primary font-semibold shadow-2xs'
-                  : 'text-content-secondary hover:text-content-primary'
-              }`}
-            >
-              Home
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* 2. Product Name (Supports two-line titles cleanly) */}
+      {/* 2. Product Name (Supports two-line titles cleanly without uncollapsed subtitle noise) */}
       <div>
         <h1 className="text-[19px] leading-[1.3] font-semibold tracking-tight text-content-primary">
           {language === 'BN' ? product.nameBn : product.name}
         </h1>
-        <p className="text-[13px] leading-[1.45] text-content-secondary mt-1 line-clamp-2">
-          {product.subtitle}
-        </p>
       </div>
 
-      {/* 3 & 6. Star Rating, Review Count, Review Navigation & Meaningful Stock Status */}
-      <div className="flex items-center justify-between gap-2 text-xs">
+      {/* 3 & 6. Star Rating, Review Count, Stock Status & Price History Link */}
+      <div className="flex items-center justify-between gap-2 text-xs pt-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={onScrollToReviews}
-            className="inline-flex items-center gap-1.5 text-content-primary hover:underline focus-visible:outline-none"
+            className="inline-flex items-center gap-1 text-content-primary hover:underline focus-visible:outline-none"
           >
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span className="tabular-nums font-semibold">
               {product.rating.toFixed(1)}
             </span>
             <span className="text-content-secondary tabular-nums">
-              ({product.reviewCount.toLocaleString()} reviews)
+              ({product.reviewCount.toLocaleString()})
             </span>
           </button>
           <span aria-hidden="true" className="text-content-muted">
             ·
           </span>
           <span
-            className={`inline-flex items-center gap-1 font-medium ${
-              product.inStock ? 'text-brand-primary' : 'text-promo-accent'
+            className={`font-medium ${
+              product.inStock ? 'text-brand-primary' : 'text-content-muted'
             }`}
           >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                product.inStock ? 'bg-brand-primary' : 'bg-promo-accent'
-              }`}
-            />
-            {product.inStock ? 'In Stock · Ready to Ship' : 'Currently Out of Stock'}
+            {product.inStock ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
 
         <button
           type="button"
           onClick={onOpenPriceHistory}
-          className="text-xs font-semibold text-brand-primary hover:underline shrink-0"
+          className="text-xs font-medium text-brand-primary hover:underline shrink-0"
         >
           Price History →
         </button>
       </div>
 
-      {/* 4 & 5. Prominent Current Selling Price, Original Price & Informative Discount */}
+      {/* 4 & 5. Prominent Current Selling Price, Original Price & Calm Discount Pill */}
       <div className="pt-1 flex items-baseline justify-between gap-2">
-        <div className="flex items-baseline gap-2.5 flex-wrap">
+        <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-[24px] leading-7 font-bold tracking-tight tabular-nums text-content-primary">
             {formatPrice(totalLandedBdt)}
           </span>
@@ -370,14 +298,14 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
               <span className="text-xs text-content-muted line-through tabular-nums">
                 {formatPrice(product.originalLandedBdt)}
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-brand-subtle border border-brand-border text-[11px] font-semibold text-brand-primary tabular-nums">
-                Save {product.discountPercent}%
+              <span className="px-2 py-0.5 rounded-md bg-brand-subtle text-[11px] font-semibold text-brand-primary tabular-nums">
+                -{product.discountPercent}%
               </span>
             </>
           )}
         </div>
         <span className="text-[11px] text-content-secondary shrink-0">
-          Customs & 15% VAT incl.
+          Customs & VAT included
         </span>
       </div>
     </section>
@@ -386,8 +314,7 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
 
 /* ============================================================================
    3. PRODUCT VARIANT SELECTOR MODULE (Section 4.D)
-   Compact selection chips, swatches, size/compatibility guide, unavailable state,
-   and quantity stepper with 44px touch targets.
+   Compact, unboxed selection chips & swatches with unified emerald active states.
    ============================================================================ */
 export interface PdpVariantSelectorProps {
   product: Product;
@@ -404,6 +331,9 @@ export interface PdpVariantSelectorProps {
   totalLandedBdt: number;
   formatPrice: (bdt: number) => string;
   onOpenSizeGuide: () => void;
+  addingState: 'idle' | 'loading' | 'added';
+  onAddToCart: () => void;
+  onBuyNow: () => void;
 }
 
 export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
@@ -421,6 +351,9 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
   totalLandedBdt,
   formatPrice,
   onOpenSizeGuide,
+  addingState,
+  onAddToCart,
+  onBuyNow,
 }) => {
   const isFashion = product.category === 'fashion' || Boolean(product.sizes?.length);
   const editionOptions =
@@ -441,7 +374,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
               ? 'রঙ / ফিনিশ'
               : isFashion
               ? 'Color / Material'
-              : 'Finish / Colorway'}
+              : 'Color / Finish'}
           </span>
           <span className="font-semibold text-content-primary">
             {selectedColor}
@@ -456,7 +389,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
                 type="button"
                 aria-pressed={active}
                 onClick={() => onSelectColor(c.name)}
-                className={`min-h-[44px] px-3 rounded-lg border flex items-center gap-2 text-xs font-medium active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                className={`min-h-[42px] px-3 rounded-lg border flex items-center gap-2 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                   active
                     ? 'border-brand-primary bg-brand-subtle text-brand-primary font-semibold'
                     : 'border-app-border bg-white text-content-primary hover:border-app-borderStrong'
@@ -474,7 +407,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
         </div>
       </div>
 
-      {/* 2. Size Selection (for Fashion/Apparel) OR Model/Edition Selection (for Electronics/Gear) */}
+      {/* 2. Size Selection (Fashion) OR Model/Configuration Selection (Electronics/Gear) */}
       {product.sizes && product.sizes.length > 0 ? (
         <div>
           <div className="flex items-center justify-between text-xs mb-2">
@@ -487,7 +420,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
             <button
               type="button"
               onClick={onOpenSizeGuide}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-none"
+              className="inline-flex items-center gap-1 text-xs font-medium text-brand-primary hover:underline focus-visible:outline-none"
             >
               <Ruler className="w-3.5 h-3.5" />
               <span>Size Guide</span>
@@ -507,12 +440,12 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
                   onClick={() => {
                     if (!isUnavailable) onSelectSize(sz);
                   }}
-                  className={`min-w-[46px] h-11 px-3 rounded-lg tabular-nums text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  className={`min-w-[44px] h-10 px-3 rounded-lg tabular-nums text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                     isUnavailable
                       ? 'bg-slate-50 text-content-muted border-app-border line-through cursor-not-allowed opacity-60'
                       : active
-                      ? 'bg-brand-primary text-white border-brand-primary'
-                      : 'bg-white text-content-primary border-app-border hover:border-app-borderStrong active:scale-95'
+                      ? 'border-brand-primary bg-brand-subtle text-brand-primary'
+                      : 'bg-white text-content-primary border-app-border hover:border-app-borderStrong'
                   }`}
                 >
                   {sz}
@@ -520,25 +453,20 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
               );
             })}
           </div>
-          {unavailableSize && (
-            <p className="text-[11px] text-content-muted mt-1.5">
-              Size {unavailableSize} is currently unavailable for direct air dispatch.
-            </p>
-          )}
         </div>
       ) : (
         <div>
           <div className="flex items-center justify-between text-xs mb-2">
             <span className="text-content-secondary font-medium">
-              Model / Regional Configuration
+              Configuration
             </span>
             <button
               type="button"
               onClick={onOpenSizeGuide}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline focus-visible:outline-none"
+              className="inline-flex items-center gap-1 text-xs font-medium text-brand-primary hover:underline focus-visible:outline-none"
             >
               <Ruler className="w-3.5 h-3.5" />
-              <span>Compatibility Guide</span>
+              <span>Compatibility</span>
             </button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -555,12 +483,12 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
                   onClick={() => {
                     if (!isUnavailable) onSelectEdition(ed);
                   }}
-                  className={`min-h-[44px] px-3 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  className={`min-h-[40px] px-3 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                     isUnavailable
                       ? 'bg-slate-50 text-content-muted border-app-border line-through cursor-not-allowed opacity-60'
                       : active
                       ? 'border-brand-primary bg-brand-subtle text-brand-primary font-semibold'
-                      : 'border-app-border bg-white text-content-primary hover:border-app-borderStrong active:scale-[0.98]'
+                      : 'border-app-border bg-white text-content-primary hover:border-app-borderStrong'
                   }`}
                 >
                   <span>{ed.replace(' (OOS)', '')}</span>
@@ -572,41 +500,89 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
         </div>
       )}
 
-      {/* 3. Quantity Stepper Row */}
-      <div className="flex items-center justify-between pt-1">
-        <div>
-          <span className="text-xs font-medium text-content-secondary block">
-            {language === 'BN' ? 'পরিমাণ' : 'Quantity'}
-          </span>
-          <span className="text-[11px] text-content-muted tabular-nums">
-            Total for {quantity} {quantity === 1 ? 'unit' : 'units'}:{' '}
-            <strong className="text-content-primary font-semibold">
-              {formatPrice(totalLandedBdt * quantity)}
-            </strong>
-          </span>
+      {/* 3. Unified Mobile Quantity, Landed Price & Purchase Actions Card */}
+      <div className="p-3.5 rounded-2xl bg-app-bg border border-app-border space-y-3">
+        {/* Top Row: Live Landed Price Summary + Ergonomic Quantity Stepper */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-[11px] text-content-secondary">
+              <span className="font-medium">
+                {language === 'BN' ? 'পরিমাণ ও ল্যান্ডেড মূল্য' : 'Landed Price'}
+              </span>
+              {quantity > 1 && (
+                <span className="text-content-muted tabular-nums">
+                  ({quantity} × {formatPrice(totalLandedBdt)})
+                </span>
+              )}
+            </div>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-xl font-bold tabular-nums text-content-primary tracking-tight leading-tight">
+                {formatPrice(totalLandedBdt * quantity)}
+              </span>
+              <span className="text-[11px] font-medium text-brand-primary">
+                {language === 'BN' ? 'ডিউটি ও ভ্যাটসহ' : 'Duty & VAT incl.'}
+              </span>
+            </div>
+          </div>
+
+          {/* Ergonomic Mobile Stepper */}
+          <div className="flex items-center gap-1.5 bg-white border border-app-border rounded-xl p-1 shrink-0 shadow-2xs">
+            <button
+              type="button"
+              aria-label="Decrease quantity"
+              disabled={quantity <= 1}
+              onClick={() => onChangeQuantity(Math.max(1, quantity - 1))}
+              className="w-8 h-8 rounded-lg bg-app-bg hover:bg-slate-200/70 active:scale-95 text-content-primary disabled:opacity-35 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              <Minus className="w-3.5 h-3.5 stroke-[2.2]" />
+            </button>
+            <span className="tabular-nums text-sm font-semibold text-content-primary min-w-[28px] text-center select-none">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              aria-label="Increase quantity"
+              disabled={quantity >= 10}
+              onClick={() => onChangeQuantity(Math.min(10, quantity + 1))}
+              className="w-8 h-8 rounded-lg bg-app-bg hover:bg-slate-200/70 active:scale-95 text-content-primary disabled:opacity-35 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-app-subtle border border-app-border rounded-xl p-1">
+        {/* Bottom Row: Mobile-Proportioned Buy Now + Add to Cart Actions */}
+        <div className="grid grid-cols-[1fr_1.35fr] gap-2.5 pt-2.5 border-t border-app-border/80">
           <button
             type="button"
-            aria-label="Decrease quantity"
-            disabled={quantity <= 1}
-            onClick={() => onChangeQuantity(Math.max(1, quantity - 1))}
-            className="w-9 h-9 rounded-lg bg-white text-content-primary hover:bg-slate-50 active:scale-95 disabled:opacity-40 flex items-center justify-center transition-all shadow-2xs"
+            disabled={!product.inStock}
+            onClick={onBuyNow}
+            className="h-11 px-4 rounded-xl border border-brand-border bg-brand-subtle text-brand-primary hover:bg-emerald-100/70 active:scale-[0.98] disabled:opacity-50 font-semibold text-xs flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
           >
-            <Minus className="w-4 h-4" />
+            {language === 'BN' ? 'এখনই কিনুন' : 'Buy Now'}
           </button>
-          <span className="tabular-nums text-xs font-semibold text-content-primary min-w-[28px] text-center">
-            {quantity}
-          </span>
+
           <button
             type="button"
-            aria-label="Increase quantity"
-            disabled={quantity >= 10}
-            onClick={() => onChangeQuantity(Math.min(10, quantity + 1))}
-            className="w-9 h-9 rounded-lg bg-white text-content-primary hover:bg-slate-50 active:scale-95 disabled:opacity-40 flex items-center justify-center transition-all shadow-2xs"
+            disabled={!product.inStock || addingState !== 'idle'}
+            onClick={onAddToCart}
+            className="bg-brand-primary hover:bg-brand-hover active:scale-[0.99] disabled:bg-slate-300 text-white font-semibold rounded-xl h-11 px-4 text-xs flex items-center justify-center gap-2 transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
           >
-            <Plus className="w-4 h-4" />
+            {!product.inStock ? (
+              <span>{language === 'BN' ? 'স্টক নেই' : 'Out of Stock'}</span>
+            ) : addingState === 'loading' ? (
+              <span>{language === 'BN' ? 'যোগ হচ্ছে...' : 'Adding...'}</span>
+            ) : addingState === 'added' ? (
+              <>
+                <Check className="w-4 h-4 stroke-[2.5]" />
+                <span>{language === 'BN' ? 'কার্টে যোগ হয়েছে' : 'Added to Cart'}</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4 stroke-[2]" />
+                <span>{language === 'BN' ? 'কার্টে যোগ করুন' : 'Add to Cart'}</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -616,15 +592,14 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
 
 /* ============================================================================
    4. SELECTIVE BENTO INFORMATION MODULE (Section 4.E & Section 6)
-   Restrained 2x2 Bento Grid (10–20% screen ratio) strictly for secondary
-   logistics, customs pre-clearance, warranty/returns, and verified exporter trust.
+   Restrained, low-noise 2x2 Bento Grid strictly for secondary logistics & trust.
+   Each tile uses a clean icon + label + concise value without heavy icon boxes.
    ============================================================================ */
 export interface PdpSelectiveBentoModuleProps {
   product: Product;
   activeRoute?: SellerRoute;
   shippingBdt: number;
   dutyAndVatBdt: number;
-  resolvedHsCode: string;
   formatPrice: (bdt: number) => string;
   onCompareRoutes: () => void;
   onOpenLandedBreakdown: () => void;
@@ -637,7 +612,6 @@ export const PdpSelectiveBentoModule: React.FC<PdpSelectiveBentoModuleProps> = (
   activeRoute,
   shippingBdt,
   dutyAndVatBdt,
-  resolvedHsCode,
   formatPrice,
   onCompareRoutes,
   onOpenLandedBreakdown,
@@ -646,7 +620,7 @@ export const PdpSelectiveBentoModule: React.FC<PdpSelectiveBentoModuleProps> = (
 }) => {
   return (
     <section
-      aria-label="Delivery, Customs, Return Policy, and Verified Seller Highlights"
+      aria-label="Delivery, Customs, Return Policy, and Seller Highlights"
       className="pt-5 border-t border-app-border"
     >
       <div className="grid grid-cols-2 gap-2.5">
@@ -654,95 +628,79 @@ export const PdpSelectiveBentoModule: React.FC<PdpSelectiveBentoModuleProps> = (
         <button
           type="button"
           onClick={onCompareRoutes}
-          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border active:scale-[0.99] text-left flex flex-col justify-between gap-2 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border text-left flex flex-col justify-between gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-7 h-7 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center">
-              <Truck className="w-4 h-4 stroke-[2]" />
-            </div>
-            <span className="text-[11px] font-semibold text-brand-primary group-hover:underline">
-              {product.routes.length} Routes →
+          <div className="flex items-center justify-between w-full text-content-secondary">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium">
+              <Truck className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+              <span>Delivery</span>
+            </span>
+            <span className="text-[11px] font-medium text-brand-primary">
+              Routes →
             </span>
           </div>
-          <div>
-            <span className="text-[11px] text-content-secondary block">
-              {activeRoute?.name || 'Direct Air Line'}
-            </span>
-            <span className="text-xs font-semibold text-content-primary tabular-nums block mt-0.5">
-              {activeRoute?.deliveryDays || '9–14 days'} · {formatPrice(shippingBdt)}
-            </span>
+          <div className="text-xs font-semibold text-content-primary tabular-nums truncate">
+            {activeRoute?.deliveryDays || '9–14 days'} · {formatPrice(shippingBdt)}
           </div>
         </button>
 
-        {/* Bento Tile 2: Customs & Import Protection */}
+        {/* Bento Tile 2: Customs & Import Duty */}
         <button
           type="button"
           onClick={onOpenLandedBreakdown}
-          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border active:scale-[0.99] text-left flex flex-col justify-between gap-2 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border text-left flex flex-col justify-between gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-7 h-7 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 stroke-[2]" />
-            </div>
-            <span className="text-[11px] font-medium text-content-muted tabular-nums">
-              HS {resolvedHsCode.slice(0, 4)}
+          <div className="flex items-center justify-between w-full text-content-secondary">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+              <span>Customs & VAT</span>
+            </span>
+            <span className="text-[11px] font-medium text-brand-primary">
+              Details →
             </span>
           </div>
-          <div>
-            <span className="text-[11px] text-content-secondary block">
-              Customs & 15% VAT
-            </span>
-            <span className="text-xs font-semibold text-content-primary tabular-nums block mt-0.5">
-              Pre-Cleared ({formatPrice(dutyAndVatBdt)})
-            </span>
+          <div className="text-xs font-semibold text-content-primary tabular-nums truncate">
+            Included ({formatPrice(dutyAndVatBdt)})
           </div>
         </button>
 
-        {/* Bento Tile 3: Return, Refund & Warranty Policy */}
+        {/* Bento Tile 3: Return & Warranty Policy */}
         <button
           type="button"
           onClick={onOpenWarrantyModal}
-          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border active:scale-[0.99] text-left flex flex-col justify-between gap-2 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border text-left flex flex-col justify-between gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-7 h-7 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center">
-              <RefreshCcw className="w-4 h-4 stroke-[2]" />
-            </div>
-            <span className="text-[11px] font-semibold text-brand-primary group-hover:underline">
+          <div className="flex items-center justify-between w-full text-content-secondary">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium">
+              <RefreshCcw className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+              <span>Protection</span>
+            </span>
+            <span className="text-[11px] font-medium text-brand-primary">
               Policy →
             </span>
           </div>
-          <div>
-            <span className="text-[11px] text-content-secondary block">
-              Return & Warranty
-            </span>
-            <span className="text-xs font-semibold text-content-primary truncate block mt-0.5">
-              {product.specs.warranty || '30-Day Dhaka Return'}
-            </span>
+          <div className="text-xs font-semibold text-content-primary truncate">
+            {product.specs.warranty || '30-Day Dhaka Return'}
           </div>
         </button>
 
-        {/* Bento Tile 4: Verified Exporter Information */}
+        {/* Bento Tile 4: Verified Exporter Storefront */}
         <button
           type="button"
           onClick={onOpenSupplierStore}
-          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border active:scale-[0.99] text-left flex flex-col justify-between gap-2 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          className="p-3 rounded-xl bg-app-bg border border-app-border hover:border-brand-border text-left flex flex-col justify-between gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-7 h-7 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center">
-              <Store className="w-4 h-4 stroke-[2]" />
-            </div>
-            <span className="text-[11px] font-semibold text-brand-primary group-hover:underline">
+          <div className="flex items-center justify-between w-full text-content-secondary">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium truncate">
+              <Store className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+              <span className="truncate">Verified Seller</span>
+            </span>
+            <span className="text-[11px] font-medium text-brand-primary shrink-0">
               Store →
             </span>
           </div>
-          <div>
-            <span className="text-[11px] text-content-secondary truncate block">
-              {product.supplierName}
-            </span>
-            <span className="text-xs font-semibold text-content-primary tabular-nums block mt-0.5">
-              {activeRoute?.onTimeRate || '98.4%'} On-Time Dispatch
-            </span>
+          <div className="text-xs font-semibold text-content-primary truncate">
+            {product.supplierName}
           </div>
         </button>
       </div>
@@ -751,17 +709,19 @@ export const PdpSelectiveBentoModule: React.FC<PdpSelectiveBentoModuleProps> = (
 };
 
 /* ============================================================================
-   5. PRODUCT DESCRIPTION, SPECIFICATIONS & CARE ACCORDIONS (Section 4.F)
-   Expandable sections with aligned label-value pairs instead of decorative cards.
+   5. COLLAPSIBLE PRODUCT INFORMATION & DETAILS ACCORDION (Section 4.F)
+   - 4 vertically stacked, full-width accordion rows with independent expansion
+   - Subtle height/opacity animation and chevron rotation
+   - Category-adaptive content for Description, Technical Specifications,
+     Compatibility & Care, and Landed Cost Breakdown (Confirmed vs Estimated)
    ============================================================================ */
-export type PdpAccordionId = 'overview' | 'specs' | 'landed' | 'care';
+export type PdpAccordionId = 'overview' | 'specs' | 'care' | 'landed';
 
 export interface PdpAccordionSectionsProps {
   product: Product;
   activeRoute?: SellerRoute;
-  openSection: PdpAccordionId;
+  openSections: Record<PdpAccordionId, boolean>;
   onToggleSection: (section: PdpAccordionId) => void;
-  specRows: { label: string; value?: string }[];
   baseBdt: number;
   shippingBdt: number;
   dutyBdt: number;
@@ -770,14 +730,14 @@ export interface PdpAccordionSectionsProps {
   resolvedHsCode: string;
   formatPrice: (bdt: number) => string;
   onCompareSpecs: () => void;
+  landedSectionRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const PdpAccordionSections: React.FC<PdpAccordionSectionsProps> = ({
   product,
   activeRoute,
-  openSection,
+  openSections,
   onToggleSection,
-  specRows,
   baseBdt,
   shippingBdt,
   dutyBdt,
@@ -786,235 +746,455 @@ export const PdpAccordionSections: React.FC<PdpAccordionSectionsProps> = ({
   resolvedHsCode,
   formatPrice,
   onCompareSpecs,
+  landedSectionRef,
 }) => {
   const isFashion = product.category === 'fashion' || Boolean(product.sizes?.length);
+  const isElectronics = product.category === 'electronics';
+  const isDomesticRoute =
+    activeRoute?.originCountry?.toLowerCase().includes('bangladesh') ||
+    activeRoute?.originCountry?.toLowerCase().includes('dhaka') ||
+    (dutyBdt === 0 && vatBdt === 0);
+
+  // Category-adaptive factual specification rows (omitting any missing/irrelevant fields)
+  const adaptiveSpecRows = React.useMemo(() => {
+    const rows: { label: string; value?: string }[] = [
+      { label: 'Brand / Supplier', value: product.supplierName },
+      {
+        label: isFashion
+          ? 'Material & Weave'
+          : isElectronics
+          ? 'Display / Form Factor'
+          : 'Primary Construction',
+        value: product.specs.display,
+      },
+      {
+        label: isFashion
+          ? 'Fabric Weight / Density'
+          : isElectronics
+          ? 'Battery / Power Rating'
+          : 'Capacity / Endurance',
+        value: product.specs.battery,
+      },
+      {
+        label: isFashion
+          ? 'Finish & Weather Resistance'
+          : 'Ingress / Build Protection',
+        value: product.specs.waterproof,
+      },
+      {
+        label: isFashion
+          ? 'Fit & Stitching Architecture'
+          : isElectronics
+          ? 'Processor / Core Sensor'
+          : 'Core Mechanism',
+        value: product.specs.heartRate,
+      },
+      {
+        label: isFashion
+          ? 'Origin Standard'
+          : isElectronics
+          ? 'Wireless / Connectivity'
+          : 'System Interface',
+        value: product.specs.gps,
+      },
+      { label: 'Net Parcel Weight', value: product.specs.weight },
+      { label: 'Origin Dispatch Hub', value: product.originLabel },
+      { label: 'Warranty Coverage', value: product.specs.warranty },
+    ];
+    return rows.filter((r) => Boolean(r.value && r.value.trim()));
+  }, [isElectronics, isFashion, product]);
+
+  // Category-adaptive compatibility & care rows (showing only relevant fields per category)
+  const compatibilityAndCareRows = React.useMemo(() => {
+    if (isFashion) {
+      return [
+        {
+          label: 'Size & Fit Standard',
+          value: product.sizes?.length
+            ? `EU ${product.sizes[0]}–${product.sizes[product.sizes.length - 1]} (True-to-Size BD Fit)`
+            : 'Standard Export Fit',
+        },
+        {
+          label: 'Washing & Cleaning',
+          value: 'Gentle hand wash or cold cycle (max 30°C) with mild detergent',
+        },
+        {
+          label: 'Drying & Storage',
+          value: 'Air dry flat in shade; store in a cool, dry wardrobe away from direct heat',
+        },
+        {
+          label: 'Handling Precautions',
+          value: 'Do not bleach or wring; steam or low-heat iron on reverse side only',
+        },
+      ];
+    }
+
+    if (isElectronics) {
+      return [
+        {
+          label: 'System Compatibility',
+          value: 'Compatible with iOS, Android, Windows, and macOS devices',
+        },
+        {
+          label: 'Power & Voltage (BD)',
+          value: '100V–240V AC 50/60Hz auto-switching (compatible with Bangladesh 220V grid)',
+        },
+        {
+          label: 'Cleaning & Maintenance',
+          value: 'Wipe exterior with a dry lint-free microfiber cloth; keep charging contacts dry',
+        },
+        {
+          label: 'Safety Precautions',
+          value: 'Use certified USB-PD / surge-protected adapters; avoid extreme humidity',
+        },
+      ];
+    }
+
+    return [
+      {
+        label: 'Usage & Environment',
+        value: 'Designed for standard household and daily commercial use in Bangladesh',
+      },
+      {
+        label: 'Cleaning & Care',
+        value: 'Wipe clean with a soft damp cloth and mild soap; dry thoroughly after use',
+      },
+      {
+        label: 'Storage & Handling',
+        value: 'Store in a dry, ventilated space away from prolonged direct sunlight',
+      },
+    ];
+  }, [isElectronics, isFashion, product.sizes]);
 
   return (
     <section
-      aria-label="Product Description, Specifications, and Care Information"
-      className="pt-5 border-t border-app-border divide-y divide-app-border"
+      aria-label="Collapsible Product Information and Details"
+      className="pt-4 border-t border-app-border divide-y divide-app-border"
     >
-      {/* 1. Product Description & Key Features */}
-      <div className="py-3 first:pt-0">
+      {/* ===================================================================
+          1. PRODUCT DESCRIPTION & KEY FEATURES
+          =================================================================== */}
+      <div className="py-1 first:pt-0">
         <button
           type="button"
-          aria-expanded={openSection === 'overview'}
-          onClick={() =>
-            onToggleSection(openSection === 'overview' ? 'specs' : 'overview')
-          }
-          className="w-full flex items-center justify-between text-left py-1 focus-visible:outline-none"
+          id="pdp-acc-btn-overview"
+          aria-expanded={openSections.overview}
+          aria-controls="pdp-acc-panel-overview"
+          onClick={() => onToggleSection('overview')}
+          className="w-full min-h-[44px] py-2 flex items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-lg"
         >
           <span className="text-sm font-semibold text-content-primary">
-            Product Description & Key Features
+            1. Product Description & Key Features
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-content-secondary transition-transform ${
-              openSection === 'overview' ? 'rotate-180' : ''
+            className={`w-4 h-4 text-content-secondary shrink-0 transition-transform duration-200 ${
+              openSections.overview ? 'rotate-180 text-brand-primary' : ''
             }`}
           />
         </button>
 
-        {openSection === 'overview' && (
-          <div className="pt-2.5 space-y-2.5 text-xs text-content-secondary leading-relaxed">
-            <p>{product.subtitle}</p>
-            <ul className="space-y-1.5 pt-1">
-              {product.highlights.map((hl) => (
-                <li
-                  key={hl}
-                  className="flex items-center gap-2 text-content-primary font-medium"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                  <span>{hl}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+        <AnimatePresence initial={false}>
+          {openSections.overview && (
+            <motion.div
+              id="pdp-acc-panel-overview"
+              role="region"
+              aria-labelledby="pdp-acc-btn-overview"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="pb-3 pt-1 space-y-3 text-xs text-content-secondary leading-relaxed">
+                <p className="text-content-primary/90">{product.subtitle}</p>
 
-      {/* 2. Technical Specifications, Materials & Dimensions Table */}
-      <div className="py-3">
-        <button
-          type="button"
-          aria-expanded={openSection === 'specs'}
-          onClick={() =>
-            onToggleSection(openSection === 'specs' ? 'overview' : 'specs')
-          }
-          className="w-full flex items-center justify-between text-left py-1 focus-visible:outline-none"
-        >
-          <span className="text-sm font-semibold text-content-primary">
-            {isFashion
-              ? 'Materials, Dimensions & Specifications'
-              : 'Technical Specifications & Dimensions'}
-          </span>
-          <ChevronDown
-            className={`w-4 h-4 text-content-secondary transition-transform ${
-              openSection === 'specs' ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
+                {product.highlights.length > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-semibold text-content-primary block">
+                      Key Features & Benefits
+                    </span>
+                    <ul className="space-y-1.5">
+                      {product.highlights.map((hl) => (
+                        <li
+                          key={hl}
+                          className="flex items-start gap-2 text-content-primary font-medium"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary shrink-0 mt-0.5" />
+                          <span>{hl}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-        {openSection === 'specs' && (
-          <div className="pt-2.5 space-y-2">
-            <div className="divide-y divide-app-border text-xs">
-              {specRows.map((row) => (
-                <div
-                  key={row.label}
-                  className="py-2 flex items-center justify-between gap-4"
-                >
-                  <span className="text-content-secondary">{row.label}</span>
+                <div className="pt-2 border-t border-app-border/70 flex items-center justify-between text-[11px]">
+                  <span className="text-content-secondary">Included in Package</span>
                   <span className="font-medium text-content-primary text-right">
-                    {row.value}
+                    {isElectronics
+                      ? `${product.name}, Charging/Data Accessory & Export Documentation`
+                      : `${product.name} in Moisture-Sealed Export Packaging`}
                   </span>
                 </div>
-              ))}
-              <div className="py-2 flex items-center justify-between gap-4">
-                <span className="text-content-secondary">Origin Corridor</span>
-                <span className="font-medium text-content-primary text-right">
-                  {product.originLabel}
-                </span>
               </div>
-            </div>
-            <div className="pt-1 flex justify-end">
-              <button
-                type="button"
-                onClick={onCompareSpecs}
-                className="text-xs font-semibold text-brand-primary hover:underline"
-              >
-                Compare Side-by-Side →
-              </button>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* 3. Compatibility & Care Instructions */}
-      <div className="py-3">
+      {/* ===================================================================
+          2. TECHNICAL SPECIFICATIONS
+          =================================================================== */}
+      <div className="py-1">
         <button
           type="button"
-          aria-expanded={openSection === 'care'}
-          onClick={() =>
-            onToggleSection(openSection === 'care' ? 'overview' : 'care')
-          }
-          className="w-full flex items-center justify-between text-left py-1 focus-visible:outline-none"
+          id="pdp-acc-btn-specs"
+          aria-expanded={openSections.specs}
+          aria-controls="pdp-acc-panel-specs"
+          onClick={() => onToggleSection('specs')}
+          className="w-full min-h-[44px] py-2 flex items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-lg"
         >
           <span className="text-sm font-semibold text-content-primary">
-            {isFashion
-              ? 'Care Instructions & Fit Guidance'
-              : 'Compatibility & Care Instructions'}
+            2. Technical Specifications
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-content-secondary transition-transform ${
-              openSection === 'care' ? 'rotate-180' : ''
+            className={`w-4 h-4 text-content-secondary shrink-0 transition-transform duration-200 ${
+              openSections.specs ? 'rotate-180 text-brand-primary' : ''
             }`}
           />
         </button>
 
-        {openSection === 'care' && (
-          <div className="pt-2.5 space-y-2 text-xs text-content-secondary leading-relaxed">
-            {isFashion ? (
-              <>
-                <div className="flex justify-between py-1 border-b border-app-border">
-                  <span>Care Method</span>
-                  <span className="font-medium text-content-primary">
-                    Gentle clean · Air dry in shade
-                  </span>
+        <AnimatePresence initial={false}>
+          {openSections.specs && (
+            <motion.div
+              id="pdp-acc-panel-specs"
+              role="region"
+              aria-labelledby="pdp-acc-btn-specs"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="pb-3 pt-1 space-y-2">
+                <div className="divide-y divide-app-border/80 text-xs">
+                  {adaptiveSpecRows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="py-2 first:pt-0 flex items-start justify-between gap-4"
+                    >
+                      <span className="text-content-secondary shrink-0">
+                        {row.label}
+                      </span>
+                      <span className="font-medium text-content-primary text-right">
+                        {row.value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-between py-1 border-b border-app-border">
-                  <span>Sizing Standard</span>
-                  <span className="font-medium text-content-primary">
-                    Standard EU / BD True-to-Size
-                  </span>
+                <div className="pt-1 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={onCompareSpecs}
+                    className="text-xs font-medium text-brand-primary hover:underline"
+                  >
+                    Compare Specifications Side-by-Side →
+                  </button>
                 </div>
-                <div className="flex justify-between py-1">
-                  <span>Packaging</span>
-                  <span className="font-medium text-content-primary">
-                    Moisture-sealed export box
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex justify-between py-1 border-b border-app-border">
-                  <span>Power / Voltage</span>
-                  <span className="font-medium text-content-primary">
-                    100V–240V Auto-Switching (BD Compatible)
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-app-border">
-                  <span>Connectivity</span>
-                  <span className="font-medium text-content-primary">
-                    iOS, Android & Windows / macOS
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span>Maintenance</span>
-                  <span className="font-medium text-content-primary">
-                    Keep dry; clean contacts with microfiber cloth
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* 4. Itemized Landed Cost & Customs Calculation */}
-      <div className="py-3 last:pb-0">
+      {/* ===================================================================
+          3. COMPATIBILITY & CARE
+          =================================================================== */}
+      <div className="py-1">
         <button
           type="button"
-          aria-expanded={openSection === 'landed'}
-          onClick={() =>
-            onToggleSection(openSection === 'landed' ? 'overview' : 'landed')
-          }
-          className="w-full flex items-center justify-between text-left py-1 focus-visible:outline-none"
+          id="pdp-acc-btn-care"
+          aria-expanded={openSections.care}
+          aria-controls="pdp-acc-panel-care"
+          onClick={() => onToggleSection('care')}
+          className="w-full min-h-[44px] py-2 flex items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-lg"
         >
           <span className="text-sm font-semibold text-content-primary">
-            Landed Cost & Customs Breakdown
+            3. Compatibility & Care
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-content-secondary transition-transform ${
-              openSection === 'landed' ? 'rotate-180' : ''
+            className={`w-4 h-4 text-content-secondary shrink-0 transition-transform duration-200 ${
+              openSections.care ? 'rotate-180 text-brand-primary' : ''
             }`}
           />
         </button>
 
-        {openSection === 'landed' && (
-          <div className="pt-2.5 space-y-2 text-xs">
-            <div className="flex justify-between text-content-secondary">
-              <span>Factory Item Price</span>
-              <span className="tabular-nums text-content-primary font-medium">
-                {formatPrice(baseBdt)}
-              </span>
-            </div>
-            <div className="flex justify-between text-content-secondary">
-              <span>
-                International Air Freight ({activeRoute?.deliveryDays || '9–14 days'})
-              </span>
-              <span className="tabular-nums text-content-primary font-medium">
-                {formatPrice(shippingBdt)}
-              </span>
-            </div>
-            <div className="flex justify-between text-content-secondary">
-              <span>Bangladesh Import Duty (10%) & VAT (15%)</span>
-              <span className="tabular-nums text-content-primary font-medium">
-                {formatPrice(dutyBdt + vatBdt)}
-              </span>
-            </div>
-            <div className="flex justify-between text-content-secondary">
-              <span>HS Customs Classification</span>
-              <span className="tabular-nums text-content-secondary">
-                {resolvedHsCode}
-              </span>
-            </div>
-            <div className="pt-2 border-t border-app-border flex justify-between items-center font-semibold text-content-primary">
-              <span>Total Guaranteed Landed Price</span>
-              <span className="tabular-nums text-sm font-bold text-brand-primary">
-                {formatPrice(totalLandedBdt)}
-              </span>
-            </div>
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {openSections.care && (
+            <motion.div
+              id="pdp-acc-panel-care"
+              role="region"
+              aria-labelledby="pdp-acc-btn-care"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="pb-3 pt-1 divide-y divide-app-border/80 text-xs">
+                {compatibilityAndCareRows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="py-2 first:pt-0 last:pb-0 flex items-start justify-between gap-4"
+                  >
+                    <span className="text-content-secondary shrink-0">
+                      {row.label}
+                    </span>
+                    <span className="font-medium text-content-primary text-right leading-relaxed">
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ===================================================================
+          4. LANDED COST BREAKDOWN
+          =================================================================== */}
+      <div ref={landedSectionRef} className="py-1 last:pb-0">
+        <button
+          type="button"
+          id="pdp-acc-btn-landed"
+          aria-expanded={openSections.landed}
+          aria-controls="pdp-acc-panel-landed"
+          onClick={() => onToggleSection('landed')}
+          className="w-full min-h-[44px] py-2 flex items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-lg"
+        >
+          <span className="text-sm font-semibold text-content-primary">
+            4. Landed Cost Breakdown
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-content-secondary shrink-0 transition-transform duration-200 ${
+              openSections.landed ? 'rotate-180 text-brand-primary' : ''
+            }`}
+          />
+        </button>
+
+        <AnimatePresence initial={false}>
+          {openSections.landed && (
+            <motion.div
+              id="pdp-acc-panel-landed"
+              role="region"
+              aria-labelledby="pdp-acc-btn-landed"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="pb-3 pt-1 space-y-2.5 text-xs">
+                <div className="divide-y divide-app-border/80">
+                  <div className="py-1.5 first:pt-0 flex items-center justify-between gap-2">
+                    <span className="text-content-secondary">
+                      Product Base Price{' '}
+                      <span className="text-[10px] text-brand-primary font-medium">
+                        (Confirmed)
+                      </span>
+                    </span>
+                    <span className="tabular-nums text-content-primary font-medium">
+                      {formatPrice(baseBdt)}
+                    </span>
+                  </div>
+
+                  <div className="py-1.5 flex items-center justify-between gap-2">
+                    <span className="text-content-secondary">
+                      {isDomesticRoute
+                        ? 'Local Dhaka Hub Courier'
+                        : `International Freight (${activeRoute?.deliveryDays || '9–14 days'})`}{' '}
+                      <span className="text-[10px] text-brand-primary font-medium">
+                        (Confirmed)
+                      </span>
+                    </span>
+                    <span className="tabular-nums text-content-primary font-medium">
+                      {formatPrice(shippingBdt)}
+                    </span>
+                  </div>
+
+                  {!isDomesticRoute && (
+                    <>
+                      <div className="py-1.5 flex items-center justify-between gap-2">
+                        <span className="text-content-secondary">
+                          Customs Duty (10% · HS {resolvedHsCode}){' '}
+                          <span className="text-[10px] text-content-muted">
+                            (Est.)
+                          </span>
+                        </span>
+                        <span className="tabular-nums text-content-primary font-medium">
+                          {formatPrice(dutyBdt)}
+                        </span>
+                      </div>
+
+                      <div className="py-1.5 flex items-center justify-between gap-2">
+                        <span className="text-content-secondary">
+                          Bangladesh Import VAT (15%){' '}
+                          <span className="text-[10px] text-content-muted">
+                            (Est.)
+                          </span>
+                        </span>
+                        <span className="tabular-nums text-content-primary font-medium">
+                          {formatPrice(vatBdt)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="py-1.5 flex items-center justify-between gap-2">
+                    <span className="text-content-secondary">
+                      Customs Clearance & Handling Fee
+                    </span>
+                    <span className="tabular-nums text-brand-primary font-medium">
+                      Included in Freight
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-app-border flex justify-between items-baseline">
+                  <div>
+                    <span className="font-semibold text-content-primary block">
+                      {isDomesticRoute
+                        ? 'Total Domestic Delivery Cost'
+                        : 'Estimated Landed Cost Total'}
+                    </span>
+                    <span className="text-[10px] text-content-muted">
+                      {isDomesticRoute
+                        ? 'Dispatched from local Dhaka inventory'
+                        : 'Pre-clearance estimate · Subject to final customs assessment'}
+                    </span>
+                  </div>
+                  <span className="tabular-nums text-sm font-bold text-brand-primary">
+                    {formatPrice(totalLandedBdt)}
+                  </span>
+                </div>
+
+                {/* Transparent Assumptions Note */}
+                <p className="text-[11px] leading-relaxed text-content-muted bg-app-bg p-2.5 rounded-lg border border-app-border">
+                  <strong className="text-content-secondary font-medium">
+                    Calculation Basis:
+                  </strong>{' '}
+                  Estimated for delivery to Bangladesh via{' '}
+                  <span className="text-content-secondary font-medium">
+                    {activeRoute?.name || 'Direct Air Line'}
+                  </span>{' '}
+                  ({activeRoute?.originCountry || product.originLabel}) based on
+                  declared item value ({formatPrice(baseBdt)}) and standard HS{' '}
+                  {resolvedHsCode} import tariff rules.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
@@ -1053,7 +1233,7 @@ export const PdpReviewsSection: React.FC<PdpReviewsSectionProps> = ({
         <button
           type="button"
           onClick={onWriteReview}
-          className="text-xs font-semibold text-brand-primary flex items-center gap-1 hover:underline"
+          className="text-xs font-medium text-brand-primary flex items-center gap-1 hover:underline"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Write Review</span>
@@ -1117,7 +1297,7 @@ export const PdpReviewsSection: React.FC<PdpReviewsSectionProps> = ({
                 </span>
                 {rev.verified && (
                   <span className="text-[11px] text-brand-primary font-medium">
-                    · Verified Purchase
+                    · Verified
                   </span>
                 )}
               </div>
@@ -1153,7 +1333,7 @@ export const PdpReviewsSection: React.FC<PdpReviewsSectionProps> = ({
         <button
           type="button"
           onClick={onViewAllReviews}
-          className="w-full h-10 rounded-lg border border-app-border text-xs font-semibold text-content-primary hover:bg-app-subtle transition-colors"
+          className="w-full h-9 rounded-lg border border-app-border text-xs font-semibold text-content-primary hover:bg-app-subtle transition-colors"
         >
           View All {product.reviewCount.toLocaleString()} Reviews
         </button>
@@ -1222,7 +1402,7 @@ export const PdpRelatedCarousel: React.FC<PdpRelatedCarouselProps> = ({
         <button
           type="button"
           onClick={onSeeAllCategory}
-          className="text-xs font-semibold text-brand-primary hover:underline"
+          className="text-xs font-medium text-brand-primary hover:underline"
         >
           See All →
         </button>
@@ -1241,46 +1421,30 @@ export const PdpRelatedCarousel: React.FC<PdpRelatedCarouselProps> = ({
 
 /* ============================================================================
    8. STICKY BOTTOM PURCHASE BAR (Section 4.I)
-   Persistent bottom bar with concise price summary, secondary Buy Now, and
-   high-emphasis Add to Bag button with idle/loading/added/unavailable states.
+   Clean, mobile-proportioned 2-button action bar (Buy Now + Add to Bag)
+   with generous horizontal touch targets.
    ============================================================================ */
 export interface PdpStickyPurchaseBarProps {
   inStock: boolean;
-  quantity: number;
-  totalLandedBdt: number;
   addingState: 'idle' | 'loading' | 'added';
-  formatPrice: (bdt: number) => string;
   onAddToCart: () => void;
   onBuyNow: () => void;
 }
 
 export const PdpStickyPurchaseBar: React.FC<PdpStickyPurchaseBarProps> = ({
   inStock,
-  quantity,
-  totalLandedBdt,
   addingState,
-  formatPrice,
   onAddToCart,
   onBuyNow,
 }) => {
   return (
     <div className="sticky bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur border-t border-app-border px-4 py-2.5 flex items-center gap-3">
-      {/* Concise Price Summary */}
-      <div className="min-w-[88px] shrink-0">
-        <span className="block text-[10px] text-content-secondary">
-          Landed ({quantity}x)
-        </span>
-        <span className="block text-base font-bold tabular-nums text-content-primary leading-tight">
-          {formatPrice(totalLandedBdt * quantity)}
-        </span>
-      </div>
-
-      {/* Optional Buy Now Action */}
+      {/* Secondary Buy Now Action */}
       <button
         type="button"
         disabled={!inStock}
         onClick={onBuyNow}
-        className="h-11 px-3.5 rounded-xl border border-brand-border bg-brand-subtle text-brand-primary hover:bg-emerald-100/70 active:scale-[0.98] disabled:opacity-50 font-semibold text-xs flex items-center justify-center transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+        className="h-11 px-4 rounded-xl border border-brand-border bg-brand-subtle text-brand-primary hover:bg-emerald-100/70 active:scale-[0.98] disabled:opacity-50 font-semibold text-xs flex-1 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
         Buy Now
       </button>
@@ -1290,7 +1454,7 @@ export const PdpStickyPurchaseBar: React.FC<PdpStickyPurchaseBarProps> = ({
         type="button"
         disabled={!inStock || addingState !== 'idle'}
         onClick={onAddToCart}
-        className="bg-brand-primary hover:bg-brand-hover active:scale-[0.99] disabled:bg-slate-300 text-white font-semibold rounded-xl h-11 flex-1 text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+        className="bg-brand-primary hover:bg-brand-hover active:scale-[0.99] disabled:bg-slate-300 text-white font-semibold rounded-xl h-11 flex-[1.45] text-xs flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
         {!inStock ? (
           <span>Out of Stock</span>

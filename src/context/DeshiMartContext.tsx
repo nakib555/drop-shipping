@@ -171,11 +171,32 @@ interface DeshiMartContextValue {
   selectedAddressId: string;
   setSelectedAddressId: (id: string) => void;
   addAddress: (addr: Omit<ShippingAddress, 'id'>) => void;
+  updateAddress: (id: string, addr: Partial<Omit<ShippingAddress, 'id'>>) => void;
   deleteAddress: (id: string) => void;
   shippingMethod: ShippingMethodId;
   setShippingMethod: (m: ShippingMethodId) => void;
   paymentMethod: PaymentMethodId;
   setPaymentMethod: (p: PaymentMethodId) => void;
+  checkoutDraft: {
+    deliveryNote: string;
+    bkashPhone: string;
+    nagadPhone: string;
+    cardHolder: string;
+    cardNumber: string;
+    cardExpiry: string;
+    cardCvv: string;
+  };
+  setCheckoutDraft: React.Dispatch<
+    React.SetStateAction<{
+      deliveryNote: string;
+      bkashPhone: string;
+      nagadPhone: string;
+      cardHolder: string;
+      cardNumber: string;
+      cardExpiry: string;
+      cardCvv: string;
+    }>
+  >;
   orders: Order[];
   selectedOrderId: string;
   selectedOrder: Order;
@@ -437,6 +458,23 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [selectedAddressId, setSelectedAddressId] = useState<string>(INITIAL_ADDRESSES[0].id);
   const [shippingMethod, setShippingMethod] = useState<ShippingMethodId>('standard');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>('cod');
+  const [checkoutDraft, setCheckoutDraft] = useState<{
+    deliveryNote: string;
+    bkashPhone: string;
+    nagadPhone: string;
+    cardHolder: string;
+    cardNumber: string;
+    cardExpiry: string;
+    cardCvv: string;
+  }>({
+    deliveryNote: 'Call upon arrival at gate',
+    bkashPhone: '01712345678',
+    nagadPhone: '01819345678',
+    cardHolder: 'Tanvir Ahmed',
+    cardNumber: '4532 8910 2345 8910',
+    cardExpiry: '12/28',
+    cardCvv: '428',
+  });
 
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [selectedOrderId, setSelectedOrderId] = useState<string>(INITIAL_ORDERS[0].id);
@@ -735,7 +773,13 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const subtotalBdt = Math.max(0, afterConsolidationBdt - promoDiscountBdt);
     const shippingBdt =
-      cart.length === 0 ? 0 : shippingMethod === 'express' ? 800 : 0;
+      cart.length === 0
+        ? 0
+        : shippingMethod === 'express'
+        ? 800
+        : shippingMethod === 'hub_pickup'
+        ? -150
+        : 0;
 
     return {
       baseItemsBdt,
@@ -745,7 +789,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       promoDiscountBdt,
       subtotalBdt,
       shippingBdt,
-      totalBdt: subtotalBdt + shippingBdt,
+      totalBdt: Math.max(0, subtotalBdt + shippingBdt),
     };
   }, [cart, catalogProducts, consolidateParcel, promoCode, promoVouchers, shippingMethod]);
 
@@ -768,6 +812,16 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setAddresses((prev) => [...prev, created]);
     setSelectedAddressId(newId);
     showToast('Delivery address saved');
+  };
+
+  const updateAddress = (
+    id: string,
+    addrUpdates: Partial<Omit<ShippingAddress, 'id'>>
+  ) => {
+    setAddresses((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, ...addrUpdates } : a))
+    );
+    showToast('Delivery address updated');
   };
 
   const deleteAddress = (id: string) => {
@@ -810,17 +864,27 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const newOrder: Order = {
       id: newOrderId,
       placedDate: 'Oct 10, 2026',
-      estimatedDelivery: shippingMethod === 'express' ? '3 – 7 days' : '7 – 14 days',
+      estimatedDelivery:
+        shippingMethod === 'express'
+          ? '3 – 7 days'
+          : shippingMethod === 'hub_pickup'
+          ? '5 – 9 days (Dhaka Hub)'
+          : '7 – 14 days',
       status: 'Processing',
       items: orderItems,
       subtotalBdt: cartTotals.subtotalBdt,
-      shippingBdt: cartTotals.shippingBdt,
-      customsDutyBdt: 0,
+      shippingBdt: Math.max(0, cartTotals.shippingBdt),
+      customsDutyBdt: cartTotals.dutyAndVatBdt,
       totalBdt: cartTotals.totalBdt,
       paymentMethod,
       shippingMethod,
       shippingAddress: chosenAddress,
-      courierName: 'eCourier Bangladesh',
+      courierName:
+        shippingMethod === 'hub_pickup'
+          ? 'DeshiMart Banani Hub Pickup'
+          : shippingMethod === 'express'
+          ? 'DHL / Pathao Priority Air'
+          : 'eCourier Bangladesh',
       trackingCode: `EC${Math.floor(1000000 + Math.random() * 8999999)}BD`,
       milestones: [
         {
@@ -1373,11 +1437,14 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         selectedAddressId,
         setSelectedAddressId,
         addAddress,
+        updateAddress,
         deleteAddress,
         shippingMethod,
         setShippingMethod,
         paymentMethod,
         setPaymentMethod,
+        checkoutDraft,
+        setCheckoutDraft,
         orders,
         selectedOrderId,
         selectedOrder,

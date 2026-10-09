@@ -11,6 +11,7 @@ export type ScreenId =
   | 'spec_compare'
   | 'cart'
   | 'checkout_shipping'
+  | 'checkout_delivery'
   | 'checkout_payment'
   | 'checkout_review'
   | 'order_success'
@@ -157,8 +158,8 @@ export interface CartItem {
   selectedRouteId: string;
 }
 
-export type ShippingMethodId = 'standard' | 'express';
-export type PaymentMethodId = 'cod' | 'bkash' | 'card' | 'paypal';
+export type ShippingMethodId = 'standard' | 'express' | 'hub_pickup';
+export type PaymentMethodId = 'cod' | 'bkash' | 'nagad' | 'card' | 'paypal';
 
 export interface ShippingAddress {
   id: string;

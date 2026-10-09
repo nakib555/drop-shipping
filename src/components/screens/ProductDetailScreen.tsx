@@ -22,7 +22,6 @@ import {
   PdpRelatedCarousel,
   PdpReviewsSection,
   PdpSelectiveBentoModule,
-  PdpStickyPurchaseBar,
   PdpVariantSelector,
 } from '../pdp/HybridBentoPdpModules';
 
@@ -32,8 +31,6 @@ export const ProductDetailScreen: React.FC = () => {
     selectedProduct,
     selectedRouteByProduct,
     recentlyViewedIds,
-    wishlist,
-    toggleWishlist,
     addToCart,
     addProductReview,
     navigateTo,
@@ -57,9 +54,22 @@ export const ProductDetailScreen: React.FC = () => {
   const [activeImageView, setActiveImageView] = useState<number>(0);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [addingState, setAddingState] = useState<'idle' | 'loading' | 'added'>('idle');
-  const [openDescSection, setOpenDescSection] = useState<PdpAccordionId>('overview');
+  const [openSections, setOpenSections] = useState<Record<PdpAccordionId, boolean>>({
+    overview: false,
+    specs: false,
+    care: false,
+    landed: false,
+  });
 
   const reviewsSectionRef = useRef<HTMLElement | null>(null);
+  const landedSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const handleToggleAccordion = (section: PdpAccordionId) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   useEffect(() => {
     setSelectedColor(selectedProduct.colors[0]?.name || 'Standard Edition');
@@ -72,6 +82,12 @@ export const ProductDetailScreen: React.FC = () => {
     setQuantity(1);
     setActiveImageView(0);
     setAddingState('idle');
+    setOpenSections({
+      overview: false,
+      specs: false,
+      care: false,
+      landed: false,
+    });
   }, [selectedProduct]);
 
   const [activeInfoModal, setActiveInfoModal] = useState<
@@ -79,8 +95,6 @@ export const ProductDetailScreen: React.FC = () => {
   >(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
-
-  const isWishlisted = wishlist.includes(selectedProduct.id);
 
   const activeRouteId =
     selectedRouteByProduct[selectedProduct.id] || selectedProduct.routes[0]?.id;
@@ -101,7 +115,7 @@ export const ProductDetailScreen: React.FC = () => {
     [selectedProduct.category]
   );
 
-  // Representative Electronics, Fashion & Home products to demonstrate component reusability (Section 8.6)
+  // Representative Electronics & Fashion products to demonstrate component reusability (Section 8.6)
   const demoCategoryProducts = useMemo(() => {
     const elec =
       products.find((p) => p.category === 'electronics') || products[0];
@@ -109,20 +123,8 @@ export const ProductDetailScreen: React.FC = () => {
       products.find((p) => p.category === 'fashion' && p.sizes && p.sizes.length > 0) ||
       products.find((p) => p.category === 'fashion') ||
       products[1];
-    const home =
-      products.find((p) => p.category === 'home_living') || products[2];
-    return { elec, fash, home };
+    return { elec, fash };
   }, [products]);
-
-  const specRows = [
-    { label: 'Build / Display', value: selectedProduct.specs.display },
-    { label: 'Power / Battery', value: selectedProduct.specs.battery },
-    { label: 'Protection / Finish', value: selectedProduct.specs.waterproof },
-    { label: 'Core Technology', value: selectedProduct.specs.heartRate },
-    { label: 'Connectivity / Tracking', value: selectedProduct.specs.gps },
-    { label: 'Parcel Net Weight', value: selectedProduct.specs.weight },
-    { label: 'Warranty Coverage', value: selectedProduct.specs.warranty },
-  ].filter((row) => Boolean(row.value));
 
   const similarProducts = useMemo(
     () =>
@@ -236,20 +238,18 @@ export const ProductDetailScreen: React.FC = () => {
   return (
     <div className="flex-1 bg-white flex flex-col justify-between">
       <div>
-        {/* B. PRODUCT IMAGE GALLERY (Full-bleed visual anchor outside nested cards) */}
+        {/* B. PRODUCT IMAGE GALLERY (Full-bleed visual anchor, zero overlapping badges) */}
         <PdpImageGallery
           product={selectedProduct}
           galleryImages={galleryImages}
           activeImageView={activeImageView}
           onSelectImageView={setActiveImageView}
           hasDistinctGalleryImages={hasDistinctGalleryImages}
-          isWishlisted={isWishlisted}
-          onToggleWishlist={() => toggleWishlist(selectedProduct.id)}
           onOpenZoom={() => setZoomOpen(true)}
         />
 
         {/* 16px Padded Vertical Product-First Flow + 10–20% Selective Bento Grid */}
-        <div className="px-4 pt-4 pb-6 space-y-6">
+        <div className="px-4 pt-4 pb-6 space-y-5">
           {/* C. CORE PRODUCT INFORMATION (Unboxed Vertical Hierarchy) */}
           <PdpCoreInfoBlock
             product={selectedProduct}
@@ -275,13 +275,12 @@ export const ProductDetailScreen: React.FC = () => {
             onOpenPriceHistory={() => navigateTo('price_tracker')}
             demoElectronicsProduct={demoCategoryProducts.elec}
             demoFashionProduct={demoCategoryProducts.fash}
-            demoHomeProduct={demoCategoryProducts.home}
             onSwitchDemoProduct={(productId) =>
               navigateTo('product_detail', { productId })
             }
           />
 
-          {/* D. PRODUCT VARIANT SELECTION (Unboxed Compact Chips & Swatches) */}
+          {/* D. PRODUCT VARIANT SELECTION (Unboxed Compact Chips + Unified Mobile Quantity, Landed Price & Purchase Actions) */}
           <PdpVariantSelector
             product={selectedProduct}
             language={language}
@@ -297,6 +296,9 @@ export const ProductDetailScreen: React.FC = () => {
             totalLandedBdt={totalLandedBdt}
             formatPrice={formatPrice}
             onOpenSizeGuide={() => setActiveInfoModal('size_guide')}
+            addingState={addingState}
+            onAddToCart={handleAddToCartClick}
+            onBuyNow={handleBuyNowClick}
           />
 
           {/* E. SELECTIVE BENTO INFORMATION MODULE (10–20% Restrained 2x2 Grid) */}
@@ -305,21 +307,27 @@ export const ProductDetailScreen: React.FC = () => {
             activeRoute={activeRoute}
             shippingBdt={shippingBdt}
             dutyAndVatBdt={dutyBdt + vatBdt}
-            resolvedHsCode={resolvedHsCode}
             formatPrice={formatPrice}
             onCompareRoutes={() => navigateTo('seller_compare')}
-            onOpenLandedBreakdown={() => setOpenDescSection('landed')}
+            onOpenLandedBreakdown={() => {
+              setOpenSections((prev) => ({ ...prev, landed: true }));
+              setTimeout(() => {
+                landedSectionRef.current?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'nearest',
+                });
+              }, 80);
+            }}
             onOpenWarrantyModal={() => setActiveInfoModal('warranty')}
             onOpenSupplierStore={() => navigateTo('supplier_store')}
           />
 
-          {/* F. PRODUCT DESCRIPTION, SPECIFICATIONS & CARE ACCORDIONS */}
+          {/* F. COLLAPSIBLE PRODUCT INFORMATION & DETAILS (4 Independent Expandable Sections) */}
           <PdpAccordionSections
             product={selectedProduct}
             activeRoute={activeRoute}
-            openSection={openDescSection}
-            onToggleSection={setOpenDescSection}
-            specRows={specRows}
+            openSections={openSections}
+            onToggleSection={handleToggleAccordion}
             baseBdt={baseBdt}
             shippingBdt={shippingBdt}
             dutyBdt={dutyBdt}
@@ -328,6 +336,7 @@ export const ProductDetailScreen: React.FC = () => {
             resolvedHsCode={resolvedHsCode}
             formatPrice={formatPrice}
             onCompareSpecs={() => navigateTo('spec_compare')}
+            landedSectionRef={landedSectionRef}
           />
 
           {/* G. REVIEWS AND RATINGS */}
@@ -351,17 +360,6 @@ export const ProductDetailScreen: React.FC = () => {
           />
         </div>
       </div>
-
-      {/* I. STICKY BOTTOM PURCHASE BAR */}
-      <PdpStickyPurchaseBar
-        inStock={selectedProduct.inStock}
-        quantity={quantity}
-        totalLandedBdt={totalLandedBdt}
-        addingState={addingState}
-        formatPrice={formatPrice}
-        onAddToCart={handleAddToCartClick}
-        onBuyNow={handleBuyNowClick}
-      />
 
       {/* Image Zoom Lightbox Modal */}
       {typeof document !== 'undefined' &&

@@ -242,7 +242,7 @@ export const AccountSupportScreen: React.FC = () => {
                     className="px-3.5 py-2 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
-                    <span>{language === 'BN' ? 'কার্টে দিন' : 'Add to Bag'}</span>
+                    <span>{language === 'BN' ? 'কার্টে দিন' : 'Add to Cart'}</span>
                   </button>
                 </div>
               </div>
@@ -444,10 +444,17 @@ export const AccountSupportScreen: React.FC = () => {
       },
       {
         id: 'bkash',
-        name: 'bKash / Nagad Personal Wallet',
+        name: 'bKash Personal Wallet',
         detail: '+880 1712-345678 · Instant Tokenized Checkout',
         status: 'Connected',
         icon: Smartphone,
+      },
+      {
+        id: 'nagad',
+        name: 'Nagad Mobile Banking',
+        detail: '+880 1819-345678 · Fast Bangladesh MFS',
+        status: 'Connected',
+        icon: Wallet,
       },
       {
         id: 'card',

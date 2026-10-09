@@ -305,7 +305,7 @@ export const PriceTrackerScreen: React.FC = () => {
           className="h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
         >
           <ShoppingCart className="w-4 h-4" />
-          <span>Add to Bag</span>
+          <span>Add to Cart</span>
         </button>
       </div>
     </div>
