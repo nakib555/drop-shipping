@@ -72,21 +72,21 @@ export const PWAInstallPopup: React.FC = () => {
         <motion.div
           role="dialog"
           aria-label={isBn ? 'DeshiMart অ্যাপ ইনস্টল পপআপ' : 'Install DeshiMart App'}
-          initial={{ opacity: 0, y: -20, scale: 0.97 }}
+          initial={{ opacity: 0, y: -16, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -16, scale: 0.97 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-2.5 left-3 right-3 z-50 pointer-events-auto"
+          exit={{ opacity: 0, y: -12, scale: 0.98 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-[calc(3.75rem+env(safe-area-inset-top,0px))] left-3 right-3 z-40 pointer-events-auto max-w-[420px] mx-auto"
         >
-          <div className="rounded-2xl bg-white/95 backdrop-blur-md border border-app-borderStrong shadow-xl p-3.5 text-left">
-            <div className="flex items-start gap-3">
+          <div className="rounded-2xl bg-white/95 backdrop-blur-md border border-app-borderStrong shadow-xl p-3 text-left">
+            <div className="flex items-start gap-2.5">
               {/* App Icon */}
               <img
                 src="/pwa-192x192.png"
                 alt="DeshiMart"
-                width={42}
-                height={42}
-                className="w-10.5 h-10.5 rounded-xl shrink-0 shadow-xs border border-emerald-700/15"
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-xl shrink-0 shadow-xs border border-emerald-700/15"
               />
 
               {/* Notification Copy */}

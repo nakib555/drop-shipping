@@ -80,6 +80,34 @@ export default defineConfig(() => {
                 },
               },
             },
+            {
+              urlPattern: /^https:\/\/(dummyjson\.com|fakestoreapi\.com|api\.escuelajs\.co)\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'deshimart-catalog-api-cache',
+                expiration: {
+                  maxEntries: 60,
+                  maxAgeSeconds: 60 * 60 * 24,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'deshimart-images-cache',
+                expiration: {
+                  maxEntries: 120,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
           ],
         },
         devOptions: {

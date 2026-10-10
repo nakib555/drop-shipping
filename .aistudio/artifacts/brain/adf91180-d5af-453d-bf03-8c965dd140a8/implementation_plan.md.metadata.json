@@ -1,6 +1,6 @@
 {
-  "summary":  "Fix Cloudflare Pages build failure caused by Bun lockfileVersion: 2 incompatibility with Cloudflare's bun@1.2.15 by removing bun.lock and switching the repository to npm with package-lock.json.",
-  "updatedAt":  "2026-10-10T12:56:21.017010793Z",
+  "summary":  "Plan to fix PWA mobile viewport sizing, safe-area insets (notch/home indicator), max-w-[430px] black sidebars on wide mobile devices, html/body background bleed, and popup overlap with the TopAppBar.",
+  "updatedAt":  "2026-10-10T13:11:57.677701561Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

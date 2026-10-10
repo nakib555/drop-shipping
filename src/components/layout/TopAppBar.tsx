@@ -157,7 +157,7 @@ export const TopAppBar: React.FC = () => {
   return (
     <header
       role="banner"
-      className="sticky top-0 z-30 h-14 px-3.5 sm:px-4 bg-white/95 backdrop-blur border-b border-app-border flex items-center justify-between gap-2 shrink-0 select-none"
+      className="sticky top-0 z-30 pt-[env(safe-area-inset-top,0px)] min-h-14 px-3.5 sm:px-4 bg-white/95 backdrop-blur border-b border-app-border flex items-center justify-between gap-2 shrink-0 select-none"
     >
       {/* Left Zone: Clean Single-Line Brand or Back Button + Screen Title */}
       <div className="flex items-center gap-2 min-w-0 flex-1">

@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { BottomTabBar } from './BottomTabBar';
 import { TopAppBar } from './TopAppBar';
 import { ToastContainer } from '../shared/ToastContainer';
 import { PWAInstallPopup } from '../shared/PWAInstallPopup';
-// Clean production MobileShell — zero Cultural Vibe or FloatingExperienceModePill UI
+// Clean production MobileShell — full-bleed on all mobile screens and installed standalone PWAs
 
 export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -14,6 +15,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     language,
     darkMode,
   } = useDeshiMart();
+  const { isInstalled } = usePWAInstall();
   const mainScrollRef = useRef<HTMLElement | null>(null);
   const scrollMemoryRef = useRef<Record<string, number>>({});
   const activeRouteKey =
@@ -39,13 +41,17 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <div
       lang={language === 'BN' ? 'bn' : 'en'}
-      className="h-dvh w-full overflow-hidden bg-slate-900 text-content-primary flex items-center justify-center sm:p-4"
+      className={`h-dvh w-full overflow-hidden text-content-primary flex items-center justify-center ${
+        isInstalled ? 'bg-app-bg' : 'bg-app-bg md:bg-slate-900 md:p-4'
+      }`}
     >
-      {/* Clean Mobile Viewport Container (Edge-to-edge on mobile, subtle centered viewport on larger screens) */}
+      {/* Full edge-to-edge on all mobile screens & installed PWAs; framed preview only on desktop browsers */}
       <div
-        className={`relative w-full max-w-[430px] h-dvh sm:h-[92dvh] sm:max-h-[860px] bg-app-bg sm:rounded-3xl sm:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.45)] sm:border sm:border-slate-700/80 flex flex-col overflow-hidden shrink-0 ${
-          darkMode ? 'contrast-105' : ''
-        }`}
+        className={`relative w-full h-dvh bg-app-bg flex flex-col overflow-hidden shrink-0 ${
+          isInstalled
+            ? 'max-w-none'
+            : 'md:max-w-[440px] md:h-[92dvh] md:max-h-[880px] md:rounded-3xl md:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.45)] md:border md:border-slate-700/80'
+        } ${darkMode ? 'contrast-105' : ''}`}
       >
         {/* Fixed Top App Bar */}
         <TopAppBar />
@@ -60,7 +66,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
         <main
           ref={mainScrollRef}
           onScroll={handleMainScroll}
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
+          className="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -69,7 +75,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -3 }}
               transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="flex-1 flex flex-col min-h-full"
+              className="flex-1 flex flex-col min-h-full w-full"
             >
               {children}
             </motion.div>
