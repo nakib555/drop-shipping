@@ -30,6 +30,8 @@ export const TopAppBar: React.FC = () => {
     wishlist,
     language,
     setLanguage,
+    experienceMode,
+    setExperienceMode,
     currency,
     setCurrency,
     addresses,
@@ -155,28 +157,69 @@ export const TopAppBar: React.FC = () => {
     );
   };
 
+  const isBangladeshMode = experienceMode === 'bangladesh';
+
   return (
     <header
       role="banner"
-      className="sticky top-0 z-30 h-14 px-3.5 sm:px-4 bg-white/95 backdrop-blur border-b border-app-border flex items-center justify-between gap-2 shrink-0 select-none"
+      className={`sticky top-0 z-30 h-14 px-3.5 sm:px-4 backdrop-blur border-b flex items-center justify-between gap-2 shrink-0 select-none relative overflow-hidden transition-colors duration-300 ${
+        isBangladeshMode
+          ? 'bg-[#006A4E] border-[#00523C] text-[#FFFDF9] dm-nakshi-stitch-bottom'
+          : 'bg-white/95 border-app-border text-content-primary'
+      }`}
     >
+      {/* Subtle Jamdani Geometric Watermark in Bangladesh Vibe Mode */}
+      {isBangladeshMode && (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 120 56"
+          fill="none"
+          className="pointer-events-none absolute right-16 top-0 h-full w-28 opacity-15"
+        >
+          <path
+            d="M28 8L48 28L28 48L8 28L28 8Z"
+            stroke="#FFFDF9"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M84 8L104 28L84 48L64 28L84 8Z"
+            stroke="#FDE68A"
+            strokeWidth="1.2"
+          />
+          <circle cx="28" cy="28" r="5" fill="#F42A41" />
+          <circle cx="84" cy="28" r="4" fill="#FFFDF9" />
+        </svg>
+      )}
+
       {/* Left Zone: Clean Single-Line Brand or Back Button + Screen Title */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center gap-2 min-w-0 flex-1 relative z-10">
         {isHome ? (
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
               aria-label={isBn ? 'দেশিমার্ট হোম' : 'DeshiMart Home'}
               onClick={() => navigateTo('home')}
-              className="w-8 h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`relative w-8 h-8 rounded-lg flex items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'bg-[#FFFDF9] text-[#006A4E] focus-visible:ring-white shadow-xs'
+                  : 'bg-brand-primary text-white focus-visible:ring-brand-primary'
+              }`}
             >
               <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
+              {isBangladeshMode && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#F42A41] ring-2 ring-[#006A4E]"
+                />
+              )}
             </button>
 
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="text-[15px] sm:text-base font-bold tracking-tight text-content-primary whitespace-nowrap shrink-0 focus-visible:outline-none"
+              className={`text-[15px] sm:text-base font-bold tracking-tight whitespace-nowrap shrink-0 focus-visible:outline-none ${
+                isBangladeshMode ? 'text-[#FFFDF9]' : 'text-content-primary'
+              }`}
             >
               {isBn ? 'দেশিমার্ট' : 'DeshiMart'}
             </button>
@@ -189,9 +232,17 @@ export const TopAppBar: React.FC = () => {
                   : `Delivery location: ${deliveryCityLabel}`
               }
               onClick={() => navigateTo('addresses')}
-              className="flex items-center gap-1 max-w-[108px] sm:max-w-[140px] h-7 px-2 rounded-md bg-app-subtle hover:bg-slate-200/70 text-xs font-medium text-content-secondary hover:text-content-primary transition-colors min-w-0"
+              className={`flex items-center gap-1 max-w-[108px] sm:max-w-[140px] h-7 px-2 rounded-md text-xs font-medium transition-colors min-w-0 ${
+                isBangladeshMode
+                  ? 'bg-white/15 hover:bg-white/25 text-[#FFFDF9]'
+                  : 'bg-app-subtle hover:bg-slate-200/70 text-content-secondary hover:text-content-primary'
+              }`}
             >
-              <MapPin className="w-3 h-3 text-brand-primary shrink-0" />
+              <MapPin
+                className={`w-3 h-3 shrink-0 ${
+                  isBangladeshMode ? 'text-[#FDE68A]' : 'text-brand-primary'
+                }`}
+              />
               <span className="truncate">{deliveryCityLabel}</span>
             </button>
           </div>
@@ -201,12 +252,20 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'পেছনে যান' : 'Go back'}
               onClick={goBack}
-              className="w-9 h-9 -ml-1 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`w-9 h-9 -ml-1 rounded-lg flex items-center justify-center active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                  : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+              }`}
             >
               <ArrowLeft className="w-5 h-5 stroke-[2]" />
             </button>
 
-            <h1 className="text-sm font-bold tracking-tight text-content-primary truncate">
+            <h1
+              className={`text-sm font-bold tracking-tight truncate ${
+                isBangladeshMode ? 'text-[#FFFDF9]' : 'text-content-primary'
+              }`}
+            >
               {screenTitle}
             </h1>
           </>
@@ -214,7 +273,7 @@ export const TopAppBar: React.FC = () => {
       </div>
 
       {/* Right Zone: Clean Contextual Utility Actions */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 relative z-10">
         {isHome && (
           <div ref={utilityMenuRef} className="relative flex items-center gap-1">
             {/* Compact combined Currency & Language control that fits 320px-414px cleanly */}
@@ -222,18 +281,29 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={
                 isBn
-                  ? 'মুদ্রা ও ভাষা পরিবর্তন করুন'
-                  : 'Currency and language preferences'
+                  ? 'মুদ্রা, ভাষা ও অভিজ্ঞতা মোড পরিবর্তন করুন'
+                  : 'Currency, language, and experience mode preferences'
               }
               aria-expanded={utilityMenuOpen}
               onClick={() => setUtilityMenuOpen((prev) => !prev)}
-              className="h-8 px-2 rounded-lg bg-app-subtle hover:bg-slate-200/70 text-[11px] font-semibold text-content-primary flex items-center gap-1 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`h-8 px-2 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'bg-white/15 hover:bg-white/25 text-[#FFFDF9] focus-visible:ring-white'
+                  : 'bg-app-subtle hover:bg-slate-200/70 text-content-primary focus-visible:ring-brand-primary'
+              }`}
             >
-              <Globe className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+              <Globe
+                className={`w-3.5 h-3.5 shrink-0 ${
+                  isBangladeshMode ? 'text-[#FDE68A]' : 'text-brand-primary'
+                }`}
+              />
               <span className="font-mono-num">
                 {currency === 'BDT' ? '৳' : '$'}
               </span>
-              <span aria-hidden="true" className="text-content-muted">
+              <span
+                aria-hidden="true"
+                className={isBangladeshMode ? 'text-white/60' : 'text-content-muted'}
+              >
                 ·
               </span>
               <span>{language === 'EN' ? 'EN' : 'বাং'}</span>
@@ -333,6 +403,42 @@ export const TopAppBar: React.FC = () => {
                       : `Indicative rate: $1 = ৳${EXCHANGE_RATE_SNAPSHOT.bdtPerUsd} (${EXCHANGE_RATE_SNAPSHOT.asOfDate}). All orders settle in ৳ BDT.`}
                   </p>
                 </div>
+
+                <div className="space-y-1.5 pt-2 border-t border-app-border">
+                  <span className="block text-[11px] font-semibold text-content-secondary">
+                    {isBn ? 'অভিজ্ঞতা মোড (Experience Mode)' : 'Experience Mode'}
+                  </span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExperienceMode('global');
+                        setUtilityMenuOpen(false);
+                      }}
+                      className={`h-8 rounded-lg text-xs font-semibold transition-colors border ${
+                        experienceMode === 'global'
+                          ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                          : 'bg-app-subtle text-content-primary border-transparent hover:border-app-border'
+                      }`}
+                    >
+                      Global
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExperienceMode('bangladesh');
+                        setUtilityMenuOpen(false);
+                      }}
+                      className={`h-8 rounded-lg text-xs font-semibold transition-colors border ${
+                        experienceMode === 'bangladesh'
+                          ? 'bg-[#006A4E] text-white border-[#006A4E]'
+                          : 'bg-app-subtle text-content-primary border-transparent hover:border-app-border'
+                      }`}
+                    >
+                      বাংলাদেশ 🇧🇩
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -344,7 +450,11 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'খুঁজুন' : 'Search products'}
               onClick={() => navigateTo('categories')}
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                  : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+              }`}
             >
               <Search className="w-4 h-4 stroke-[2]" />
             </button>
@@ -353,12 +463,20 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'উইশলিস্টে যোগ করুন' : 'Toggle wishlist'}
               onClick={() => toggleWishlist(selectedProduct.id)}
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                  : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+              }`}
             >
               <Heart
                 className={`w-4 h-4 transition-colors ${
                   isProductLiked
-                    ? 'fill-brand-primary text-brand-primary'
+                    ? isBangladeshMode
+                      ? 'fill-[#F42A41] text-[#F42A41]'
+                      : 'fill-brand-primary text-brand-primary'
+                    : isBangladeshMode
+                    ? 'text-[#FFFDF9] stroke-[2]'
                     : 'text-content-primary stroke-[2]'
                 }`}
               />
@@ -368,7 +486,11 @@ export const TopAppBar: React.FC = () => {
               type="button"
               aria-label={isBn ? 'শেয়ার করুন' : 'Share product'}
               onClick={handleShareProduct}
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                  : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+              }`}
             >
               <Share2 className="w-4 h-4 stroke-[2]" />
             </button>
@@ -381,11 +503,19 @@ export const TopAppBar: React.FC = () => {
                   : 'Shopping cart'
               }
               onClick={() => navigateTo('cart')}
-              className="relative w-9 h-9 rounded-lg flex items-center justify-center text-content-primary hover:bg-app-subtle active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className={`relative w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+                isBangladeshMode
+                  ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                  : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+              }`}
             >
               <ShoppingCart className="w-4 h-4 stroke-[2]" />
               {cartCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-brand-primary text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center">
+                <span
+                  className={`absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center ${
+                    isBangladeshMode ? 'bg-[#F42A41]' : 'bg-brand-primary'
+                  }`}
+                >
                   {cartCount}
                 </span>
               )}
@@ -404,11 +534,19 @@ export const TopAppBar: React.FC = () => {
                 : 'Wishlist'
             }
             onClick={() => navigateTo('wishlist')}
-            className="relative w-10 h-10 rounded-lg hover:bg-app-subtle flex items-center justify-center text-content-primary active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            className={`relative w-10 h-10 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+              isBangladeshMode
+                ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+            }`}
           >
             <Heart className="w-4 h-4 stroke-[2]" />
             {wishlist.length > 0 && (
-              <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full bg-brand-primary text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center">
+              <span
+                className={`absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center ${
+                  isBangladeshMode ? 'bg-[#F42A41]' : 'bg-brand-primary'
+                }`}
+              >
                 {wishlist.length}
               </span>
             )}
@@ -419,7 +557,11 @@ export const TopAppBar: React.FC = () => {
           <button
             type="button"
             onClick={markAllNotificationsRead}
-            className="h-8 px-2.5 rounded-lg text-xs font-semibold text-brand-primary hover:bg-brand-subtle flex items-center gap-1 transition-colors whitespace-nowrap"
+            className={`h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors whitespace-nowrap ${
+              isBangladeshMode
+                ? 'bg-white/15 text-[#FFFDF9] hover:bg-white/25'
+                : 'text-brand-primary hover:bg-brand-subtle'
+            }`}
           >
             <CheckCheck className="w-3.5 h-3.5" />
             <span>{isBn ? 'সব পঠিত' : 'Mark Read'}</span>
@@ -431,7 +573,11 @@ export const TopAppBar: React.FC = () => {
             type="button"
             aria-label={isBn ? 'নোটিফিকেশন সেটিংস' : 'Alert preferences'}
             onClick={() => navigateTo('settings')}
-            className="w-9 h-9 rounded-lg hover:bg-app-subtle flex items-center justify-center text-content-primary active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+              isBangladeshMode
+                ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+            }`}
           >
             <Settings className="w-4 h-4 stroke-[2]" />
           </button>
@@ -444,11 +590,19 @@ export const TopAppBar: React.FC = () => {
                 : 'Notifications'
             }
             onClick={() => navigateTo('notifications')}
-            className="relative w-9 h-9 rounded-lg hover:bg-app-subtle flex items-center justify-center text-content-primary active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            className={`relative w-9 h-9 rounded-lg flex items-center justify-center active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 ${
+              isBangladeshMode
+                ? 'text-[#FFFDF9] hover:bg-white/15 focus-visible:ring-white'
+                : 'text-content-primary hover:bg-app-subtle focus-visible:ring-brand-primary'
+            }`}
           >
             <Bell className="w-4 h-4 stroke-[2]" />
             {unreadNotificationCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full bg-brand-primary text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center">
+              <span
+                className={`absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 rounded-full text-white tabular-nums text-[9px] leading-none font-bold flex items-center justify-center ${
+                  isBangladeshMode ? 'bg-[#F42A41]' : 'bg-brand-primary'
+                }`}
+              >
                 {unreadNotificationCount}
               </span>
             )}

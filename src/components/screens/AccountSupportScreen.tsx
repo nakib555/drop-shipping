@@ -36,6 +36,10 @@ import { useDeshiMart } from '../../context/DeshiMartContext';
 import { SUPPORT_FAQS } from '../../data/catalogData';
 import { AppNotification, PaymentMethodId } from '../../types/deshimart';
 import { ProductCard } from '../shared/ProductCard';
+import {
+  BangladeshHeritageBadge,
+  ExperienceModeStudioCard,
+} from '../shared/ExperienceModeSwitcher';
 
 export const AccountSupportScreen: React.FC = () => {
   const {
@@ -154,8 +158,9 @@ export const AccountSupportScreen: React.FC = () => {
 
     if (wishlistedProducts.length === 0) {
       return (
-        <div className="p-6 flex-1 flex flex-col items-center justify-center text-center bg-app-bg">
-          <div className="w-16 h-16 rounded-2xl bg-app-subtle border border-app-border text-content-secondary flex items-center justify-center mb-4">
+        <div className="p-6 flex-1 flex flex-col items-center justify-center text-center bg-app-bg space-y-2">
+          <BangladeshHeritageBadge />
+          <div className="w-16 h-16 rounded-2xl bg-app-subtle border border-app-border text-brand-primary flex items-center justify-center mb-2">
             <Heart className="w-8 h-8" />
           </div>
           <h2 className="text-lg font-semibold text-content-primary">
@@ -169,7 +174,7 @@ export const AccountSupportScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="mt-5 px-6 min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
+            className="mt-4 px-6 min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
           >
             {language === 'BN' ? 'শপিং শুরু করুন' : 'Explore Catalog'}
           </button>
@@ -935,10 +940,13 @@ export const AccountSupportScreen: React.FC = () => {
     );
   }
 
-  // 7. SETTINGS & CURRENCY / LANGUAGE SCREEN
+  // 7. SETTINGS & CURRENCY / LANGUAGE / EXPERIENCE MODE SCREEN
   if (currentScreen === 'settings') {
     return (
       <div className="p-4 space-y-4 pb-6 bg-app-bg">
+        {/* Experience Mode Studio (Global Premium vs. বাংলাদেশ 🇧🇩) */}
+        <ExperienceModeStudioCard />
+
         {/* Currency Selection */}
         <div className="bg-white rounded-xl border border-app-border p-4 space-y-2.5">
           <h2 className="text-sm font-semibold text-content-primary">
@@ -1460,6 +1468,9 @@ export const AccountSupportScreen: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* 1.5 Experience Mode Studio (Global Premium vs. বাংলাদেশ 🇧🇩) */}
+      <ExperienceModeStudioCard />
 
       {/* 2. Clean Categorized Navigation Sections */}
       {accountSections.map((section) => (

@@ -23,6 +23,10 @@ import {
   isVerifiedQualitySupplier,
 } from '../../utils/pricingEngine';
 import { ProductCard, ProductCardGhost } from '../shared/ProductCard';
+import {
+  NakshiStitchDivider,
+  RickshawCornerMotif,
+} from '../shared/ExperienceModeSwitcher';
 
 const PAGE_SIZE = 16;
 
@@ -224,9 +228,10 @@ export const CategoriesScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => navigateTo('category_products', { categoryId: 'all' })}
-          className="w-full p-4 rounded-2xl bg-brand-primary text-white flex items-center justify-between text-left hover:bg-brand-hover transition-colors"
+          className="relative overflow-hidden w-full p-4 rounded-2xl bg-brand-primary text-white flex items-center justify-between text-left hover:bg-brand-hover transition-colors"
         >
-          <div>
+          <RickshawCornerMotif position="top-left" variant="light" />
+          <div className="relative z-10">
             <h2 className="text-sm font-semibold">
               {language === 'BN'
                 ? 'সকল গ্লোবাল পণ্য দেখুন'
@@ -236,8 +241,10 @@ export const CategoriesScreen: React.FC = () => {
               {products.length} items · Duty & VAT included
             </p>
           </div>
-          <ChevronRight className="w-5 h-5 text-emerald-100 shrink-0" />
+          <ChevronRight className="w-5 h-5 text-emerald-100 shrink-0 relative z-10" />
         </button>
+
+        <NakshiStitchDivider />
 
         {/* Clean 2-Column Department Cards (One visual focal point per card) */}
         <div className="grid grid-cols-2 gap-3">
@@ -256,16 +263,17 @@ export const CategoriesScreen: React.FC = () => {
                 onClick={() =>
                   navigateTo('category_products', { categoryId: cat.id })
                 }
-                className="bg-white rounded-xl p-3.5 border border-app-border flex flex-col justify-between text-left hover:border-brand-border transition-colors group"
+                className="relative overflow-hidden bg-white rounded-xl p-3.5 border border-app-border flex flex-col justify-between text-left hover:border-brand-border transition-colors group"
               >
-                <div className="w-full flex items-center justify-between mb-3">
+                <RickshawCornerMotif position="bottom-right" variant="emerald" />
+                <div className="w-full flex items-center justify-between mb-3 relative z-10">
                   <div className="w-10 h-10 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors shrink-0">
                     <Icon className="w-5 h-5" />
                   </div>
                   <ChevronRight className="w-4 h-4 text-content-muted group-hover:text-brand-primary transition-colors shrink-0" />
                 </div>
 
-                <div className="w-full">
+                <div className="w-full relative z-10">
                   <h3 className="text-sm font-semibold text-content-primary truncate">
                     {language === 'BN' ? cat.nameBn : cat.name}
                   </h3>

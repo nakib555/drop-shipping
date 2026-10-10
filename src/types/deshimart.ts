@@ -42,6 +42,7 @@ export interface PromoVoucher {
 
 export type CurrencyCode = 'BDT' | 'USD';
 export type LanguageCode = 'EN' | 'BN';
+export type ExperienceMode = 'global' | 'bangladesh';
 
 export type CategoryId =
   | 'all'

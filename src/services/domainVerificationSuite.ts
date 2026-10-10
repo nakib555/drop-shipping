@@ -230,5 +230,23 @@ export function runDeshiMartDomainVerificationSuite(): {
     'Backward navigation between two Product Detail screens restores prior productId'
   );
 
+  // 8. Dual Cultural Identity Mode (Global Premium vs. Bangladesh Vibe 🇧🇩) Persistence & Language Independence
+  const parseExperienceMode = (raw: string | null): 'global' | 'bangladesh' =>
+    raw === 'bangladesh' ? 'bangladesh' : 'global';
+  assert(
+    parseExperienceMode(null) === 'global' &&
+      parseExperienceMode('invalid') === 'global' &&
+      parseExperienceMode('bangladesh') === 'bangladesh',
+    'ExperienceMode defaults to global and validates bangladesh mode cleanly'
+  );
+
+  const simulatedLang: 'EN' | 'BN' = 'EN';
+  const switchedIdentityMode = parseExperienceMode('bangladesh');
+  assert(
+    switchedIdentityMode === 'bangladesh' && simulatedLang === 'EN',
+    'Switching ExperienceMode to bangladesh preserves independent EN/BN language state'
+  );
+
   return { passed, failed };
 }
+

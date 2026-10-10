@@ -554,66 +554,77 @@ const GlobeBoxesPlaneArt: React.FC<{ variant: 'splash' | 'ob' }> = ({
         </g>
       </svg>
 
-      {/* Dual Flight Route Trail */}
+      {/* Dual Flight Route Trail & Synchronized Cargo Jet inside the exact 300x260 SVG coordinate space */}
       <svg className="trail" viewBox="0 0 300 260" aria-hidden="true">
         <path
-          d="M-30 100C60 20 170-20 262 40"
+          d="M-18 102C62 24 172-14 260 42"
           fill="none"
-          strokeOpacity=".85"
+          strokeOpacity=".88"
           strokeWidth="2.2"
           strokeDasharray="2 7"
           strokeLinecap="round"
         />
         <path
-          d="M-30 106C60 26 170-14 262 46"
+          d="M-18 108C62 30 172-8 260 48"
           fill="none"
-          strokeOpacity=".3"
+          strokeOpacity=".32"
           strokeWidth="1"
           strokeDasharray="4 8"
           strokeLinecap="round"
         />
       </svg>
 
-      {/* Detailed Cargo Jet with Windows & Turbine Pods */}
-      <div className="plane" aria-hidden="true">
-        <svg viewBox="0 0 44 44">
-          {/* Swept Wings & Under-wing Engines */}
-          <path d="M17 18L10 3L16 3L28 18zM17 26L10 41L16 41L28 26z" />
-          <ellipse cx="20" cy="11" rx="3.2" ry="1.6" />
-          <ellipse cx="20" cy="33" rx="3.2" ry="1.6" />
-          {/* Tail Stabilizers */}
-          <path d="M5 18L1 10L7 10L11 18zM5 26L1 34L7 34L11 26z" />
-          {/* Fuselage Body */}
-          <path d="M2 22Q2 18 9 18L33 18Q42 18 42 22Q42 26 33 26L9 26Q2 26 2 22z" />
-          {/* Cockpit & Cabin Windows */}
-          <path
-            d="M35 20.2C37.5 20.2 39 21 39 22C39 23 37.5 23.8 35 23.8Z"
-            fill={isSplash ? '#14523d' : '#ffffff'}
-            opacity="0.85"
-          />
-          <circle
-            cx="29"
-            cy="22"
-            r="1"
-            fill={isSplash ? '#14523d' : '#ffffff'}
-            opacity="0.75"
-          />
-          <circle
-            cx="25"
-            cy="22"
-            r="1"
-            fill={isSplash ? '#14523d' : '#ffffff'}
-            opacity="0.75"
-          />
-          <circle
-            cx="21"
-            cy="22"
-            r="1"
-            fill={isSplash ? '#14523d' : '#ffffff'}
-            opacity="0.75"
-          />
-        </svg>
-      </div>
+      {/* Cargo Jet Moving Along the Exact 300x260 SVG Flight Path */}
+      <svg viewBox="0 0 300 260" aria-hidden="true">
+        <g className="plane-track">
+          <g className="plane-bob" transform="translate(-22, -22)">
+            {/* Swept Wings & Under-wing Engines */}
+            <path
+              className="fuselage"
+              d="M17 18L10 3L16 3L28 18zM17 26L10 41L16 41L28 26z"
+            />
+            <ellipse className="fuselage" cx="20" cy="11" rx="3.2" ry="1.6" />
+            <ellipse className="fuselage" cx="20" cy="33" rx="3.2" ry="1.6" />
+            {/* Tail Stabilizers */}
+            <path
+              className="fuselage"
+              d="M5 18L1 10L7 10L11 18zM5 26L1 34L7 34L11 26z"
+            />
+            {/* Fuselage Body */}
+            <path
+              className="fuselage"
+              d="M2 22Q2 18 9 18L33 18Q42 18 42 22Q42 26 33 26L9 26Q2 26 2 22z"
+            />
+            {/* Cockpit & Cabin Windows */}
+            <path
+              d="M35 20.2C37.5 20.2 39 21 39 22C39 23 37.5 23.8 35 23.8Z"
+              fill={isSplash ? '#14523d' : '#ffffff'}
+              opacity="0.88"
+            />
+            <circle
+              cx="29"
+              cy="22"
+              r="1"
+              fill={isSplash ? '#14523d' : '#ffffff'}
+              opacity="0.78"
+            />
+            <circle
+              cx="25"
+              cy="22"
+              r="1"
+              fill={isSplash ? '#14523d' : '#ffffff'}
+              opacity="0.78"
+            />
+            <circle
+              cx="21"
+              cy="22"
+              r="1"
+              fill={isSplash ? '#14523d' : '#ffffff'}
+              opacity="0.78"
+            />
+          </g>
+        </g>
+      </svg>
     </div>
   );
 };
@@ -891,6 +902,7 @@ export const SplashOnboarding: React.FC = () => {
       : 4;
 
   const [step, setStep] = useState<FlowStep>(initialStep);
+  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const pointerStartX = useRef<number | null>(null);
 
   // Auth Form State
@@ -915,15 +927,16 @@ export const SplashOnboarding: React.FC = () => {
 
   const goStep = (next: FlowStep) => {
     if (next === step) return;
+    setSlideDirection(next > step ? 1 : -1);
     setStep(next);
   };
 
-  // Splash auto-advances after 5.2s just like the reference HTML
+  // Splash auto-advances after 3.5s as confirmed
   useEffect(() => {
     if (step !== 0) return;
     const timer = window.setTimeout(() => {
       goStep(1);
-    }, 5200);
+    }, 3500);
     return () => window.clearTimeout(timer);
   }, [step]);
 
@@ -936,7 +949,7 @@ export const SplashOnboarding: React.FC = () => {
     if (pointerStartX.current === null) return;
     const dx = e.clientX - pointerStartX.current;
     pointerStartX.current = null;
-    if (step >= 1 && step <= 3 && Math.abs(dx) > 55) {
+    if (step >= 1 && step <= 3 && Math.abs(dx) > 45) {
       if (dx < 0) {
         goStep((step === 3 ? 4 : step + 1) as FlowStep);
       } else {
@@ -985,8 +998,10 @@ export const SplashOnboarding: React.FC = () => {
 
   const renderDots = (activeIdx: number, isSplash = false) => (
     <div
-      className={`flex justify-center gap-2 ${
-        isSplash ? '' : 'my-3'
+      role="tablist"
+      aria-label="Onboarding slide indicator"
+      className={`flex items-center justify-center gap-1.5 ${
+        isSplash ? '' : 'my-2'
       }`}
     >
       {[0, 1, 2].map((k) => {
@@ -995,21 +1010,27 @@ export const SplashOnboarding: React.FC = () => {
           <button
             key={k}
             type="button"
+            role="tab"
+            aria-selected={active}
             aria-label={`Go to slide ${k + 1}`}
             onClick={(e) => {
               e.stopPropagation();
               goStep((k + 1) as FlowStep);
             }}
-            className={`block h-[7px] rounded-full transition-all duration-300 ${
-              active
-                ? isSplash
-                  ? 'w-[22px] bg-white'
-                  : 'w-[22px] bg-[#059669]'
-                : isSplash
-                ? 'w-[7px] bg-white/40 hover:bg-white/60'
-                : 'w-[7px] bg-[#DFEAE3] hover:bg-[#A7C4B5]'
-            }`}
-          />
+            className="py-2 px-1 flex items-center justify-center focus-visible:outline-none"
+          >
+            <span
+              className={`block h-[7px] rounded-full transition-all duration-300 ${
+                active
+                  ? isSplash
+                    ? 'w-[24px] bg-white'
+                    : 'w-[24px] bg-[#059669]'
+                  : isSplash
+                  ? 'w-[7px] bg-white/40 hover:bg-white/65'
+                  : 'w-[7px] bg-[#DFEAE3] hover:bg-[#A7C4B5]'
+              }`}
+            />
+          </button>
         );
       })}
     </div>
@@ -1022,36 +1043,39 @@ export const SplashOnboarding: React.FC = () => {
       className="relative flex-1 w-full h-full overflow-hidden bg-white select-none flex flex-col"
     >
       <AnimatePresence mode="wait" initial={false}>
-        {/* =====================  0: SPLASH SCREEN (STATIONARY PAGE SHELL) ===================== */}
+        {/* =====================  0: SPLASH SCREEN (3.5s AUTO-ADVANCE, ZERO VERTICAL CROWDING) ===================== */}
         {step === 0 && (
           <motion.section
             key="flow-splash"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.26, ease: 'easeOut' }}
             onClick={() => goStep(1)}
-            className="dm-flow-splash relative flex-1 flex flex-col items-center justify-between px-6 pt-8 pb-6 overflow-hidden cursor-pointer"
+            className="dm-flow-splash relative flex-1 flex flex-col items-center justify-between px-6 pt-5 pb-5 overflow-hidden cursor-pointer"
           >
             <div className="dm-flow-glow absolute inset-0 pointer-events-none" />
 
             {/* Top bar with quick Skip to Store option */}
-            <div className="relative z-10 w-full flex items-center justify-end">
+            <div className="relative z-10 w-full flex items-center justify-between">
+              <span className="text-[11px] font-medium text-white/75 tracking-wide">
+                Tap anywhere to continue
+              </span>
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateTo('home');
                 }}
-                className="text-xs leading-4 font-semibold text-white/85 hover:text-white bg-white/12 hover:bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-xs transition-colors"
+                className="min-h-[36px] text-xs leading-4 font-semibold text-white/90 hover:text-white bg-white/14 hover:bg-white/22 px-3.5 py-1.5 rounded-full backdrop-blur-xs transition-colors whitespace-nowrap"
               >
                 Skip to Store →
               </button>
             </div>
 
-            {/* Center Brand Identity (Stationary frame, internal SVG & letter animations) */}
-            <div className="relative z-10 flex flex-col items-center mt-2">
-              <div className="relative w-24 h-24 flex items-center justify-center">
+            {/* Center Brand Identity (Balanced vertical proportions so globe & parcels never collide) */}
+            <div className="relative z-10 flex flex-col items-center my-auto py-1">
+              <div className="relative w-[82px] h-[82px] flex items-center justify-center">
                 <div className="dm-flow-ring" />
                 <div className="dm-flow-ring" />
                 <div className="dm-flow-logo dm-flow-logo-splash">
@@ -1061,7 +1085,7 @@ export const SplashOnboarding: React.FC = () => {
 
               <h1
                 aria-label="DeshiMart"
-                className="mt-5 text-[36px] leading-[42px] font-bold tracking-tight flex justify-center text-white"
+                className="mt-3.5 text-[32px] sm:text-[34px] leading-[38px] font-bold tracking-tight flex justify-center text-white"
               >
                 {'DeshiMart'.split('').map((ch, idx) => (
                   <span
@@ -1074,51 +1098,59 @@ export const SplashOnboarding: React.FC = () => {
                 ))}
               </h1>
 
-              <p className="dm-flow-sp mt-1.5 text-[16px] leading-6 font-medium text-white">
-                Drop Shipping Store
+              <p className="dm-flow-sp mt-1 text-[14px] leading-5 font-medium text-emerald-50">
+                Cross-Border Landed Shopping
               </p>
 
-              <p className="dm-flow-tg mt-3 text-[14px] leading-6 text-white/90">
+              <p className="dm-flow-tg mt-1.5 text-[12px] leading-4 text-white/85 flex items-center gap-1.5">
                 <span>Global Products</span>
+                <span aria-hidden="true">·</span>
                 <span>Local Dreams</span>
               </p>
             </div>
 
-            {/* Bottom Animated Globe + Parcel Boxes + Plane */}
-            <div className="relative z-10 flex flex-col items-center w-full">
+            {/* Bottom Animated Globe + Parcel Boxes + Plane + 3.5s Auto-Advance Bar */}
+            <div className="relative z-10 flex flex-col items-center w-full shrink-0">
               <GlobeBoxesPlaneArt variant="splash" />
-              <div className="mt-2">{renderDots(0, true)}</div>
+              <div className="w-36 h-1 rounded-full bg-white/20 overflow-hidden mt-2">
+                <div className="dm-splash-progress-fill h-full w-full bg-white rounded-full" />
+              </div>
+              <div className="mt-0.5">{renderDots(0, true)}</div>
             </div>
           </motion.section>
         )}
 
-        {/* =====================  1–3: ONBOARDING SCREENS (STATIONARY SHELL, IN-PLACE CONTENT) ===================== */}
+        {/* =====================  1–3: ONBOARDING SCREENS (DIRECTIONAL SLIDE MOTION & SAFE VIEWBOX) ===================== */}
         {(step === 1 || step === 2 || step === 3) && (
           <motion.section
             key="flow-ob-shell"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-6 pt-8 pb-6 text-center bg-white text-[#0F1D17]"
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="flex-1 flex flex-col justify-between px-6 pt-5 pb-5 text-center bg-white text-[#0F1D17] overflow-hidden"
           >
-            {/* Stationary Top Header + In-Place Animated Copy */}
-            <div>
+            {/* Stationary Top Header + Directional Animated Copy */}
+            <div className="shrink-0">
               <div className="flex items-center justify-between w-full">
                 <button
                   type="button"
                   aria-label="Back"
                   onClick={() => goStep((step - 1) as FlowStep)}
-                  className="w-9 h-9 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1] transition-colors"
+                  className="w-11 h-11 -ml-2 rounded-full grid place-items-center hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
                 >
                   <BackIconSvg />
                 </button>
+
+                <span className="font-mono-num text-xs font-semibold text-[#485B52]">
+                  {step} / 3
+                </span>
 
                 <button
                   type="button"
                   aria-label="Account Login"
                   onClick={() => goStep(4)}
-                  className="w-9 h-9 rounded-full grid place-items-center text-[#059669] hover:bg-[#EFF4F1] transition-colors"
+                  className="w-11 h-11 -mr-2 rounded-full grid place-items-center text-[#059669] hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
                 >
                   <svg
                     width="22"
@@ -1135,22 +1167,23 @@ export const SplashOnboarding: React.FC = () => {
                 </button>
               </div>
 
-              <div className="min-h-[104px] flex flex-col justify-center mt-3">
-                <AnimatePresence mode="wait" initial={false}>
+              <div className="min-h-[96px] flex flex-col justify-center mt-1 px-1">
+                <AnimatePresence mode="wait" initial={false} custom={slideDirection}>
                   <motion.div
                     key={`ob-copy-${step}`}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    custom={slideDirection}
+                    initial={{ opacity: 0, x: slideDirection * 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: slideDirection * -24 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <h2 className="text-[21px] leading-[27px] font-bold text-[#0F1D17]">
+                    <h2 className="text-[20px] sm:text-[21px] leading-[26px] font-bold text-[#0F1D17] text-balance">
                       {step === 1 && 'Worldwide Products Delivered to Your Door'}
                       {step === 2 && 'Safe & Secure Shopping'}
                       {step === 3 && 'Fast & Reliable Delivery'}
                     </h2>
 
-                    <p className="text-[13px] leading-5 text-[#485B52] mt-2">
+                    <p className="text-[13px] leading-5 text-[#485B52] mt-1.5 max-w-[32ch] mx-auto">
                       {step === 1 &&
                         'Discover the best products from global brands with upfront BD customs & VAT.'}
                       {step === 2 &&
@@ -1163,16 +1196,17 @@ export const SplashOnboarding: React.FC = () => {
               </div>
             </div>
 
-            {/* Stationary Center Illustration Stage with In-Place Artwork Choreography */}
-            <div className="flex-1 grid place-items-center min-h-0 my-1">
-              <AnimatePresence mode="wait" initial={false}>
+            {/* Center Illustration Stage with Directional Swipe Motion & Safe Overflow Padding */}
+            <div className="flex-1 flex items-center justify-center min-h-0 py-2 px-2">
+              <AnimatePresence mode="wait" initial={false} custom={slideDirection}>
                 <motion.div
                   key={`ob-art-${step}`}
-                  initial={{ opacity: 0, scale: 0.94 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-                  className="grid place-items-center"
+                  custom={slideDirection}
+                  initial={{ opacity: 0, x: slideDirection * 32, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: slideDirection * -32, scale: 0.96 }}
+                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full flex items-center justify-center"
                 >
                   {step === 1 && <GlobeBoxesPlaneArt variant="ob" />}
                   {step === 2 && <SafeSecureArt />}
@@ -1182,7 +1216,7 @@ export const SplashOnboarding: React.FC = () => {
             </div>
 
             {/* Stationary Bottom Dots + CTA + Skip */}
-            <div>
+            <div className="shrink-0">
               {renderDots(step - 1, false)}
 
               <RippleButton
@@ -1196,11 +1230,11 @@ export const SplashOnboarding: React.FC = () => {
                 {step === 3 ? 'Get Started' : 'Next'}
               </RippleButton>
 
-              <div className="mt-3 h-6 flex items-center justify-center gap-4">
+              <div className="mt-2.5 h-7 flex items-center justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => navigateTo('home')}
-                  className="text-[13px] font-semibold text-[#059669] hover:underline"
+                  className="min-h-[36px] px-3 text-[13px] font-semibold text-[#059669] hover:underline"
                 >
                   {step < 3 ? 'Skip to Store' : 'Browse Store as Guest →'}
                 </button>
@@ -1209,107 +1243,74 @@ export const SplashOnboarding: React.FC = () => {
           </motion.section>
         )}
 
-        {/* =====================  4: LOGIN SCREEN (STATIONARY PAGE SHELL) ===================== */}
+        {/* =====================  4: LOGIN SCREEN (MOBILE VIEWPORT-FITTED, ZERO SCROLL) ===================== */}
         {step === 4 && (
           <motion.section
             key="flow-login"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-6 pt-7 pb-6 text-center bg-white text-[#0F1D17] overflow-y-auto"
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="flex-1 flex flex-col justify-between px-5 py-4 text-center bg-white text-[#0F1D17] overflow-y-auto no-scrollbar"
           >
-            <div>
-              <div className="flex items-center justify-between w-full dm-flow-a">
-                <button
-                  type="button"
-                  aria-label="Back"
-                  onClick={() => goStep(3)}
-                  className="w-9 h-9 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1]"
-                >
-                  <BackIconSvg />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('home')}
-                  className="text-xs font-semibold text-[#059669] hover:underline"
-                >
-                  Skip to Store →
-                </button>
-              </div>
+            {/* 1. Compact Top Navigation Bar */}
+            <div className="flex items-center justify-between w-full shrink-0 dm-flow-a">
+              <button
+                type="button"
+                aria-label="Back"
+                onClick={() => goStep(3)}
+                className="w-9 h-9 -ml-1.5 rounded-full grid place-items-center hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
+              >
+                <BackIconSvg />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateTo('home')}
+                className="min-h-[36px] px-2 text-xs font-semibold text-[#059669] hover:underline whitespace-nowrap"
+              >
+                Skip to Store →
+              </button>
+            </div>
 
+            {/* 2. Center Auth Content (Compact Logo + Title + Form + 2-Column Socials) */}
+            <div className="my-auto py-1">
               <div
                 className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
-                style={{ '--d': 0.05 } as React.CSSProperties}
+                style={{ '--d': 0.04 } as React.CSSProperties}
               >
                 <BagLogoSvg />
               </div>
 
               <h2
-                className="dm-flow-a text-[22px] leading-7 font-bold mt-2.5 text-[#0F1D17]"
-                style={{ '--d': 0.12 } as React.CSSProperties}
+                className="dm-flow-a text-[20px] leading-6 font-bold mt-2 text-[#0F1D17]"
+                style={{ '--d': 0.1 } as React.CSSProperties}
               >
-                Welcome Back
+                {loginRole === 'admin' ? 'Admin Console Sign In' : 'Welcome Back'}
               </h2>
               <p
-                className="dm-flow-a text-[13px] leading-5 text-[#485B52] mt-1"
-                style={{ '--d': 0.18 } as React.CSSProperties}
+                className="dm-flow-a text-[12px] leading-4 text-[#485B52] mt-0.5"
+                style={{ '--d': 0.14 } as React.CSSProperties}
               >
-                Select account type or sign in with credentials
+                {loginRole === 'admin'
+                  ? 'Authorized DeshiMart operations & catalog portal'
+                  : 'Sign in to your DeshiMart cross-border account'}
               </p>
-
-              {/* Quick Role Selector (Customer Account vs Admin Console) */}
-              <div
-                className="dm-flow-a grid grid-cols-2 gap-1.5 mt-3.5 p-1 rounded-xl bg-[#F5F8F6] border border-[#DFEAE3]"
-                style={{ '--d': 0.21 } as React.CSSProperties}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginRole('customer');
-                    setLoginIdentifier('tanvir.ahmed@deshimart.bd');
-                    setLoginPassword('••••••••••••');
-                  }}
-                  className={`h-9 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                    loginRole === 'customer'
-                      ? 'bg-[#065F46] text-white shadow-xs'
-                      : 'text-[#485B52] hover:text-[#0F1D17]'
-                  }`}
-                >
-                  Customer Account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginRole('admin');
-                    setLoginIdentifier('admin@deshimart.bd');
-                    setLoginPassword('••••••••••••');
-                  }}
-                  className={`h-9 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                    loginRole === 'admin'
-                      ? 'bg-[#065F46] text-white shadow-xs'
-                      : 'text-[#485B52] hover:text-[#0F1D17]'
-                  }`}
-                >
-                  Admin Console
-                </button>
-              </div>
 
               <form
                 onSubmit={handleLoginSubmit}
                 noValidate
-                className={`text-left mt-3.5 space-y-3 ${
+                className={`text-left mt-3 space-y-2.5 ${
                   loginShake ? 'dm-flow-shake' : ''
                 }`}
               >
                 <div
                   className="dm-flow-a"
-                  style={{ '--d': 0.24 } as React.CSSProperties}
+                  style={{ '--d': 0.18 } as React.CSSProperties}
                 >
                   <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
                     Email or Phone
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-10 sm:h-11 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type="text"
                       value={loginIdentifier}
@@ -1323,12 +1324,23 @@ export const SplashOnboarding: React.FC = () => {
 
                 <div
                   className="dm-flow-a"
-                  style={{ '--d': 0.32 } as React.CSSProperties}
+                  style={{ '--d': 0.24 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
-                    Password
-                  </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[12px] font-semibold text-[#0F1D17]">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        showToast('Password reset link sent to your email/SMS', 'info')
+                      }
+                      className="text-[11px] font-semibold text-[#059669] hover:underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div className="flex items-center h-10 sm:h-11 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type={showLoginPw ? 'text' : 'password'}
                       value={loginPassword}
@@ -1341,124 +1353,139 @@ export const SplashOnboarding: React.FC = () => {
                       type="button"
                       aria-label="Show password"
                       onClick={() => setShowLoginPw((v) => !v)}
-                      className="w-8 h-8 grid place-items-center text-[#74887E] hover:text-[#0F1D17]"
+                      className="w-8 h-8 -mr-1 grid place-items-center text-[#74887E] hover:text-[#0F1D17]"
                     >
                       <EyeIconSvg show={showLoginPw} />
                     </button>
                   </div>
                 </div>
 
-                <div
-                  className="flex justify-end dm-flow-a"
-                  style={{ '--d': 0.38 } as React.CSSProperties}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      showToast('Password reset link sent to your email/SMS', 'info')
-                    }
-                    className="text-[12px] font-semibold text-[#059669] hover:underline"
-                  >
-                    Forgot Password?
-                  </button>
+                <div className="pt-0.5">
+                  <RippleButton type="submit" delaySec={0.3}>
+                    {loginRole === 'admin' ? 'Sign In to Admin Console' : 'Login'}
+                  </RippleButton>
                 </div>
-
-                <RippleButton type="submit" delaySec={0.44}>
-                  Login
-                </RippleButton>
               </form>
 
-              {/* Social Auth Divider */}
+              {/* Compact Social Auth Divider + 2-Column Side-by-Side Grid */}
               <div
-                className="dm-flow-a flex items-center gap-3 text-[#74887E] text-xs my-3.5 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
-                style={{ '--d': 0.52 } as React.CSSProperties}
+                className="dm-flow-a flex items-center gap-2.5 text-[#74887E] text-[11px] my-2.5 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
+                style={{ '--d': 0.36 } as React.CSSProperties}
               >
-                or
+                or continue with
               </div>
 
-              <div className="space-y-2">
+              <div
+                className="dm-flow-a grid grid-cols-2 gap-2.5"
+                style={{ '--d': 0.42 } as React.CSSProperties}
+              >
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('Google')}
-                  style={{ '--d': 0.56 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="flex items-center justify-center gap-2 w-full h-10 sm:h-11 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
                 >
                   <GoogleIconSvg />
-                  <span>Continue with Google</span>
+                  <span>Google</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('Facebook')}
-                  style={{ '--d': 0.62 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="flex items-center justify-center gap-2 w-full h-10 sm:h-11 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
                 >
                   <FacebookIconSvg />
-                  <span>Continue with Facebook</span>
+                  <span>Facebook</span>
                 </button>
               </div>
             </div>
 
-            <p
-              className="dm-flow-a pt-3 text-[13px] text-[#485B52]"
-              style={{ '--d': 0.7 } as React.CSSProperties}
+            {/* 3. Compact Footer with Register Switch & Subtle Admin Console Link */}
+            <div
+              className="dm-flow-a shrink-0 pt-1 space-y-1"
+              style={{ '--d': 0.48 } as React.CSSProperties}
             >
-              Don&apos;t have an account?{' '}
-              <button
-                type="button"
-                onClick={() => goStep(5)}
-                className="font-semibold text-[#059669] hover:underline"
-              >
-                Register
-              </button>
-            </p>
+              <p className="text-[12px] text-[#485B52]">
+                Don&apos;t have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => goStep(5)}
+                  className="font-semibold text-[#059669] hover:underline"
+                >
+                  Register
+                </button>
+              </p>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (loginRole === 'customer') {
+                      setLoginRole('admin');
+                      setLoginIdentifier('admin@deshimart.bd');
+                      setLoginPassword('••••••••••••');
+                    } else {
+                      setLoginRole('customer');
+                      setLoginIdentifier('tanvir.ahmed@deshimart.bd');
+                      setLoginPassword('••••••••••••');
+                    }
+                  }}
+                  className="text-[11px] font-medium text-[#74887E] hover:text-[#059669] transition-colors"
+                >
+                  {loginRole === 'admin'
+                    ? '← Switch back to Customer Sign In'
+                    : 'Staff member? Switch to Admin Console →'}
+                </button>
+              </div>
+            </div>
           </motion.section>
         )}
 
-        {/* =====================  5: REGISTER SCREEN (STATIONARY PAGE SHELL) ===================== */}
+        {/* =====================  5: REGISTER SCREEN (MOBILE VIEWPORT-FITTED, ZERO SCROLL) ===================== */}
         {step === 5 && (
           <motion.section
             key="flow-register"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.24, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-6 pt-7 pb-6 text-center bg-white text-[#0F1D17] overflow-y-auto"
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="flex-1 flex flex-col justify-between px-5 py-4 text-center bg-white text-[#0F1D17] overflow-y-auto no-scrollbar"
           >
-            <div>
-              <div className="flex items-center justify-between w-full dm-flow-a">
-                <button
-                  type="button"
-                  aria-label="Back to Login"
-                  onClick={() => goStep(4)}
-                  className="w-9 h-9 -ml-2 rounded-full grid place-items-center active:bg-[#EFF4F1]"
-                >
-                  <BackIconSvg />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('home')}
-                  className="text-xs font-semibold text-[#059669] hover:underline"
-                >
-                  Skip to Store →
-                </button>
-              </div>
+            {/* 1. Compact Top Navigation Bar */}
+            <div className="flex items-center justify-between w-full shrink-0 dm-flow-a">
+              <button
+                type="button"
+                aria-label="Back to Login"
+                onClick={() => goStep(4)}
+                className="w-9 h-9 -ml-1.5 rounded-full grid place-items-center hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
+              >
+                <BackIconSvg />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateTo('home')}
+                className="min-h-[36px] px-2 text-xs font-semibold text-[#059669] hover:underline whitespace-nowrap"
+              >
+                Skip to Store →
+              </button>
+            </div>
 
+            {/* 2. Center Register Content (Compact Logo + Title + Form + 2-Column Socials) */}
+            <div className="my-auto py-1">
               <div
                 className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
-                style={{ '--d': 0.05 } as React.CSSProperties}
+                style={{ '--d': 0.04 } as React.CSSProperties}
               >
                 <BagLogoSvg />
               </div>
 
               <h2
-                className="dm-flow-a text-[22px] leading-7 font-bold mt-2.5 text-[#0F1D17]"
-                style={{ '--d': 0.12 } as React.CSSProperties}
+                className="dm-flow-a text-[20px] leading-6 font-bold mt-1.5 text-[#0F1D17]"
+                style={{ '--d': 0.1 } as React.CSSProperties}
               >
                 Create Your Account
               </h2>
               <p
-                className="dm-flow-a text-[13px] leading-5 text-[#485B52] mt-1"
-                style={{ '--d': 0.18 } as React.CSSProperties}
+                className="dm-flow-a text-[12px] leading-4 text-[#485B52] mt-0.5"
+                style={{ '--d': 0.14 } as React.CSSProperties}
               >
                 Join DeshiMart and start global shopping
               </p>
@@ -1466,18 +1493,18 @@ export const SplashOnboarding: React.FC = () => {
               <form
                 onSubmit={handleRegisterSubmit}
                 noValidate
-                className={`text-left mt-3.5 space-y-2.5 ${
+                className={`text-left mt-2.5 space-y-2 ${
                   regShake ? 'dm-flow-shake' : ''
                 }`}
               >
                 <div
                   className="dm-flow-a"
-                  style={{ '--d': 0.24 } as React.CSSProperties}
+                  style={{ '--d': 0.18 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
+                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-0.5">
                     Full Name
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type="text"
                       value={regName}
@@ -1491,12 +1518,12 @@ export const SplashOnboarding: React.FC = () => {
 
                 <div
                   className="dm-flow-a"
-                  style={{ '--d': 0.31 } as React.CSSProperties}
+                  style={{ '--d': 0.24 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
-                    Phone Number
+                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-0.5">
+                    Phone Number (Bangladesh)
                   </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type="tel"
                       value={regPhone}
@@ -1510,12 +1537,23 @@ export const SplashOnboarding: React.FC = () => {
 
                 <div
                   className="dm-flow-a"
-                  style={{ '--d': 0.38 } as React.CSSProperties}
+                  style={{ '--d': 0.3 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
-                    Password
-                  </label>
-                  <div className="flex items-center h-11 px-3.5 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-4 focus-within:ring-[#059669]/12 transition-all">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[12px] font-semibold text-[#0F1D17]">
+                      Password
+                    </label>
+                    <span
+                      className={`text-[11px] transition-colors ${
+                        regPassword.length >= 8
+                          ? 'text-[#059669] font-semibold'
+                          : 'text-[#74887E]'
+                      }`}
+                    >
+                      {regPassword.length >= 8 ? '✓ 8+ characters' : 'Min. 8 chars'}
+                    </span>
+                  </div>
+                  <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
                     <input
                       type={showRegPw ? 'text' : 'password'}
                       value={regPassword}
@@ -1528,62 +1566,55 @@ export const SplashOnboarding: React.FC = () => {
                       type="button"
                       aria-label="Show password"
                       onClick={() => setShowRegPw((v) => !v)}
-                      className="w-8 h-8 grid place-items-center text-[#74887E] hover:text-[#0F1D17]"
+                      className="w-8 h-8 -mr-1 grid place-items-center text-[#74887E] hover:text-[#0F1D17]"
                     >
                       <EyeIconSvg show={showRegPw} />
                     </button>
                   </div>
                 </div>
 
-                <div
-                  style={{ '--d': 0.44 } as React.CSSProperties}
-                  className={`dm-flow-a text-xs transition-colors ${
-                    regPassword.length >= 8
-                      ? 'text-[#059669] font-semibold'
-                      : 'text-[#485B52]'
-                  }`}
-                >
-                  {regPassword.length >= 8 ? '✓ ' : ''}At least 8 characters
+                <div className="pt-1">
+                  <RippleButton type="submit" delaySec={0.36}>
+                    Register
+                  </RippleButton>
                 </div>
-
-                <RippleButton type="submit" delaySec={0.5}>
-                  Register
-                </RippleButton>
               </form>
 
-              {/* Social Auth Divider */}
+              {/* Compact Social Auth Divider + 2-Column Side-by-Side Grid */}
               <div
-                className="dm-flow-a flex items-center gap-3 text-[#74887E] text-xs my-3 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
-                style={{ '--d': 0.56 } as React.CSSProperties}
+                className="dm-flow-a flex items-center gap-2.5 text-[#74887E] text-[11px] my-2.5 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
+                style={{ '--d': 0.42 } as React.CSSProperties}
               >
-                or
+                or continue with
               </div>
 
-              <div className="space-y-2">
+              <div
+                className="dm-flow-a grid grid-cols-2 gap-2.5"
+                style={{ '--d': 0.48 } as React.CSSProperties}
+              >
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('Google')}
-                  style={{ '--d': 0.6 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="flex items-center justify-center gap-2 w-full h-10 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
                 >
                   <GoogleIconSvg />
-                  <span>Continue with Google</span>
+                  <span>Google</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('Facebook')}
-                  style={{ '--d': 0.66 } as React.CSSProperties}
-                  className="dm-flow-a flex items-center justify-center gap-2.5 w-full h-11 border-[1.5px] border-[#DFEAE3] rounded-xl text-[13px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all"
+                  className="flex items-center justify-center gap-2 w-full h-10 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
                 >
                   <FacebookIconSvg />
-                  <span>Continue with Facebook</span>
+                  <span>Facebook</span>
                 </button>
               </div>
             </div>
 
+            {/* 3. Compact Footer with Login Switch */}
             <p
-              className="dm-flow-a pt-3 text-[13px] text-[#485B52]"
-              style={{ '--d': 0.72 } as React.CSSProperties}
+              className="dm-flow-a shrink-0 pt-1 text-[12px] text-[#485B52]"
+              style={{ '--d': 0.54 } as React.CSSProperties}
             >
               Already have an account?{' '}
               <button

@@ -4,6 +4,7 @@ import { Check, Heart, Package, Plus } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { Product } from '../../types/deshimart';
 import { getCanonicalLandedPricing } from '../../utils/pricingEngine';
+import { RickshawCornerMotif } from './ExperienceModeSwitcher';
 
 interface ProductCardProps {
   product: Product;
@@ -59,8 +60,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
     toggleWishlist,
     formatPrice,
     language,
+    experienceMode,
     selectedRouteByProduct,
   } = useDeshiMart();
+  const isBangladeshMode = experienceMode === 'bangladesh';
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -98,10 +101,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           navigateTo('product_detail', { productId: product.id });
         }
       }}
-      className="group relative bg-white border border-app-border rounded-xl overflow-hidden flex flex-col justify-between hover:border-app-borderStrong transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+      className={`group relative bg-white border rounded-xl overflow-hidden flex flex-col justify-between transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+        isBangladeshMode
+          ? 'border-[#E5DEC9] hover:border-[#C88A2B]/80 shadow-[0_2px_10px_-4px_rgba(0,106,78,0.08)]'
+          : 'border-app-border hover:border-app-borderStrong'
+      }`}
     >
       {/* Clean 1:1 Image Container */}
       <div className="relative w-full aspect-square bg-slate-50 overflow-hidden flex items-center justify-center border-b border-app-border">
+        {/* Subtle Rickshaw/Nakshi Corner Craft Motif in Bangladesh Vibe Mode */}
+        {!compact && <RickshawCornerMotif position="top-left" variant="emerald" />}
+
         {/* Top-Right Wishlist Button (Hidden in compact carousel cards to prevent icon clutter) */}
         {!compact && (
           <motion.button

@@ -19,7 +19,9 @@ export const BottomTabBar: React.FC = () => {
     wishlist,
     unreadNotificationCount,
     language,
+    experienceMode,
   } = useDeshiMart();
+  const isBangladeshMode = experienceMode === 'bangladesh';
 
   const checkoutAndOnboardingScreens: ScreenId[] = [
     'splash',
@@ -126,7 +128,11 @@ export const BottomTabBar: React.FC = () => {
     <nav
       role="navigation"
       aria-label="Primary Bottom Navigation"
-      className="z-50 min-h-[60px] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur border-t border-app-border grid grid-cols-6 items-center px-1.5 shrink-0 select-none"
+      className={`z-50 min-h-[60px] pb-[env(safe-area-inset-bottom,0px)] backdrop-blur border-t grid grid-cols-6 items-center px-1.5 shrink-0 select-none transition-colors duration-300 ${
+        isBangladeshMode
+          ? 'bg-[#FFFDF9]/95 border-[#E5DEC9] dm-nakshi-stitch-top'
+          : 'bg-white/95 border-app-border'
+      }`}
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -145,12 +151,16 @@ export const BottomTabBar: React.FC = () => {
                 : 'text-content-secondary hover:text-content-primary text-[10px] font-medium'
             }`}
           >
-            {/* Active top indicator bar */}
+            {/* Active top indicator bar (Rising Sun Crimson & Flag Green in Bangladesh Vibe) */}
             {isActive && (
               <motion.span
                 layoutId="bottom-tab-top-line"
                 transition={{ type: 'spring', stiffness: 440, damping: 34 }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-brand-primary"
+                className={`absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full ${
+                  isBangladeshMode
+                    ? 'w-7 bg-[#F42A41]'
+                    : 'w-6 bg-brand-primary'
+                }`}
               />
             )}
 
@@ -163,14 +173,16 @@ export const BottomTabBar: React.FC = () => {
                 }`}
               />
 
-              {/* Emerald Brand Badge */}
+              {/* Emerald or Rising Sun Crimson Badge */}
               {typeof tab.badge === 'number' && tab.badge > 0 && (
                 <motion.span
                   key={tab.badge}
                   initial={{ scale: 0.6 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  className="absolute -top-1 -right-2.5 bg-brand-primary text-white text-[10px] font-bold font-mono-num h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white"
+                  className={`absolute -top-1 -right-2.5 text-white text-[10px] font-bold font-mono-num h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center ring-2 ring-white ${
+                    isBangladeshMode ? 'bg-[#F42A41]' : 'bg-brand-primary'
+                  }`}
                 >
                   {tab.badge}
                 </motion.span>
@@ -178,7 +190,11 @@ export const BottomTabBar: React.FC = () => {
 
               {/* Subtle Unread Dot on Account Tab */}
               {tab.hasDot && (
-                <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-brand-primary ring-2 ring-white" />
+                <span
+                  className={`absolute -top-0.5 -right-1 w-2 h-2 rounded-full ring-2 ring-white ${
+                    isBangladeshMode ? 'bg-[#F42A41]' : 'bg-brand-primary'
+                  }`}
+                />
               )}
             </div>
 

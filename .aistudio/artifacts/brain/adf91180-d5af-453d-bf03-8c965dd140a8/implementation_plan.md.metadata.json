@@ -1,0 +1,6 @@
+{
+  "summary":  "Engineering plan to optimize the Welcome Back (step 4) and Create Account (step 5) screens in SplashOnboarding.tsx so both screens fit mobile viewports without vertical scrolling, using a compact header/logo, inline Password + Forgot Password label row, 2-column Google/Facebook social buttons, and a subtle footer Admin Console toggle link.",
+  "updatedAt":  "2026-10-10T04:41:56.325946653Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

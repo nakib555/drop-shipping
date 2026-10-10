@@ -23,6 +23,7 @@ import {
   CartItem,
   CategoryId,
   CurrencyCode,
+  ExperienceMode,
   LanguageCode,
   Order,
   PaymentMethodId,
@@ -116,11 +117,16 @@ interface DeshiMartContextValue {
     type: AppNotification['type']
   ) => void;
 
-  // Preferences
+  // Preferences & Dual Cultural Identity Mode
   currency: CurrencyCode;
   setCurrency: (c: CurrencyCode) => void;
   language: LanguageCode;
   setLanguage: (l: LanguageCode) => void;
+  experienceMode: ExperienceMode;
+  setExperienceMode: (m: ExperienceMode) => void;
+  toggleExperienceMode: () => void;
+  experienceIntroDismissed: boolean;
+  dismissExperienceIntro: () => void;
   darkMode: boolean;
   setDarkMode: (d: boolean) => void;
   formatPrice: (bdtAmount: number) => string;
@@ -317,7 +323,58 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [currency, setCurrency] = useState<CurrencyCode>('BDT');
   const [language, setLanguage] = useState<LanguageCode>('EN');
+  const [experienceMode, setExperienceModeState] = useState<ExperienceMode>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? window.localStorage.getItem('dm_experience_mode') : null;
+      return saved === 'bangladesh' ? 'bangladesh' : 'global';
+    } catch {
+      return 'global';
+    }
+  });
+  const [experienceIntroDismissed, setExperienceIntroDismissed] = useState<boolean>(() => {
+    try {
+      return typeof window !== 'undefined' && window.localStorage.getItem('dm_experience_intro_dismissed') === '1';
+    } catch {
+      return false;
+    }
+  });
   const [darkMode, setDarkMode] = useState<boolean>(false);
+
+  const setExperienceMode = useCallback((mode: ExperienceMode) => {
+    setExperienceModeState(mode);
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('dm_experience_mode', mode);
+      }
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, []);
+
+  const toggleExperienceMode = useCallback(() => {
+    setExperienceModeState((prev) => {
+      const next: ExperienceMode = prev === 'global' ? 'bangladesh' : 'global';
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('dm_experience_mode', next);
+        }
+      } catch {
+        // Ignore storage quota errors
+      }
+      return next;
+    });
+  }, []);
+
+  const dismissExperienceIntro = useCallback(() => {
+    setExperienceIntroDismissed(true);
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('dm_experience_intro_dismissed', '1');
+      }
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, []);
 
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
@@ -1656,6 +1713,11 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setCurrency,
         language,
         setLanguage,
+        experienceMode,
+        setExperienceMode,
+        toggleExperienceMode,
+        experienceIntroDismissed,
+        dismissExperienceIntro,
         darkMode,
         setDarkMode,
         formatPrice,
