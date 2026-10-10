@@ -28,6 +28,7 @@ export type ScreenId =
   | 'guides'
   | 'admin_dashboard';
 
+// Clean production types — zero ExperienceMode types
 export type UserRole = 'customer' | 'admin';
 
 export interface PromoVoucher {

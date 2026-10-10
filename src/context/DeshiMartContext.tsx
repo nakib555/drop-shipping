@@ -51,6 +51,7 @@ export interface ToastMessage {
   type: 'success' | 'info';
 }
 
+// Clean production DeshiMartContext — zero ExperienceMode state
 interface DeshiMartContextValue {
   // Navigation
   currentScreen: ScreenId;

@@ -14,11 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
-import {
-  BangladeshHeritageBadge,
-  NakshiStitchDivider,
-  RickshawCornerMotif,
-} from '../shared/ExperienceModeSwitcher';
+// Clean production OrdersTrackingScreen — zero NakshiStitchDivider imports
 
 export const OrdersTrackingScreen: React.FC = () => {
   const {
@@ -149,9 +145,7 @@ export const OrdersTrackingScreen: React.FC = () => {
   return (
     <div className="p-4 space-y-4 pb-6 bg-app-bg">
       {/* 1. Clean Order Status & 4-Step Horizontal Micro-Progress Bar */}
-      <div className="relative overflow-hidden bg-white rounded-xl border border-app-border p-4 space-y-4">
-        <RickshawCornerMotif position="top-left" variant="emerald" />
-        <BangladeshHeritageBadge label="Dhaka Customs Hub · Pre-Cleared" />
+      <div className="bg-white rounded-xl border border-app-border p-4 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -265,8 +259,6 @@ export const OrdersTrackingScreen: React.FC = () => {
           </button>
         </div>
       </div>
-
-      <NakshiStitchDivider />
 
       {/* 2. Vertical Logistics Timeline (Active node in Blue-600 status-transit) */}
       <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">

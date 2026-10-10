@@ -20,6 +20,7 @@ import {
   Truck,
   Wallet,
 } from 'lucide-react';
+// Clean production CheckoutFlowScreen — zero Cultural Vibe imports
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import {
   PaymentMethodId,

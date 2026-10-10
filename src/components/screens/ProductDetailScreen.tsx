@@ -24,6 +24,7 @@ import {
   PdpSelectiveBentoModule,
   PdpVariantSelector,
 } from '../pdp/HybridBentoPdpModules';
+// Clean production ProductDetailScreen — zero Cultural Vibe imports
 
 export const ProductDetailScreen: React.FC = () => {
   const {

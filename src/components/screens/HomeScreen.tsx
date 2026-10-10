@@ -24,11 +24,7 @@ import {
   isVerifiedQualitySupplier,
 } from '../../utils/pricingEngine';
 import { ProductCard, ProductCardGhost } from '../shared/ProductCard';
-import {
-  CulturalSectionBadge,
-  NakshiStitchDivider,
-  RickshawCornerMotif,
-} from '../shared/ExperienceModeSwitcher';
+// Clean production HomeScreen — zero Cultural Vibe banners or heritage badges
 
 const PAGE_SIZE = 16;
 
@@ -52,19 +48,13 @@ export const HomeScreen: React.FC = () => {
     setSmartFilters,
     resetSmartFilters,
     language,
-    experienceMode,
-    setExperienceMode,
-    experienceIntroDismissed,
-    dismissExperienceIntro,
     currency,
     formatPrice,
     orders,
-    showToast,
   } = useDeshiMart();
 
   const prefersReducedMotion = useReducedMotion();
   const isBn = language === 'BN';
-  const isBangladeshMode = experienceMode === 'bangladesh';
 
   const [visibleLimit, setVisibleLimit] = useState<number>(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
@@ -476,79 +466,6 @@ export const HomeScreen: React.FC = () => {
         )}
       </div>
 
-      {/* 1.5 First-Use Cultural Identity Intro Banner (Dismissible permanently) */}
-      {!searchQuery.trim() && !experienceIntroDismissed && (
-        <section
-          aria-label={
-            isBn
-              ? 'নতুন বাংলাদেশ ভাইব পরিচয়'
-              : 'Introducing Bangladesh Vibe Mode'
-          }
-          className={`relative overflow-hidden rounded-2xl border p-3.5 flex items-center justify-between gap-3 transition-colors ${
-            isBangladeshMode
-              ? 'bg-[#E6F2EE] border-[#006A4E]/35 text-[#1B2420]'
-              : 'bg-white border-app-border text-content-primary'
-          }`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="w-9 h-9 rounded-xl bg-[#006A4E] text-white flex items-center justify-center shrink-0 relative shadow-2xs">
-              <span className="w-3.5 h-3.5 rounded-full bg-[#F42A41]" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-content-primary truncate">
-                  {isBn
-                    ? 'নতুন: বাংলাদেশ 🇧🇩 ভাইব মোড'
-                    : 'New: বাংলাদেশ 🇧🇩 Cultural Vibe'}
-                </span>
-              </div>
-              <p className="text-[11px] text-content-secondary leading-snug line-clamp-2 mt-0.5">
-                {isBn
-                  ? 'নকশী কাঁথা ও লাল-সবুজ আবহে শপিং করতে নিচের পিল থেকে মোড পরিবর্তন করুন।'
-                  : 'Experience DeshiMart in Bangladesh Flag Green & Nakshi Kantha craft anytime.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                const nextMode = isBangladeshMode ? 'global' : 'bangladesh';
-                setExperienceMode(nextMode);
-                showToast(
-                  nextMode === 'bangladesh'
-                    ? isBn
-                      ? 'বাংলাদেশ 🇧🇩 ভাইব চালু হয়েছে'
-                      : 'বাংলাদেশ 🇧🇩 Vibe activated!'
-                    : isBn
-                    ? 'Global মোড চালু হয়েছে'
-                    : 'Switched to Global Premium',
-                  'success'
-                );
-              }}
-              className="h-8 px-3 rounded-xl bg-[#006A4E] hover:bg-[#00563F] text-white text-[11px] font-semibold whitespace-nowrap transition-colors"
-            >
-              {isBangladeshMode
-                ? isBn
-                  ? 'Global দেখুন'
-                  : 'Try Global'
-                : isBn
-                ? 'বাংলাদেশ 🇧🇩 দেখুন'
-                : 'Try বাংলাদেশ 🇧🇩'}
-            </button>
-            <button
-              type="button"
-              aria-label={isBn ? 'বন্ধ করুন' : 'Dismiss introduction'}
-              onClick={dismissExperienceIntro}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-content-muted hover:text-content-primary hover:bg-app-subtle transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </section>
-      )}
-
       {/* 2. Compact Promotional Hero Carousel (Hidden while actively typing a search query so results appear immediately) */}
       {!searchQuery.trim() && (
         <section
@@ -563,44 +480,8 @@ export const HomeScreen: React.FC = () => {
           onTouchEnd={() => setIsHeroPaused(false)}
           onFocusCapture={() => setIsHeroPaused(true)}
           onBlurCapture={() => setIsHeroPaused(false)}
-          className={`relative overflow-hidden rounded-2xl text-white p-3.5 sm:p-4 select-none transition-colors ${
-            isBangladeshMode
-              ? 'bg-gradient-to-br from-[#006A4E] via-[#005B42] to-[#004633] border border-[#C88A2B]/45 shadow-[0_12px_28px_-10px_rgba(0,106,78,0.45)]'
-              : 'bg-brand-primary'
-          }`}
+          className="relative overflow-hidden rounded-2xl bg-brand-primary text-white p-3.5 sm:p-4 select-none"
         >
-          {/* Expressive Rickshaw & Rising-Sun Craft Backdrop in Bangladesh Vibe Mode */}
-          {isBangladeshMode && (
-            <>
-              <RickshawCornerMotif position="top-left" variant="light" />
-              <RickshawCornerMotif position="bottom-right" variant="light" />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-4 top-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-[#F42A41]/25 blur-md"
-              />
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 120 120"
-                fill="none"
-                className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-28 h-28 opacity-20"
-              >
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="46"
-                  stroke="#FDE68A"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                />
-                <circle cx="60" cy="60" r="32" fill="#F42A41" fillOpacity="0.45" />
-                <path
-                  d="M60 8L66 24L82 24L69 34L74 50L60 40L46 50L51 34L38 24L54 24L60 8Z"
-                  stroke="#FFFDF9"
-                  strokeWidth="1"
-                />
-              </svg>
-            </>
-          )}
           <AnimatePresence mode="wait" custom={heroDirection} initial={false}>
             <motion.div
               key={activeSlide.id}
@@ -769,12 +650,10 @@ export const HomeScreen: React.FC = () => {
           aria-label={isBn ? 'সেরা ল্যান্ডেড ডিল' : 'Featured Landed Drops'}
           className="space-y-2.5"
         >
-          <NakshiStitchDivider />
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-content-primary flex items-center">
-                <CulturalSectionBadge />
-                <span>{isBn ? 'সেরা ল্যান্ডেড ডিল' : 'Featured Landed Drops'}</span>
+              <h2 className="text-sm font-bold text-content-primary">
+                {isBn ? 'সেরা ল্যান্ডেড ডিল' : 'Featured Landed Drops'}
               </h2>
               <p className="text-[11px] text-content-secondary">
                 {isBn
@@ -898,9 +777,8 @@ export const HomeScreen: React.FC = () => {
           className="space-y-2"
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-content-primary flex items-center">
-              <CulturalSectionBadge />
-              <span>{isBn ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed'}</span>
+            <h2 className="text-sm font-bold text-content-primary">
+              {isBn ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed'}
             </h2>
           </div>
 
@@ -957,12 +835,10 @@ export const HomeScreen: React.FC = () => {
         aria-label={isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Product Catalog'}
         className="space-y-3"
       >
-        <NakshiStitchDivider />
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-content-primary flex items-center">
-              <CulturalSectionBadge />
-              <span>{isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Catalog'}</span>
+            <h2 className="text-sm font-bold text-content-primary">
+              {isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Catalog'}
             </h2>
             <p className="text-[11px] text-content-secondary truncate">
               {isBn

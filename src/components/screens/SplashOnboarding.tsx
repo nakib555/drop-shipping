@@ -2,6 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 
+// Clean production SplashOnboarding & Login Screen (Welcome Back design)
 type FlowStep = 0 | 1 | 2 | 3 | 4 | 5;
 
 /* =====================  CUSTOM ANIMATED SVGs  ===================== */

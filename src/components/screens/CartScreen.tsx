@@ -21,10 +21,7 @@ import {
   CheckoutPriceBreakdown,
   CheckoutStickyFooter,
 } from '../checkout/CheckoutSharedModules';
-import {
-  BangladeshHeritageBadge,
-  NakshiStitchDivider,
-} from '../shared/ExperienceModeSwitcher';
+// Clean production CartScreen — zero NakshiStitchDivider imports
 
 export const CartScreen: React.FC = () => {
   const {
@@ -62,18 +59,17 @@ export const CartScreen: React.FC = () => {
       .slice(0, 4);
 
     return (
-      <div className="flex-1 flex flex-col justify-between bg-app-bg text-content-primary pb-6">
+      <div className="flex-1 flex flex-col justify-between bg-[#F9FAFB] text-[#111827] pb-6">
         <div>
           {/* B. Empty Cart State (Compact 8pt-grid hierarchy, keeps primary CTA above the fold) */}
           <section
             aria-labelledby="empty-cart-heading"
-            className="px-4 pt-6 pb-6 flex flex-col items-center text-center border-b border-app-border bg-white space-y-2"
+            className="px-4 pt-6 pb-6 flex flex-col items-center text-center border-b border-slate-200/80 bg-white"
           >
-            <BangladeshHeritageBadge />
             {/* Tasteful, minimal 2D shopping-bag illustration */}
             <div
               aria-hidden="true"
-              className="w-16 h-16 rounded-2xl bg-brand-subtle border border-brand-border flex items-center justify-center mb-2 shadow-2xs"
+              className="w-16 h-16 rounded-2xl bg-[#ECFDF5]/70 border border-[#A7F3D0]/70 flex items-center justify-center mb-4 shadow-2xs"
             >
               <svg
                 viewBox="0 0 64 64"
@@ -155,13 +151,12 @@ export const CartScreen: React.FC = () => {
           {/* C. Product Discovery Section ("Popular right now") */}
           <section
             aria-labelledby="popular-discovery-heading"
-            className="px-4 pt-4 space-y-3"
+            className="px-4 pt-5"
           >
-            <NakshiStitchDivider />
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <h3
                 id="popular-discovery-heading"
-                className="text-sm font-bold tracking-tight text-content-primary"
+                className="text-sm font-bold tracking-tight text-[#111827]"
               >
                 {isBn ? 'এখন জনপ্রিয়' : 'Popular right now'}
               </h3>
