@@ -34,40 +34,40 @@ const BagLogoSvg: React.FC = () => (
 
 const BackIconSvg: React.FC = () => (
   <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="#1c2a22"
-    strokeWidth="2.4"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M15 5l-7 7 7 7" />
-  </svg>
-);
-
-const EyeIconSvg: React.FC<{ show: boolean }> = ({ show }) => (
-  <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.8"
+    strokeWidth="2.2"
     strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
   >
-    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
+
+const EyeIconSvg: React.FC<{ show: boolean }> = ({ show }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z" />
     <circle cx="12" cy="12" r="3" />
-    <path
-      d="M4 4l16 16"
-      style={{ opacity: show ? 0 : 1, transition: 'opacity 0.2s' }}
-    />
+    {!show && <path d="M4 4l16 16" />}
   </svg>
 );
 
 const GoogleIconSvg: React.FC = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
     <path
       fill="#4285F4"
       d="M23.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9z"
@@ -88,7 +88,7 @@ const GoogleIconSvg: React.FC = () => (
 );
 
 const FacebookIconSvg: React.FC = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
     <circle cx="12" cy="12" r="12" fill="#1877F2" />
     <path
       fill="#fff"
@@ -905,18 +905,30 @@ export const SplashOnboarding: React.FC = () => {
   const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const pointerStartX = useRef<number | null>(null);
 
-  // Auth Form State
+  // Auth Form State (Clean initial state without hardcoded real credentials)
   const [loginRole, setLoginRole] = useState<'customer' | 'admin'>('customer');
-  const [loginIdentifier, setLoginIdentifier] = useState('tanvir.ahmed@deshimart.bd');
-  const [loginPassword, setLoginPassword] = useState('••••••••••••');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [loginShake, setLoginShake] = useState(false);
+  const [loginErrors, setLoginErrors] = useState<{
+    identifier?: string;
+    password?: string;
+    form?: string;
+  }>({});
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('+880 1712 345678');
+  const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [showRegPw, setShowRegPw] = useState(false);
   const [regShake, setRegShake] = useState(false);
+  const [regErrors, setRegErrors] = useState<{
+    name?: string;
+    phone?: string;
+    password?: string;
+  }>({});
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Sync when external navigation changes currentScreen
   useEffect(() => {
@@ -958,8 +970,8 @@ export const SplashOnboarding: React.FC = () => {
     }
   };
 
-  const triggerShake = (which: 'login' | 'reg', msg: string) => {
-    showToast(msg, 'info');
+  const triggerShake = (which: 'login' | 'reg', msg?: string) => {
+    if (msg) showToast(msg, 'info');
     if (which === 'login') {
       setLoginShake(false);
       window.setTimeout(() => setLoginShake(true), 10);
@@ -971,28 +983,81 @@ export const SplashOnboarding: React.FC = () => {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginIdentifier.trim() || !loginPassword.trim()) {
-      triggerShake('login', 'Please enter email/phone and password');
+    if (isLoggingIn) return;
+
+    const trimmedId = loginIdentifier.trim();
+    const trimmedPw = loginPassword.trim();
+    const nextErrors: { identifier?: string; password?: string; form?: string } = {};
+
+    if (!trimmedId) {
+      nextErrors.identifier = 'Enter your email address or Bangladesh phone number.';
+    } else if (
+      !trimmedId.includes('@') &&
+      !/^(\+?880|0)?1[3-9]\d{8}$/.test(trimmedId.replace(/[\s-]/g, '')) &&
+      trimmedId.length < 4
+    ) {
+      nextErrors.identifier = 'Enter a valid email (name@example.com) or BD mobile number.';
+    }
+
+    if (!trimmedPw) {
+      nextErrors.password = 'Enter your account password.';
+    } else if (trimmedPw.length < 6) {
+      nextErrors.password = 'Password must be at least 6 characters.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setLoginErrors(nextErrors);
+      triggerShake('login');
       return;
     }
+
+    setLoginErrors({});
+    setIsLoggingIn(true);
     const isAdminLogin = loginRole === 'admin';
-    loginUser(
-      loginIdentifier.trim(),
-      isAdminLogin ? 'Nakib Prince' : 'Tanvir Ahmed',
-      isAdminLogin ? 'admin' : 'customer'
-    );
+    window.setTimeout(() => {
+      setIsLoggingIn(false);
+      loginUser(
+        trimmedId,
+        isAdminLogin ? 'Nakib Prince' : 'Tanvir Ahmed',
+        isAdminLogin ? 'admin' : 'customer'
+      );
+    }, 180);
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regPhone.trim() || regPassword.trim().length < 8) {
-      triggerShake('reg', 'Fill all fields (password 8+ chars)');
+    if (isRegistering) return;
+
+    const trimmedName = regName.trim();
+    const trimmedPhone = regPhone.trim();
+    const nextErrors: { name?: string; phone?: string; password?: string } = {};
+
+    if (!trimmedName) {
+      nextErrors.name = 'Enter your full name.';
+    }
+    if (!trimmedPhone) {
+      nextErrors.phone = 'Enter your Bangladesh mobile number.';
+    }
+    if (regPassword.trim().length < 8) {
+      nextErrors.password = 'Password must be at least 8 characters.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setRegErrors(nextErrors);
+      triggerShake('reg');
       return;
     }
-    loginUser(regPhone.trim(), regName.trim());
+
+    setRegErrors({});
+    setIsRegistering(true);
+    window.setTimeout(() => {
+      setIsRegistering(false);
+      loginUser(trimmedPhone, trimmedName);
+    }, 180);
   };
 
   const handleSocialLogin = (provider: 'Google' | 'Facebook') => {
+    if (isLoggingIn || isRegistering) return;
     loginUser(`tanvir.${provider.toLowerCase()}@deshimart.bd`, 'Tanvir Ahmed');
   };
 
@@ -1137,7 +1202,7 @@ export const SplashOnboarding: React.FC = () => {
                   type="button"
                   aria-label="Back"
                   onClick={() => goStep((step - 1) as FlowStep)}
-                  className="w-11 h-11 -ml-2 rounded-full grid place-items-center hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
+                  className="w-11 h-11 -ml-2 rounded-full grid place-items-center text-[#17231E] hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
                 >
                   <BackIconSvg />
                 </button>
@@ -1234,7 +1299,7 @@ export const SplashOnboarding: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigateTo('home')}
-                  className="min-h-[36px] px-3 text-[13px] font-semibold text-[#059669] hover:underline"
+                  className="min-h-[36px] px-3 text-[13px] font-semibold text-[#16865F] hover:underline"
                 >
                   {step < 3 ? 'Skip to Store' : 'Browse Store as Guest →'}
                 </button>
@@ -1243,393 +1308,619 @@ export const SplashOnboarding: React.FC = () => {
           </motion.section>
         )}
 
-        {/* =====================  4: LOGIN SCREEN (MOBILE VIEWPORT-FITTED, ZERO SCROLL) ===================== */}
+        {/* =====================  4: LOGIN SCREEN (REFINED TYPOGRAPHY, 8PT SPACING & ACCESSIBILITY) ===================== */}
         {step === 4 && (
           <motion.section
             key="flow-login"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-5 py-4 text-center bg-white text-[#0F1D17] overflow-y-auto no-scrollbar"
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className="flex-1 min-h-0 overflow-y-auto no-scrollbar bg-[var(--auth-surface)] text-[var(--auth-text-main)] select-text"
           >
-            {/* 1. Compact Top Navigation Bar */}
-            <div className="flex items-center justify-between w-full shrink-0 dm-flow-a">
-              <button
-                type="button"
-                aria-label="Back"
-                onClick={() => goStep(3)}
-                className="w-9 h-9 -ml-1.5 rounded-full grid place-items-center hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
-              >
-                <BackIconSvg />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigateTo('home')}
-                className="min-h-[36px] px-2 text-xs font-semibold text-[#059669] hover:underline whitespace-nowrap"
-              >
-                Skip to Store →
-              </button>
-            </div>
+            <div className="min-h-full w-full max-w-[392px] mx-auto px-5 pt-3 pb-5 flex flex-col justify-between">
+              {/* 1. Top Navigation Bar (44x44px back target & balanced Skip to Store) */}
+              <header className="flex items-center justify-between w-full shrink-0">
+                <button
+                  type="button"
+                  aria-label="Back to onboarding"
+                  onClick={() => goStep(3)}
+                  className="w-11 h-11 -ml-2.5 rounded-full grid place-items-center text-[var(--auth-text-main)] hover:bg-[#EFF5F2] active:bg-[#E2ECE7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] transition-colors duration-150"
+                >
+                  <BackIconSvg />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('home')}
+                  className="min-h-[44px] px-2 -mr-1.5 inline-flex items-center gap-1 text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-interactive)] hover:text-[var(--auth-hover)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] rounded-lg transition-colors duration-150 whitespace-nowrap"
+                >
+                  <span>Skip to Store</span>
+                  <span aria-hidden="true" className="text-[13px] leading-none">
+                    →
+                  </span>
+                </button>
+              </header>
 
-            {/* 2. Elevated Brand Header + Distinct Form Section */}
-            <div className="flex-1 flex flex-col justify-center py-1">
-              {/* Elevated Brand Header Block */}
-              <div className="mb-6 sm:mb-7">
-                <div
-                  className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
-                  style={{ '--d': 0.04 } as React.CSSProperties}
-                >
-                  <BagLogoSvg />
-                </div>
-
-                <h2
-                  className="dm-flow-a text-[21px] leading-6 font-bold mt-2.5 text-[#0F1D17] tracking-[-0.02em]"
-                  style={{ '--d': 0.1 } as React.CSSProperties}
-                >
-                  {loginRole === 'admin' ? 'Admin Console Sign In' : 'Welcome Back'}
-                </h2>
-                <p
-                  className="dm-flow-a text-[12.5px] leading-4 text-[#485B52] mt-1"
-                  style={{ '--d': 0.14 } as React.CSSProperties}
-                >
-                  {loginRole === 'admin'
-                    ? 'Authorized DeshiMart operations & catalog portal'
-                    : 'Sign in to your DeshiMart cross-border account'}
-                </p>
-              </div>
-
-              <form
-                onSubmit={handleLoginSubmit}
-                noValidate
-                className={`text-left space-y-3 ${
-                  loginShake ? 'dm-flow-shake' : ''
-                }`}
-              >
-                <div
-                  className="dm-flow-a"
-                  style={{ '--d': 0.18 } as React.CSSProperties}
-                >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
-                    Email or Phone
-                  </label>
-                  <div className="flex items-center h-10 sm:h-11 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
-                    <input
-                      type="text"
-                      value={loginIdentifier}
-                      onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder="name@example.com"
-                      autoComplete="username"
-                      className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13px] text-[#0F1D17]"
-                    />
+              {/* 2. Unified Brand Header + Auth Form + Social Authentication */}
+              <div className="w-full my-auto py-3">
+                {/* Brand Mark + Heading + Subtitle */}
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-[#EEF6F2] border border-[#DCE7E0]/80 flex items-center justify-center shadow-[0_1px_2px_rgba(6,95,70,0.06)]">
+                    <div className="dm-flow-logo dm-flow-logo-sm">
+                      <BagLogoSvg />
+                    </div>
                   </div>
+
+                  <h1 className="mt-3 text-[22px] sm:text-[23px] leading-[1.25] font-bold text-[var(--auth-text-main)] tracking-[-0.02em] whitespace-nowrap">
+                    {loginRole === 'admin' ? 'Admin Console Sign In' : 'Welcome Back'}
+                  </h1>
+
+                  <p className="mt-1.5 text-[13.5px] leading-[1.5] font-normal text-[var(--auth-text-secondary)]">
+                    {loginRole === 'admin'
+                      ? 'Authorized DeshiMart operations & catalog portal'
+                      : 'Sign in to your DeshiMart cross-border account'}
+                  </p>
                 </div>
 
-                <div
-                  className="dm-flow-a"
-                  style={{ '--d': 0.24 } as React.CSSProperties}
+                {/* Login Form */}
+                <form
+                  onSubmit={handleLoginSubmit}
+                  noValidate
+                  className={`text-left space-y-4 ${
+                    loginShake ? 'dm-flow-shake' : ''
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[12px] font-semibold text-[#0F1D17]">
-                      Password
+                  {/* Email or Phone Field */}
+                  <div>
+                    <label
+                      htmlFor="dm-login-identifier"
+                      className="block text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] mb-1.5"
+                    >
+                      Email or Phone
                     </label>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        showToast('Password reset link sent to your email/SMS', 'info')
+                    <div
+                      className={`flex items-center h-[46px] px-3.5 rounded-xl border bg-[var(--auth-input-bg)] transition-all duration-150 ${
+                        loginErrors.identifier
+                          ? 'border-[var(--auth-error)] bg-[var(--auth-error-bg)]/40 focus-within:border-[var(--auth-error)] focus-within:ring-3 focus-within:ring-[#B42318]/14'
+                          : 'border-[var(--auth-border)] hover:border-[var(--auth-border-hover)] focus-within:border-[var(--auth-interactive)] focus-within:bg-white focus-within:ring-3 focus-within:ring-[var(--auth-focus-ring)]'
+                      }`}
+                    >
+                      <input
+                        id="dm-login-identifier"
+                        name="username"
+                        type="text"
+                        inputMode="email"
+                        value={loginIdentifier}
+                        disabled={isLoggingIn}
+                        onChange={(e) => {
+                          setLoginIdentifier(e.target.value);
+                          if (loginErrors.identifier) {
+                            setLoginErrors((prev) => ({ ...prev, identifier: undefined }));
+                          }
+                        }}
+                        placeholder={
+                          loginRole === 'admin'
+                            ? 'admin@deshimart.bd'
+                            : 'name@example.com or +880 17...'
+                        }
+                        autoComplete="username"
+                        aria-invalid={Boolean(loginErrors.identifier)}
+                        aria-describedby={
+                          loginErrors.identifier ? 'dm-login-identifier-error' : undefined
+                        }
+                        className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13.5px] leading-[1.45] font-medium text-[var(--auth-text-main)] placeholder:text-[var(--auth-text-muted)] placeholder:font-normal disabled:opacity-60"
+                      />
+                    </div>
+                    {loginErrors.identifier && (
+                      <p
+                        id="dm-login-identifier-error"
+                        role="alert"
+                        className="mt-1.5 flex items-center gap-1.5 text-[12px] leading-[1.4] font-medium text-[var(--auth-error)]"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          className="shrink-0"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span>{loginErrors.identifier}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Password Field & Recovery Link */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <label
+                        htmlFor="dm-login-password"
+                        className="text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)]"
+                      >
+                        Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          showToast('Password reset link sent to your email/SMS', 'info')
+                        }
+                        className="min-h-[28px] -my-1 px-1 text-[12px] leading-[1.4] font-semibold text-[var(--auth-interactive)] hover:text-[var(--auth-hover)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] rounded transition-colors duration-150 whitespace-nowrap"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                    <div
+                      className={`flex items-center h-[46px] pl-3.5 pr-1 rounded-xl border bg-[var(--auth-input-bg)] transition-all duration-150 ${
+                        loginErrors.password
+                          ? 'border-[var(--auth-error)] bg-[var(--auth-error-bg)]/40 focus-within:border-[var(--auth-error)] focus-within:ring-3 focus-within:ring-[#B42318]/14'
+                          : 'border-[var(--auth-border)] hover:border-[var(--auth-border-hover)] focus-within:border-[var(--auth-interactive)] focus-within:bg-white focus-within:ring-3 focus-within:ring-[var(--auth-focus-ring)]'
+                      }`}
+                    >
+                      <input
+                        id="dm-login-password"
+                        name="password"
+                        type={showLoginPw ? 'text' : 'password'}
+                        value={loginPassword}
+                        disabled={isLoggingIn}
+                        onChange={(e) => {
+                          setLoginPassword(e.target.value);
+                          if (loginErrors.password) {
+                            setLoginErrors((prev) => ({ ...prev, password: undefined }));
+                          }
+                        }}
+                        placeholder="Enter your password"
+                        autoComplete="current-password"
+                        aria-invalid={Boolean(loginErrors.password)}
+                        aria-describedby={
+                          loginErrors.password ? 'dm-login-password-error' : undefined
+                        }
+                        className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13.5px] leading-[1.45] font-medium text-[var(--auth-text-main)] placeholder:text-[var(--auth-text-muted)] placeholder:font-normal disabled:opacity-60"
+                      />
+                      <button
+                        type="button"
+                        aria-label={showLoginPw ? 'Hide password' : 'Show password'}
+                        aria-pressed={showLoginPw}
+                        onClick={() => setShowLoginPw((v) => !v)}
+                        className="w-10 h-10 rounded-lg grid place-items-center text-[var(--auth-text-muted)] hover:text-[var(--auth-text-main)] hover:bg-[#E8F0EC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] transition-colors duration-150 shrink-0"
+                      >
+                        <EyeIconSvg show={showLoginPw} />
+                      </button>
+                    </div>
+                    {loginErrors.password && (
+                      <p
+                        id="dm-login-password-error"
+                        role="alert"
+                        className="mt-1.5 flex items-center gap-1.5 text-[12px] leading-[1.4] font-medium text-[var(--auth-error)]"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          className="shrink-0"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span>{loginErrors.password}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Primary Login CTA */}
+                  <div className="pt-1">
+                    <RippleButton
+                      type="submit"
+                      disabled={isLoggingIn}
+                      aria-busy={isLoggingIn}
+                    >
+                      {isLoggingIn ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <svg
+                            className="w-4 h-4 animate-spin text-white shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="9"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                               className="opacity-30"
+                            />
+                            <path
+                              d="M21 12a9 9 0 0 0-9-9"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <span>
+                            {loginRole === 'admin'
+                              ? 'Signing in to Console...'
+                              : 'Signing in...'}
+                          </span>
+                        </span>
+                      ) : loginRole === 'admin' ? (
+                        'Sign In to Admin Console'
+                      ) : (
+                        'Login'
+                      )}
+                    </RippleButton>
+                  </div>
+                </form>
+
+                {/* Social Authentication Divider */}
+                <div
+                  role="separator"
+                  aria-label="or continue with"
+                  className="flex items-center gap-3 text-[var(--auth-text-muted)] text-[11.5px] leading-[1.4] font-normal my-5 before:content-[''] before:flex-1 before:h-px before:bg-[var(--auth-border)] after:content-[''] after:flex-1 after:h-px after:bg-[var(--auth-border)]"
+                >
+                  <span>or continue with</span>
+                </div>
+
+                {/* 2-Column Google & Facebook Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    disabled={isLoggingIn}
+                    onClick={() => handleSocialLogin('Google')}
+                    className="flex items-center justify-center gap-2 w-full h-[44px] px-3 bg-[var(--auth-surface)] border border-[var(--auth-border)] rounded-xl text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] hover:border-[var(--auth-border-hover)] hover:bg-[#FAFDFB] active:bg-[#EFF5F2] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--auth-focus-ring)] transition-all duration-150 whitespace-nowrap disabled:opacity-60"
+                  >
+                    <GoogleIconSvg />
+                    <span>Google</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isLoggingIn}
+                    onClick={() => handleSocialLogin('Facebook')}
+                    className="flex items-center justify-center gap-2 w-full h-[44px] px-3 bg-[var(--auth-surface)] border border-[var(--auth-border)] rounded-xl text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] hover:border-[var(--auth-border-hover)] hover:bg-[#FAFDFB] active:bg-[#EFF5F2] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--auth-focus-ring)] transition-all duration-150 whitespace-nowrap disabled:opacity-60"
+                  >
+                    <FacebookIconSvg />
+                    <span>Facebook</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Registration Prompt & Discreet Staff Console Link */}
+              <footer className="shrink-0 pt-3 text-center space-y-2">
+                <p className="text-[12.5px] leading-[1.5] font-normal text-[var(--auth-text-secondary)]">
+                  Don&apos;t have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginErrors({});
+                      goStep(5);
+                    }}
+                    className="font-semibold text-[var(--auth-interactive)] hover:text-[var(--auth-hover)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] rounded px-0.5 transition-colors duration-150"
+                  >
+                    Register
+                  </button>
+                </p>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginErrors({});
+                      if (loginRole === 'customer') {
+                        setLoginRole('admin');
+                        if (!loginIdentifier) setLoginIdentifier('admin@deshimart.bd');
+                        if (!loginPassword) setLoginPassword('admin1234');
+                      } else {
+                        setLoginRole('customer');
+                        if (loginIdentifier === 'admin@deshimart.bd') {
+                          setLoginIdentifier('');
+                        }
+                        if (loginPassword === 'admin1234') {
+                          setLoginPassword('');
+                        }
                       }
-                      className="text-[11px] font-semibold text-[#059669] hover:underline"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                  <div className="flex items-center h-10 sm:h-11 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
-                    <input
-                      type={showLoginPw ? 'text' : 'password'}
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13px] text-[#0F1D17]"
-                    />
-                    <button
-                      type="button"
-                      aria-label="Show password"
-                      onClick={() => setShowLoginPw((v) => !v)}
-                      className="w-8 h-8 -mr-1 grid place-items-center text-[#74887E] hover:text-[#0F1D17]"
-                    >
-                      <EyeIconSvg show={showLoginPw} />
-                    </button>
-                  </div>
+                    }}
+                    className="inline-flex items-center justify-center gap-1 min-h-[32px] px-2 text-[11.5px] leading-[1.5] font-medium text-[var(--auth-text-muted)] hover:text-[var(--auth-interactive)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] rounded transition-colors duration-150"
+                  >
+                    {loginRole === 'admin' ? (
+                      <>
+                        <span aria-hidden="true">←</span>
+                        <span>Switch back to Customer Sign In</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Staff member? Switch to Admin Console</span>
+                        <span aria-hidden="true">→</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-
-                <div className="pt-1">
-                  <RippleButton type="submit" delaySec={0.3}>
-                    {loginRole === 'admin' ? 'Sign In to Admin Console' : 'Login'}
-                  </RippleButton>
-                </div>
-              </form>
-
-              {/* Compact Social Auth Divider + 2-Column Side-by-Side Grid */}
-              <div
-                className="dm-flow-a flex items-center gap-2.5 text-[#74887E] text-[11px] my-3 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
-                style={{ '--d': 0.36 } as React.CSSProperties}
-              >
-                or continue with
-              </div>
-
-              <div
-                className="dm-flow-a grid grid-cols-2 gap-2.5"
-                style={{ '--d': 0.42 } as React.CSSProperties}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('Google')}
-                  className="flex items-center justify-center gap-2 w-full h-10 sm:h-11 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
-                >
-                  <GoogleIconSvg />
-                  <span>Google</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('Facebook')}
-                  className="flex items-center justify-center gap-2 w-full h-10 sm:h-11 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
-                >
-                  <FacebookIconSvg />
-                  <span>Facebook</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 3. Compact Footer with Register Switch & Subtle Admin Console Link */}
-            <div
-              className="dm-flow-a shrink-0 pt-1 space-y-1"
-              style={{ '--d': 0.48 } as React.CSSProperties}
-            >
-              <p className="text-[12px] text-[#485B52]">
-                Don&apos;t have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => goStep(5)}
-                  className="font-semibold text-[#059669] hover:underline"
-                >
-                  Register
-                </button>
-              </p>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (loginRole === 'customer') {
-                      setLoginRole('admin');
-                      setLoginIdentifier('admin@deshimart.bd');
-                      setLoginPassword('••••••••••••');
-                    } else {
-                      setLoginRole('customer');
-                      setLoginIdentifier('tanvir.ahmed@deshimart.bd');
-                      setLoginPassword('••••••••••••');
-                    }
-                  }}
-                  className="text-[11px] font-medium text-[#74887E] hover:text-[#059669] transition-colors"
-                >
-                  {loginRole === 'admin'
-                    ? '← Switch back to Customer Sign In'
-                    : 'Staff member? Switch to Admin Console →'}
-                </button>
-              </div>
+              </footer>
             </div>
           </motion.section>
         )}
 
-        {/* =====================  5: REGISTER SCREEN (MOBILE VIEWPORT-FITTED, ZERO SCROLL) ===================== */}
+        {/* =====================  5: REGISTER SCREEN (MATCHING TYPOGRAPHY & 8PT SPACING SYSTEM) ===================== */}
         {step === 5 && (
           <motion.section
             key="flow-register"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-5 py-4 text-center bg-white text-[#0F1D17] overflow-y-auto no-scrollbar"
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className="flex-1 min-h-0 overflow-y-auto no-scrollbar bg-[var(--auth-surface)] text-[var(--auth-text-main)] select-text"
           >
-            {/* 1. Compact Top Navigation Bar */}
-            <div className="flex items-center justify-between w-full shrink-0 dm-flow-a">
-              <button
-                type="button"
-                aria-label="Back to Login"
-                onClick={() => goStep(4)}
-                className="w-9 h-9 -ml-1.5 rounded-full grid place-items-center hover:bg-[#EFF4F1] active:bg-[#E2ECE6] transition-colors"
-              >
-                <BackIconSvg />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigateTo('home')}
-                className="min-h-[36px] px-2 text-xs font-semibold text-[#059669] hover:underline whitespace-nowrap"
-              >
-                Skip to Store →
-              </button>
-            </div>
+            <div className="min-h-full w-full max-w-[392px] mx-auto px-5 pt-3 pb-5 flex flex-col justify-between">
+              {/* 1. Top Navigation Bar */}
+              <header className="flex items-center justify-between w-full shrink-0">
+                <button
+                  type="button"
+                  aria-label="Back to Login"
+                  onClick={() => goStep(4)}
+                  className="w-11 h-11 -ml-2.5 rounded-full grid place-items-center text-[var(--auth-text-main)] hover:bg-[#EFF5F2] active:bg-[#E2ECE7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] transition-colors duration-150"
+                >
+                  <BackIconSvg />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('home')}
+                  className="min-h-[44px] px-2 -mr-1.5 inline-flex items-center gap-1 text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-interactive)] hover:text-[var(--auth-hover)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] rounded-lg transition-colors duration-150 whitespace-nowrap"
+                >
+                  <span>Skip to Store</span>
+                  <span aria-hidden="true" className="text-[13px] leading-none">
+                    →
+                  </span>
+                </button>
+              </header>
 
-            {/* 2. Elevated Brand Header + Distinct Register Form Section */}
-            <div className="flex-1 flex flex-col justify-center py-1">
-              <div className="mb-5 sm:mb-6">
-                <div
-                  className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
-                  style={{ '--d': 0.04 } as React.CSSProperties}
-                >
-                  <BagLogoSvg />
-                </div>
-
-                <h2
-                  className="dm-flow-a text-[21px] leading-6 font-bold mt-2 text-[#0F1D17] tracking-[-0.02em]"
-                  style={{ '--d': 0.1 } as React.CSSProperties}
-                >
-                  Create Your Account
-                </h2>
-                <p
-                  className="dm-flow-a text-[12.5px] leading-4 text-[#485B52] mt-1"
-                  style={{ '--d': 0.14 } as React.CSSProperties}
-                >
-                  Join DeshiMart and start global shopping
-                </p>
-              </div>
-
-              <form
-                onSubmit={handleRegisterSubmit}
-                noValidate
-                className={`text-left space-y-2.5 ${
-                  regShake ? 'dm-flow-shake' : ''
-                }`}
-              >
-                <div
-                  className="dm-flow-a"
-                  style={{ '--d': 0.18 } as React.CSSProperties}
-                >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
-                    Full Name
-                  </label>
-                  <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
-                    <input
-                      type="text"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      placeholder="Tanvir Ahmed"
-                      autoComplete="name"
-                      className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13px] text-[#0F1D17]"
-                    />
+              {/* 2. Brand Header + Register Form + Social Authentication */}
+              <div className="w-full my-auto py-2.5">
+                <div className="text-center mb-5">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-[#EEF6F2] border border-[#DCE7E0]/80 flex items-center justify-center shadow-[0_1px_2px_rgba(6,95,70,0.06)]">
+                    <div className="dm-flow-logo dm-flow-logo-sm">
+                      <BagLogoSvg />
+                    </div>
                   </div>
+
+                  <h1 className="mt-2.5 text-[22px] sm:text-[23px] leading-[1.25] font-bold text-[var(--auth-text-main)] tracking-[-0.02em] whitespace-nowrap">
+                    Create Your Account
+                  </h1>
+                  <p className="mt-1 text-[13.5px] leading-[1.5] font-normal text-[var(--auth-text-secondary)]">
+                    Join DeshiMart and start global shopping
+                  </p>
                 </div>
 
-                <div
-                  className="dm-flow-a"
-                  style={{ '--d': 0.24 } as React.CSSProperties}
+                <form
+                  onSubmit={handleRegisterSubmit}
+                  noValidate
+                  className={`text-left space-y-3.5 ${
+                    regShake ? 'dm-flow-shake' : ''
+                  }`}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
-                    Phone Number (Bangladesh)
-                  </label>
-                  <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
-                    <input
-                      type="tel"
-                      value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                      placeholder="+880 1712 345678"
-                      autoComplete="tel"
-                      className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13px] text-[#0F1D17] font-mono-num"
-                    />
-                  </div>
-                </div>
-
-                <div
-                  className="dm-flow-a"
-                  style={{ '--d': 0.3 } as React.CSSProperties}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[12px] font-semibold text-[#0F1D17]">
-                      Password
+                  <div>
+                    <label
+                      htmlFor="dm-reg-name"
+                      className="block text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] mb-1.5"
+                    >
+                      Full Name
                     </label>
-                    <span
-                      className={`text-[11px] transition-colors ${
-                        regPassword.length >= 8
-                          ? 'text-[#059669] font-semibold'
-                          : 'text-[#74887E]'
+                    <div
+                      className={`flex items-center h-[44px] px-3.5 rounded-xl border bg-[var(--auth-input-bg)] transition-all duration-150 ${
+                        regErrors.name
+                          ? 'border-[var(--auth-error)] bg-[var(--auth-error-bg)]/40 focus-within:border-[var(--auth-error)] focus-within:ring-3 focus-within:ring-[#B42318]/14'
+                          : 'border-[var(--auth-border)] hover:border-[var(--auth-border-hover)] focus-within:border-[var(--auth-interactive)] focus-within:bg-white focus-within:ring-3 focus-within:ring-[var(--auth-focus-ring)]'
                       }`}
                     >
-                      {regPassword.length >= 8 ? '✓ 8+ characters' : 'Min. 8 chars'}
-                    </span>
+                      <input
+                        id="dm-reg-name"
+                        name="name"
+                        type="text"
+                        value={regName}
+                        disabled={isRegistering}
+                        onChange={(e) => {
+                          setRegName(e.target.value);
+                          if (regErrors.name) {
+                            setRegErrors((prev) => ({ ...prev, name: undefined }));
+                          }
+                        }}
+                        placeholder="Tanvir Ahmed"
+                        autoComplete="name"
+                        aria-invalid={Boolean(regErrors.name)}
+                        aria-describedby={regErrors.name ? 'dm-reg-name-error' : undefined}
+                        className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13.5px] leading-[1.45] font-medium text-[var(--auth-text-main)] placeholder:text-[var(--auth-text-muted)] placeholder:font-normal"
+                      />
+                    </div>
+                    {regErrors.name && (
+                      <p
+                        id="dm-reg-name-error"
+                        role="alert"
+                        className="mt-1 text-[12px] leading-[1.4] font-medium text-[var(--auth-error)]"
+                      >
+                        {regErrors.name}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
-                    <input
-                      type={showRegPw ? 'text' : 'password'}
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="••••••••••"
-                      autoComplete="new-password"
-                      className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13px] text-[#0F1D17]"
-                    />
-                    <button
-                      type="button"
-                      aria-label="Show password"
-                      onClick={() => setShowRegPw((v) => !v)}
-                      className="w-8 h-8 -mr-1 grid place-items-center text-[#74887E] hover:text-[#0F1D17]"
+
+                  <div>
+                    <label
+                      htmlFor="dm-reg-phone"
+                      className="block text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] mb-1.5"
                     >
-                      <EyeIconSvg show={showRegPw} />
-                    </button>
+                      Phone Number (Bangladesh)
+                    </label>
+                    <div
+                      className={`flex items-center h-[44px] px-3.5 rounded-xl border bg-[var(--auth-input-bg)] transition-all duration-150 ${
+                        regErrors.phone
+                          ? 'border-[var(--auth-error)] bg-[var(--auth-error-bg)]/40 focus-within:border-[var(--auth-error)] focus-within:ring-3 focus-within:ring-[#B42318]/14'
+                          : 'border-[var(--auth-border)] hover:border-[var(--auth-border-hover)] focus-within:border-[var(--auth-interactive)] focus-within:bg-white focus-within:ring-3 focus-within:ring-[var(--auth-focus-ring)]'
+                      }`}
+                    >
+                      <input
+                        id="dm-reg-phone"
+                        name="tel"
+                        type="tel"
+                        value={regPhone}
+                        disabled={isRegistering}
+                        onChange={(e) => {
+                          setRegPhone(e.target.value);
+                          if (regErrors.phone) {
+                            setRegErrors((prev) => ({ ...prev, phone: undefined }));
+                          }
+                        }}
+                        placeholder="+880 1712 345678"
+                        autoComplete="tel"
+                        aria-invalid={Boolean(regErrors.phone)}
+                        aria-describedby={regErrors.phone ? 'dm-reg-phone-error' : undefined}
+                        className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13.5px] leading-[1.45] font-medium text-[var(--auth-text-main)] placeholder:text-[var(--auth-text-muted)] placeholder:font-normal font-mono-num"
+                      />
+                    </div>
+                    {regErrors.phone && (
+                      <p
+                        id="dm-reg-phone-error"
+                        role="alert"
+                        className="mt-1 text-[12px] leading-[1.4] font-medium text-[var(--auth-error)]"
+                      >
+                        {regErrors.phone}
+                      </p>
+                    )}
                   </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        htmlFor="dm-reg-password"
+                        className="text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)]"
+                      >
+                        Password
+                      </label>
+                      <span
+                        className={`text-[11.5px] leading-[1.4] transition-colors ${
+                          regPassword.length >= 8
+                            ? 'text-[var(--auth-interactive)] font-semibold'
+                            : 'text-[var(--auth-text-muted)] font-medium'
+                        }`}
+                      >
+                        {regPassword.length >= 8 ? '8+ characters met' : 'Min. 8 characters'}
+                      </span>
+                    </div>
+                    <div
+                      className={`flex items-center h-[44px] pl-3.5 pr-1 rounded-xl border bg-[var(--auth-input-bg)] transition-all duration-150 ${
+                        regErrors.password
+                          ? 'border-[var(--auth-error)] bg-[var(--auth-error-bg)]/40 focus-within:border-[var(--auth-error)] focus-within:ring-3 focus-within:ring-[#B42318]/14'
+                          : 'border-[var(--auth-border)] hover:border-[var(--auth-border-hover)] focus-within:border-[var(--auth-interactive)] focus-within:bg-white focus-within:ring-3 focus-within:ring-[var(--auth-focus-ring)]'
+                      }`}
+                    >
+                      <input
+                        id="dm-reg-password"
+                        name="new-password"
+                        type={showRegPw ? 'text' : 'password'}
+                        value={regPassword}
+                        disabled={isRegistering}
+                        onChange={(e) => {
+                          setRegPassword(e.target.value);
+                          if (regErrors.password) {
+                            setRegErrors((prev) => ({ ...prev, password: undefined }));
+                          }
+                        }}
+                        placeholder="Create a password"
+                        autoComplete="new-password"
+                        aria-invalid={Boolean(regErrors.password)}
+                        aria-describedby={regErrors.password ? 'dm-reg-pw-error' : undefined}
+                        className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13.5px] leading-[1.45] font-medium text-[var(--auth-text-main)] placeholder:text-[var(--auth-text-muted)] placeholder:font-normal"
+                      />
+                      <button
+                        type="button"
+                        aria-label={showRegPw ? 'Hide password' : 'Show password'}
+                        aria-pressed={showRegPw}
+                        onClick={() => setShowRegPw((v) => !v)}
+                        className="w-10 h-10 rounded-lg grid place-items-center text-[var(--auth-text-muted)] hover:text-[var(--auth-text-main)] hover:bg-[#E8F0EC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] transition-colors duration-150 shrink-0"
+                      >
+                        <EyeIconSvg show={showRegPw} />
+                      </button>
+                    </div>
+                    {regErrors.password && (
+                      <p
+                        id="dm-reg-pw-error"
+                        role="alert"
+                        className="mt-1 text-[12px] leading-[1.4] font-medium text-[var(--auth-error)]"
+                      >
+                        {regErrors.password}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-1">
+                    <RippleButton
+                      type="submit"
+                      disabled={isRegistering}
+                      aria-busy={isRegistering}
+                    >
+                      {isRegistering ? 'Creating account...' : 'Register'}
+                    </RippleButton>
+                  </div>
+                </form>
+
+                {/* Social Auth Divider + 2-Column Side-by-Side Grid */}
+                <div
+                  role="separator"
+                  aria-label="or continue with"
+                  className="flex items-center gap-3 text-[var(--auth-text-muted)] text-[11.5px] leading-[1.4] font-normal my-4 before:content-[''] before:flex-1 before:h-px before:bg-[var(--auth-border)] after:content-[''] after:flex-1 after:h-px after:bg-[var(--auth-border)]"
+                >
+                  <span>or continue with</span>
                 </div>
 
-                <div className="pt-1">
-                  <RippleButton type="submit" delaySec={0.36}>
-                    Register
-                  </RippleButton>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    disabled={isRegistering}
+                    onClick={() => handleSocialLogin('Google')}
+                    className="flex items-center justify-center gap-2 w-full h-[44px] px-3 bg-[var(--auth-surface)] border border-[var(--auth-border)] rounded-xl text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] hover:border-[var(--auth-border-hover)] hover:bg-[#FAFDFB] active:bg-[#EFF5F2] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--auth-focus-ring)] transition-all duration-150 whitespace-nowrap"
+                  >
+                    <GoogleIconSvg />
+                    <span>Google</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isRegistering}
+                    onClick={() => handleSocialLogin('Facebook')}
+                    className="flex items-center justify-center gap-2 w-full h-[44px] px-3 bg-[var(--auth-surface)] border border-[var(--auth-border)] rounded-xl text-[12.5px] leading-[1.4] font-semibold text-[var(--auth-text-main)] hover:border-[var(--auth-border-hover)] hover:bg-[#FAFDFB] active:bg-[#EFF5F2] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--auth-focus-ring)] transition-all duration-150 whitespace-nowrap"
+                  >
+                    <FacebookIconSvg />
+                    <span>Facebook</span>
+                  </button>
                 </div>
-              </form>
-
-              {/* Compact Social Auth Divider + 2-Column Side-by-Side Grid */}
-              <div
-                className="dm-flow-a flex items-center gap-2.5 text-[#74887E] text-[11px] my-2.5 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
-                style={{ '--d': 0.42 } as React.CSSProperties}
-              >
-                or continue with
               </div>
 
-              <div
-                className="dm-flow-a grid grid-cols-2 gap-2.5"
-                style={{ '--d': 0.48 } as React.CSSProperties}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('Google')}
-                  className="flex items-center justify-center gap-2 w-full h-10 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
-                >
-                  <GoogleIconSvg />
-                  <span>Google</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('Facebook')}
-                  className="flex items-center justify-center gap-2 w-full h-10 px-3 border-[1.5px] border-[#DFEAE3] rounded-xl text-[12px] font-semibold text-[#0F1D17] hover:border-[#A7C4B5] active:bg-[#EFF4F1] active:scale-[0.98] transition-all whitespace-nowrap"
-                >
-                  <FacebookIconSvg />
-                  <span>Facebook</span>
-                </button>
-              </div>
+              {/* 3. Footer with Login Switch */}
+              <footer className="shrink-0 pt-2 text-center">
+                <p className="text-[12.5px] leading-[1.5] font-normal text-[var(--auth-text-secondary)]">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRegErrors({});
+                      goStep(4);
+                    }}
+                    className="font-semibold text-[var(--auth-interactive)] hover:text-[var(--auth-hover)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16865F] rounded px-0.5 transition-colors duration-150"
+                  >
+                    Login
+                  </button>
+                </p>
+              </footer>
             </div>
-
-            {/* 3. Compact Footer with Login Switch */}
-            <p
-              className="dm-flow-a shrink-0 pt-1 text-[12px] text-[#485B52]"
-              style={{ '--d': 0.54 } as React.CSSProperties}
-            >
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => goStep(4)}
-                className="font-semibold text-[#059669] hover:underline"
-              >
-                Login
-              </button>
-            </p>
           </motion.section>
         )}
       </AnimatePresence>
