@@ -11,22 +11,6 @@ interface ProductCardProps {
   compact?: boolean;
 }
 
-function getCleanOriginName(originLabel: string): string {
-  const lower = originLabel.toLowerCase();
-  if (lower.includes('china') || lower.includes('shenzhen') || lower.includes('yiwu')) {
-    return 'China';
-  }
-  if (lower.includes('singapore')) return 'Singapore';
-  if (lower.includes('vietnam')) return 'Vietnam';
-  if (lower.includes('japan') || lower.includes('tokyo')) return 'Japan';
-  if (lower.includes('malaysia') || lower.includes('kuala')) return 'Malaysia';
-  if (lower.includes('korea') || lower.includes('seoul')) return 'Korea';
-  if (lower.includes('usa') || lower.includes('states')) return 'USA';
-  if (lower.includes('bangladesh') || lower.includes('dhaka')) return 'Dhaka Hub';
-  const cleaned = originLabel.replace(/^From\s+/i, '').split('·')[0].trim();
-  return cleaned || 'Global';
-}
-
 /**
  * 1:1 Structural Ghost Element for Lazy-Loading Product Grids (Zero Layout Shift)
  */
@@ -41,7 +25,6 @@ export const ProductCardGhost: React.FC = () => {
       </div>
 
       <div className="p-3 space-y-2">
-        <div className="h-3 w-1/2 rounded bg-slate-100 animate-pulse" />
         <div className="h-4 w-4/5 rounded bg-slate-200 animate-pulse" />
         <div className="pt-2 flex items-center justify-between">
           <div className="h-5 w-20 rounded bg-slate-200 animate-pulse" />
@@ -69,8 +52,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   const isWishlisted = wishlist.includes(product.id);
   const pricing = getCanonicalLandedPricing(product, selectedRouteByProduct);
   const landedBdt = pricing.estimatedLandedBdt;
-  const deliveryWindow = pricing.deliveryDaysLabel.replace(/\s*days/i, 'd');
-  const originMeta = `${getCleanOriginName(product.originLabel)} · ${deliveryWindow}`;
   const isBn = language === 'BN';
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -175,27 +156,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       {/* Content Container */}
       <div className={`${compact ? 'p-2.5' : 'p-3'} flex-1 flex flex-col justify-between`}>
         <div>
-          {/* Quiet Unboxed Origin & Delivery Metadata */}
-          <p className="text-[11px] leading-4 text-content-secondary truncate">
-            {compact ? (
-              getCleanOriginName(product.originLabel)
-            ) : (
-              <>
-                {originMeta}
-                {pricing.isEstimatedCustomsPreCleared && (
-                  <>
-                    {' · '}
-                    <span className="text-brand-primary font-medium">
-                      {isBn ? 'আনুমানিক ডিউটিসহ' : 'Est. Landed'}
-                    </span>
-                  </>
-                )}
-              </>
-            )}
-          </p>
-
           {/* Product Title */}
-          <h3 className="line-clamp-2 text-content-primary text-[13px] font-semibold leading-[1.35] tracking-[-0.01em] mt-1 min-h-[35px]">
+          <h3 className="line-clamp-2 text-content-primary text-[13px] font-semibold leading-[1.35] tracking-[-0.01em] min-h-[35px]">
             {isBn ? product.nameBn : product.name}
           </h3>
         </div>

@@ -425,14 +425,12 @@ function buildNormalizedProduct(params: {
   // Build concise summary specs line for subtitle while keeping full API description
   const specSummaryParts = [
     brand && brand !== 'Global Direct' ? brand : null,
-    sku ? `SKU ${sku}` : null,
     dimensions || `${weightGrams}g`,
-    shippingInformation,
   ].filter(Boolean);
 
   const subtitle =
     specSummaryParts.length >= 2
-      ? specSummaryParts.slice(0, 3).join(' · ')
+      ? specSummaryParts.join(' · ')
       : description;
 
   const apiHighlights = [
