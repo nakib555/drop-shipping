@@ -41,16 +41,16 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <div
       lang={language === 'BN' ? 'bn' : 'en'}
-      className={`h-dvh w-full overflow-hidden text-content-primary flex items-center justify-center ${
-        isInstalled ? 'bg-app-bg' : 'bg-app-bg md:bg-slate-900 md:p-4'
+      className={`h-dvh w-full max-w-[100vw] overflow-hidden text-content-primary flex items-center justify-center ${
+        isInstalled ? 'bg-app-bg' : 'bg-app-bg lg:bg-slate-900 lg:p-4'
       }`}
     >
-      {/* Full edge-to-edge on all mobile screens & installed PWAs; framed preview only on desktop browsers */}
+      {/* Full edge-to-edge on all mobile/tablet screens (<1024px) & installed PWAs; framed preview only on large desktop browsers */}
       <div
-        className={`relative w-full h-dvh bg-app-bg flex flex-col overflow-hidden shrink-0 ${
+        className={`relative w-full max-w-[100vw] h-dvh bg-app-bg flex flex-col overflow-hidden shrink-0 ${
           isInstalled
-            ? 'max-w-none'
-            : 'md:max-w-[440px] md:h-[92dvh] md:max-h-[880px] md:rounded-3xl md:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.45)] md:border md:border-slate-700/80'
+            ? 'lg:max-w-none lg:h-dvh lg:rounded-none lg:border-0 lg:shadow-none'
+            : 'lg:max-w-[440px] lg:h-[92dvh] lg:max-h-[880px] lg:rounded-3xl lg:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.45)] lg:border lg:border-slate-700/80'
         } ${darkMode ? 'contrast-105' : ''}`}
       >
         {/* Fixed Top App Bar */}
@@ -66,7 +66,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
         <main
           ref={mainScrollRef}
           onScroll={handleMainScroll}
-          className="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
+          className="flex-1 min-h-0 w-full max-w-full overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -75,7 +75,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -3 }}
               transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="flex-1 flex flex-col min-h-full w-full"
+              className="flex-1 flex flex-col min-h-full w-full max-w-full min-w-0"
             >
               {children}
             </motion.div>
@@ -94,3 +94,4 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     </div>
   );
 };
+

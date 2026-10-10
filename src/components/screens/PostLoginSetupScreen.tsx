@@ -1651,7 +1651,7 @@ export const PostLoginSetupScreen: React.FC = () => {
       </div>
 
       {/* ===================== STICKY BOTTOM CTA BAR ===================== */}
-      <footer className="shrink-0 bg-white border-t border-[#DCE7E0] p-3.5 z-20">
+      <footer className="shrink-0 bg-white border-t border-[#DCE7E0] px-3.5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] z-20">
         {wizardStep === 1 && (
           <button
             type="submit"
@@ -1691,3 +1691,4 @@ export const PostLoginSetupScreen: React.FC = () => {
     </div>
   );
 };
+

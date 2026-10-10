@@ -8,33 +8,56 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_SESSION_KEY = 'deshimart_pwa_popup_dismissed';
 const OPEN_POPUP_EVENT = 'deshimart:open-pwa-popup';
-const APP_BUILD_VERSION = '2026.10.2';
+const APP_BUILD_VERSION = '2026.10.3';
 const BUILD_VERSION_KEY = 'deshimart_build_version';
+const CHUNK_RELOAD_GUARD_KEY = 'deshimart_chunk_reload_guard';
 
 let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
 let swInitialized = false;
+let isRefreshingForSwUpdate = false;
+
+function detectStandaloneModeSync(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true
+    );
+  } catch {
+    return false;
+  }
+}
 
 async function purgeStaleCachesIfNeeded() {
   if (typeof window === 'undefined') return;
   try {
     const storedVersion = localStorage.getItem(BUILD_VERSION_KEY);
     if (storedVersion !== APP_BUILD_VERSION) {
-      // Remove legacy unversioned or obsolete localStorage keys from older builds
+      // Remove only legacy unversioned or obsolete localStorage keys from older builds
       const obsoleteKeys = [
         'deshimart_user',
         'deshimart_user_v1',
         'deshimart_cart',
         'deshimart_wishlist',
         'deshimart_experience_mode',
+        'deshimart_experience_mode_v1',
+        'deshimart_cultural_vibe',
       ];
       obsoleteKeys.forEach((k) => localStorage.removeItem(k));
 
-      // Clear any outdated CacheStorage buckets (preserving Google Fonts cache)
+      // Clear only outdated runtime caches — NEVER delete active workbox-precache buckets
+      // while the page is running, as Workbox cleanupOutdatedCaches handles precache rotation safely.
       if ('caches' in window) {
         const cacheNames = await window.caches.keys();
         await Promise.all(
           cacheNames
-            .filter((name) => !name.includes('fonts'))
+            .filter(
+              (name) =>
+                !name.includes('fonts') &&
+                !name.includes('workbox-precache')
+            )
             .map((name) => window.caches.delete(name))
         );
       }
@@ -67,11 +90,19 @@ export function usePWAInstall(onAutoUpdated?: () => void) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
     globalDeferredPrompt
   );
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  // Initialize synchronously so installed PWAs and mobile screens never flash a desktop frame on update
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => detectStandaloneModeSync());
+  const [isIOS, setIsIOS] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+  });
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(DISMISS_SESSION_KEY) === '1';
+    try {
+      return sessionStorage.getItem(DISMISS_SESSION_KEY) === '1';
+    } catch {
+      return false;
+    }
   });
   const [forceShowPopup, setForceShowPopup] = useState(false);
 
@@ -82,18 +113,59 @@ export function usePWAInstall(onAutoUpdated?: () => void) {
     if (!swInitialized) {
       swInitialized = true;
       void purgeStaleCachesIfNeeded();
+
+      // Auto-recover if a new deployment invalidated a lazy-loaded JS/CSS asset
+      window.addEventListener('vite:preloadError', (event) => {
+        event.preventDefault();
+        try {
+          const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_GUARD_KEY) || '0');
+          if (Date.now() - lastReload > 10000) {
+            sessionStorage.setItem(CHUNK_RELOAD_GUARD_KEY, String(Date.now()));
+            window.location.reload();
+          }
+        } catch {
+          window.location.reload();
+        }
+      });
+
+      // Listen for Service Worker controller swap and reload cleanly once when a new SW takes over
+      if ('serviceWorker' in navigator) {
+        let hadController = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!hadController) {
+            hadController = true;
+            return;
+          }
+          if (isRefreshingForSwUpdate) return;
+          isRefreshingForSwUpdate = true;
+          onAutoUpdated?.();
+          window.location.reload();
+        });
+      }
+
       try {
         const updateSW = registerSW({
           immediate: true,
           onNeedRefresh() {
-            void updateSW(true);
             onAutoUpdated?.();
+            void updateSW(true);
           },
           onRegisteredSW(_swUrl, registration) {
             if (registration) {
+              // Check for updates when the user returns to the PWA tab/window
+              const checkUpdateOnVisible = () => {
+                if (document.visibilityState === 'visible') {
+                  void registration.update().catch(() => {});
+                }
+              };
+              document.addEventListener('visibilitychange', checkUpdateOnVisible);
+              window.addEventListener('online', checkUpdateOnVisible);
+
               // Periodically check for new builds so the PWA auto-updates seamlessly
               window.setInterval(() => {
-                void registration.update();
+                if (document.visibilityState === 'visible' && navigator.onLine) {
+                  void registration.update().catch(() => {});
+                }
               }, 60 * 1000);
             }
           },
@@ -105,10 +177,7 @@ export function usePWAInstall(onAutoUpdated?: () => void) {
 
     // 2. Detect standalone mode (already installed)
     const checkStandalone = () => {
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-      setIsInstalled(standalone);
+      setIsInstalled(detectStandaloneModeSync());
     };
     checkStandalone();
 
@@ -172,7 +241,11 @@ export function usePWAInstall(onAutoUpdated?: () => void) {
 
   const dismiss = useCallback(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem(DISMISS_SESSION_KEY, '1');
+      try {
+        sessionStorage.setItem(DISMISS_SESSION_KEY, '1');
+      } catch {
+        // Ignore sessionStorage restrictions
+      }
     }
     setIsDismissed(true);
     setForceShowPopup(false);
@@ -188,3 +261,4 @@ export function usePWAInstall(onAutoUpdated?: () => void) {
     dismiss,
   };
 }
+

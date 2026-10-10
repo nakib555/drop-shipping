@@ -1118,12 +1118,12 @@ export const SplashOnboarding: React.FC = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.26, ease: 'easeOut' }}
             onClick={() => goStep(1)}
-            className="dm-flow-splash relative flex-1 flex flex-col items-center justify-between px-6 pt-5 pb-5 overflow-hidden cursor-pointer"
+            className="dm-flow-splash relative flex-1 min-h-0 flex flex-col items-center justify-between px-6 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))] overflow-hidden cursor-pointer"
           >
             <div className="dm-flow-glow absolute inset-0 pointer-events-none" />
 
             {/* Top bar with quick Skip to Store option */}
-            <div className="relative z-10 w-full flex items-center justify-between">
+            <div className="relative z-10 w-full flex items-center justify-between shrink-0">
               <span className="text-[11px] font-medium text-white/75 tracking-wide">
                 Tap anywhere to continue
               </span>
@@ -1140,8 +1140,8 @@ export const SplashOnboarding: React.FC = () => {
             </div>
 
             {/* Center Brand Identity (Balanced vertical proportions so globe & parcels never collide) */}
-            <div className="relative z-10 flex flex-col items-center my-auto py-1">
-              <div className="relative w-[82px] h-[82px] flex items-center justify-center">
+            <div className="relative z-10 flex flex-col items-center my-auto py-1 shrink-0">
+              <div className="relative w-[76px] sm:w-[82px] h-[76px] sm:h-[82px] flex items-center justify-center">
                 <div className="dm-flow-ring" />
                 <div className="dm-flow-ring" />
                 <div className="dm-flow-logo dm-flow-logo-splash">
@@ -1151,7 +1151,7 @@ export const SplashOnboarding: React.FC = () => {
 
               <h1
                 aria-label="DeshiMart"
-                className="mt-3.5 text-[32px] sm:text-[34px] leading-[38px] font-bold tracking-tight flex justify-center text-white"
+                className="mt-3 text-[30px] sm:text-[34px] leading-[36px] font-bold tracking-tight flex justify-center text-white"
               >
                 {'DeshiMart'.split('').map((ch, idx) => (
                   <span
@@ -1164,11 +1164,11 @@ export const SplashOnboarding: React.FC = () => {
                 ))}
               </h1>
 
-              <p className="dm-flow-sp mt-1 text-[14px] leading-5 font-medium text-emerald-50">
+              <p className="dm-flow-sp mt-1 text-[13.5px] sm:text-[14px] leading-5 font-medium text-emerald-50">
                 Cross-Border Landed Shopping
               </p>
 
-              <p className="dm-flow-tg mt-1.5 text-[12px] leading-4 text-white/85 flex items-center gap-1.5">
+              <p className="dm-flow-tg mt-1 text-[12px] leading-4 text-white/85 flex items-center gap-1.5">
                 <span>Global Products</span>
                 <span aria-hidden="true">·</span>
                 <span>Local Dreams</span>
@@ -1176,7 +1176,7 @@ export const SplashOnboarding: React.FC = () => {
             </div>
 
             {/* Bottom Animated Globe + Parcel Boxes + Plane + 3.5s Auto-Advance Bar */}
-            <div className="relative z-10 flex flex-col items-center w-full shrink-0">
+            <div className="relative z-10 flex flex-col items-center w-full shrink-0 min-h-0">
               <GlobeBoxesPlaneArt variant="splash" />
               <div className="w-36 h-1 rounded-full bg-white/20 overflow-hidden mt-2">
                 <div className="dm-splash-progress-fill h-full w-full bg-white rounded-full" />
@@ -1194,7 +1194,7 @@ export const SplashOnboarding: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.24, ease: 'easeOut' }}
-            className="flex-1 flex flex-col justify-between px-6 pt-5 pb-5 text-center bg-white text-[#0F1D17] overflow-hidden"
+            className="flex-1 min-h-0 flex flex-col justify-between px-6 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1rem+env(safe-area-inset-bottom,0px))] text-center bg-white text-[#0F1D17] overflow-hidden"
           >
             {/* Stationary Top Header + Directional Animated Copy */}
             <div className="shrink-0">
@@ -1319,7 +1319,7 @@ export const SplashOnboarding: React.FC = () => {
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className="flex-1 min-h-0 overflow-y-auto no-scrollbar bg-[var(--auth-surface)] text-[var(--auth-text-main)] select-text"
           >
-            <div className="min-h-full w-full max-w-[392px] mx-auto px-5 pt-3 pb-5 flex flex-col justify-between">
+            <div className="min-h-full w-full max-w-[392px] mx-auto px-5 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] flex flex-col justify-between">
               {/* 1. Top Navigation Bar (44x44px back target & balanced Skip to Store) */}
               <header className="flex items-center justify-between w-full shrink-0">
                 <button
@@ -1664,7 +1664,7 @@ export const SplashOnboarding: React.FC = () => {
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className="flex-1 min-h-0 overflow-y-auto no-scrollbar bg-[var(--auth-surface)] text-[var(--auth-text-main)] select-text"
           >
-            <div className="min-h-full w-full max-w-[392px] mx-auto px-5 pt-3 pb-5 flex flex-col justify-between">
+            <div className="min-h-full w-full max-w-[392px] mx-auto px-5 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] flex flex-col justify-between">
               {/* 1. Top Navigation Bar */}
               <header className="flex items-center justify-between w-full shrink-0">
                 <button

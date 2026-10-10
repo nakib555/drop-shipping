@@ -89,19 +89,34 @@
     --auth-error-bg: #FEF3F2;
     --auth-error-border: #FECDCA;
     --auth-focus-ring: rgba(22, 134, 95, 0.16);
+    /* Safe-area inset CSS variables with fallback */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 
   html,
   body,
   #root {
     width: 100%;
+    max-width: 100vw;
     height: 100%;
+    height: 100dvh;
     min-height: 100dvh;
+    max-height: 100dvh;
     margin: 0;
     padding: 0;
     overflow: hidden;
     overscroll-behavior: none;
     background-color: var(--dm-canvas);
+    touch-action: manipulation;
   }
 
   body {
@@ -830,6 +845,30 @@ svg.dm-flow-il {
   }
 }
 
+/* Compact Mobile Viewport Height Scaling (Ensures zero vertical overflow on 568px–700px mobile screens) */
+@media (max-height: 700px) {
+  .dm-flow-art,
+  .dm-flow-art-splash,
+  .dm-flow-art-ob,
+  svg.dm-flow-il {
+    max-width: 224px;
+  }
+
+  .dm-flow-logo-splash {
+    width: 68px;
+    height: 68px;
+  }
+}
+
+@media (max-height: 620px) {
+  .dm-flow-art,
+  .dm-flow-art-splash,
+  .dm-flow-art-ob,
+  svg.dm-flow-il {
+    max-width: 184px;
+  }
+}
+
 /* Respect Reduced Motion Accessibility Preference */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -841,3 +880,4 @@ svg.dm-flow-il {
     scroll-behavior: auto !important;
   }
 }
+

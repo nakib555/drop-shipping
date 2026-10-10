@@ -71,6 +71,7 @@ interface DeshiMartContextValue {
   loginUser: (emailOrPhone: string, fullName?: string, role?: UserRole) => void;
   switchUserRole: (role: UserRole) => void;
   updateUserProfile: (data: { fullName: string; email: string; phone: string }) => void;
+  completeOnboardingSetup: () => void;
   logoutUser: () => void;
 
   // Admin Operations & Merchandising
@@ -184,6 +185,8 @@ interface DeshiMartContextValue {
     deliveryNote: string;
     bkashPhone: string;
     nagadPhone: string;
+    rocketPhone?: string;
+    upayPhone?: string;
     cardHolder: string;
     cardNumber: string;
     cardExpiry: string;
@@ -194,6 +197,8 @@ interface DeshiMartContextValue {
       deliveryNote: string;
       bkashPhone: string;
       nagadPhone: string;
+      rocketPhone?: string;
+      upayPhone?: string;
       cardHolder: string;
       cardNumber: string;
       cardExpiry: string;
@@ -273,14 +278,30 @@ export interface AppRouteHistoryEntry {
   orderId?: string;
 }
 
+const ONBOARDING_COMPLETED_KEY = 'deshimart_onboarding_completed_v1';
+const ACTIVE_ROUTE_SESSION_KEY = 'deshimart_active_route_v1';
+
 export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [routeStack, setRouteStack] = useState<AppRouteHistoryEntry[]>([
-    { screen: 'splash' },
-  ]);
-  const screenHistory = useMemo(
-    () => routeStack.map((entry) => entry.screen),
-    [routeStack]
-  );
+  const [routeStack, setRouteStack] = useState<AppRouteHistoryEntry[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const sessionRouteRaw = window.sessionStorage.getItem(ACTIVE_ROUTE_SESSION_KEY);
+        if (sessionRouteRaw) {
+          const parsed = JSON.parse(sessionRouteRaw) as AppRouteHistoryEntry[];
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[parsed.length - 1]?.screen) {
+            return parsed;
+          }
+        }
+        const onboardingDone = window.localStorage.getItem(ONBOARDING_COMPLETED_KEY) === '1';
+        if (onboardingDone) {
+          return [{ screen: 'home' }];
+        }
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+    return [{ screen: 'splash' }];
+  });
 
   const [user, setUser] = useState<{
     fullName: string;
@@ -357,6 +378,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     deliveryNote: string;
     bkashPhone: string;
     nagadPhone: string;
+    rocketPhone?: string;
+    upayPhone?: string;
     cardHolder: string;
     cardNumber: string;
     cardExpiry: string;
@@ -365,6 +388,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     deliveryNote: 'Call upon arrival at gate',
     bkashPhone: '01712345678',
     nagadPhone: '01819345678',
+    rocketPhone: '01911345678',
+    upayPhone: '01615345678',
     cardHolder: 'Tanvir Ahmed',
     cardNumber: '•••• •••• •••• 8910',
     cardExpiry: '12/28',
@@ -531,6 +556,36 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     writeVersionedStorage('deshimart_vouchers_v1', promoVouchers);
   }, [promoVouchers]);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(ACTIVE_ROUTE_SESSION_KEY, JSON.stringify(routeStack));
+        const active = routeStack[routeStack.length - 1]?.screen;
+        if (
+          active &&
+          active !== 'splash' &&
+          active !== 'onboarding' &&
+          active !== 'auth' &&
+          active !== 'post_login_setup'
+        ) {
+          window.localStorage.setItem(ONBOARDING_COMPLETED_KEY, '1');
+        }
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+  }, [routeStack]);
+
+  const completeOnboardingSetup = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(ONBOARDING_COMPLETED_KEY, '1');
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+  }, []);
 
   const showToast = (text: string, type: 'success' | 'info' = 'success') => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -1665,6 +1720,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         loginUser,
         switchUserRole,
         updateUserProfile,
+        completeOnboardingSetup,
         logoutUser,
         promoVouchers,
         adminAuditLog,
