@@ -1272,34 +1272,37 @@ export const SplashOnboarding: React.FC = () => {
               </button>
             </div>
 
-            {/* 2. Center Auth Content (Compact Logo + Title + Form + 2-Column Socials) */}
-            <div className="my-auto py-1">
-              <div
-                className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
-                style={{ '--d': 0.04 } as React.CSSProperties}
-              >
-                <BagLogoSvg />
-              </div>
+            {/* 2. Elevated Brand Header + Distinct Form Section */}
+            <div className="flex-1 flex flex-col justify-center py-1">
+              {/* Elevated Brand Header Block */}
+              <div className="mb-6 sm:mb-7">
+                <div
+                  className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
+                  style={{ '--d': 0.04 } as React.CSSProperties}
+                >
+                  <BagLogoSvg />
+                </div>
 
-              <h2
-                className="dm-flow-a text-[20px] leading-6 font-bold mt-2 text-[#0F1D17]"
-                style={{ '--d': 0.1 } as React.CSSProperties}
-              >
-                {loginRole === 'admin' ? 'Admin Console Sign In' : 'Welcome Back'}
-              </h2>
-              <p
-                className="dm-flow-a text-[12px] leading-4 text-[#485B52] mt-0.5"
-                style={{ '--d': 0.14 } as React.CSSProperties}
-              >
-                {loginRole === 'admin'
-                  ? 'Authorized DeshiMart operations & catalog portal'
-                  : 'Sign in to your DeshiMart cross-border account'}
-              </p>
+                <h2
+                  className="dm-flow-a text-[21px] leading-6 font-bold mt-2.5 text-[#0F1D17] tracking-[-0.02em]"
+                  style={{ '--d': 0.1 } as React.CSSProperties}
+                >
+                  {loginRole === 'admin' ? 'Admin Console Sign In' : 'Welcome Back'}
+                </h2>
+                <p
+                  className="dm-flow-a text-[12.5px] leading-4 text-[#485B52] mt-1"
+                  style={{ '--d': 0.14 } as React.CSSProperties}
+                >
+                  {loginRole === 'admin'
+                    ? 'Authorized DeshiMart operations & catalog portal'
+                    : 'Sign in to your DeshiMart cross-border account'}
+                </p>
+              </div>
 
               <form
                 onSubmit={handleLoginSubmit}
                 noValidate
-                className={`text-left mt-3 space-y-2.5 ${
+                className={`text-left space-y-3 ${
                   loginShake ? 'dm-flow-shake' : ''
                 }`}
               >
@@ -1360,7 +1363,7 @@ export const SplashOnboarding: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-0.5">
+                <div className="pt-1">
                   <RippleButton type="submit" delaySec={0.3}>
                     {loginRole === 'admin' ? 'Sign In to Admin Console' : 'Login'}
                   </RippleButton>
@@ -1369,7 +1372,7 @@ export const SplashOnboarding: React.FC = () => {
 
               {/* Compact Social Auth Divider + 2-Column Side-by-Side Grid */}
               <div
-                className="dm-flow-a flex items-center gap-2.5 text-[#74887E] text-[11px] my-2.5 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
+                className="dm-flow-a flex items-center gap-2.5 text-[#74887E] text-[11px] my-3 before:content-[''] before:flex-1 before:h-px before:bg-[#EAF0EC] after:content-[''] after:flex-1 after:h-px after:bg-[#EAF0EC]"
                 style={{ '--d': 0.36 } as React.CSSProperties}
               >
                 or continue with
@@ -1468,32 +1471,34 @@ export const SplashOnboarding: React.FC = () => {
               </button>
             </div>
 
-            {/* 2. Center Register Content (Compact Logo + Title + Form + 2-Column Socials) */}
-            <div className="my-auto py-1">
-              <div
-                className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
-                style={{ '--d': 0.04 } as React.CSSProperties}
-              >
-                <BagLogoSvg />
-              </div>
+            {/* 2. Elevated Brand Header + Distinct Register Form Section */}
+            <div className="flex-1 flex flex-col justify-center py-1">
+              <div className="mb-5 sm:mb-6">
+                <div
+                  className="dm-flow-logo dm-flow-logo-sm dm-flow-a"
+                  style={{ '--d': 0.04 } as React.CSSProperties}
+                >
+                  <BagLogoSvg />
+                </div>
 
-              <h2
-                className="dm-flow-a text-[20px] leading-6 font-bold mt-1.5 text-[#0F1D17]"
-                style={{ '--d': 0.1 } as React.CSSProperties}
-              >
-                Create Your Account
-              </h2>
-              <p
-                className="dm-flow-a text-[12px] leading-4 text-[#485B52] mt-0.5"
-                style={{ '--d': 0.14 } as React.CSSProperties}
-              >
-                Join DeshiMart and start global shopping
-              </p>
+                <h2
+                  className="dm-flow-a text-[21px] leading-6 font-bold mt-2 text-[#0F1D17] tracking-[-0.02em]"
+                  style={{ '--d': 0.1 } as React.CSSProperties}
+                >
+                  Create Your Account
+                </h2>
+                <p
+                  className="dm-flow-a text-[12.5px] leading-4 text-[#485B52] mt-1"
+                  style={{ '--d': 0.14 } as React.CSSProperties}
+                >
+                  Join DeshiMart and start global shopping
+                </p>
+              </div>
 
               <form
                 onSubmit={handleRegisterSubmit}
                 noValidate
-                className={`text-left mt-2.5 space-y-2 ${
+                className={`text-left space-y-2.5 ${
                   regShake ? 'dm-flow-shake' : ''
                 }`}
               >
@@ -1501,7 +1506,7 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.18 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-0.5">
+                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
                     Full Name
                   </label>
                   <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
@@ -1520,7 +1525,7 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.24 } as React.CSSProperties}
                 >
-                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-0.5">
+                  <label className="block text-[12px] font-semibold text-[#0F1D17] mb-1">
                     Phone Number (Bangladesh)
                   </label>
                   <div className="flex items-center h-10 px-3 rounded-xl border-[1.5px] border-[#DFEAE3] bg-[#F5F8F6] focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/12 transition-all">
@@ -1539,7 +1544,7 @@ export const SplashOnboarding: React.FC = () => {
                   className="dm-flow-a"
                   style={{ '--d': 0.3 } as React.CSSProperties}
                 >
-                  <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center justify-between mb-1">
                     <label className="text-[12px] font-semibold text-[#0F1D17]">
                       Password
                     </label>

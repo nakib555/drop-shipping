@@ -244,8 +244,8 @@
 
 .dm-flow-logo-sm {
   --lt: 0.3s;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   --tick: #fff;
   color: var(--g);
   margin: 0 auto;
