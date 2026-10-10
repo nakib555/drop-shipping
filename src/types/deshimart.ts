@@ -42,7 +42,6 @@ export interface PromoVoucher {
 
 export type CurrencyCode = 'BDT' | 'USD';
 export type LanguageCode = 'EN' | 'BN';
-export type ExperienceMode = 'global' | 'bangladesh';
 
 export type CategoryId =
   | 'all'
@@ -140,6 +139,7 @@ export interface Product {
   inStock: boolean;
   colors: { name: string; hex: string }[];
   sizes?: string[];
+  tags?: string[];
   highlights: string[];
   specs: {
     display?: string;
@@ -148,6 +148,13 @@ export interface Product {
     heartRate?: string;
     gps?: string;
     weight?: string;
+    sku?: string;
+    barcode?: string;
+    dimensions?: string;
+    stock?: string;
+    moq?: string;
+    shippingInfo?: string;
+    returnPolicy?: string;
     warranty: string;
   };
   routes: SellerRoute[];

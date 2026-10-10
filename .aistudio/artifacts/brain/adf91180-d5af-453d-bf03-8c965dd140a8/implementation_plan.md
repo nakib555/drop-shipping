@@ -1,91 +1,58 @@
-# DeshiMart — Mobile Viewport Adaptation Plan for "Welcome Back" & "Create Account"
+# DeshiMart — Auth Header Elevation & Form Separation Plan
 
-Optimize the **Welcome Back (`step 4`)** and **Create Account (`step 5`)** screens so every element fits naturally inside mobile viewports (`360px–430px` wide, `640px–844px` tall) with zero vertical overflow or cramped scrolling.
+## 1. Visual Diagnosis (From Your Screenshot)
 
----
-
-## User Review & Confirmed Decisions
-
-> [!IMPORTANT]
-> All layout decisions confirmed in Phase 1 are incorporated below:
-
-- **Confirmed Decision 1 (Zero-Scroll Mobile Viewport Fit)**: Both **Welcome Back** and **Create Account** screens will be proportioned to fit 100% within a single mobile screen height (`dvh`) without vertical scrolling on standard smartphones, while retaining `overflow-y-auto` as a safe fallback for ultra-short landscape or split-screen viewports.
-- **Confirmed Decision 2 (2-Column Social Auth Buttons)**: Replace the two stacked full-width social buttons (`Continue with Google` and `Continue with Facebook`) with a single-row **2-column side-by-side grid (`Google` | `Facebook`)**, saving ~52px of vertical space.
-- **Confirmed Decision 3 (Compact Header, Logo & Form Spacing)**:
-  - Compact top utility bar (`px-5 pt-4 pb-4`), scaled-down brand bag badge (`44×44px`), tight headline + subtitle lockup, and inline **Password + Forgot Password?** label row (eliminating a standalone vertical row).
-- **Confirmed Decision 4 (Subtle Admin Console Footer Toggle)**:
-  - Remove the bulky top segmented role switcher box (`Customer Account | Admin Console`) from the top of the form and move the **Admin Console / Customer Account** mode toggle into a subtle, clean link in the bottom footer area.
+In the current **Welcome Back (`step 4`)** and **Create Your Account (`step 5`)** screens:
+- Both the brand header block (`BagLogoSvg` + **Welcome Back** + subtitle) and the form inputs sit inside a single `my-auto` wrapper with only `mt-3` (`12px`) separating the subtitle from the **Email or Phone** label.
+- Because the outer container uses `justify-between` with the header bundled directly onto the form, empty vertical space is pushed **above** the logo instead of creating a clean architectural separation **between** the brand hero header and the input card.
 
 ---
 
-## 1. Overview & Spatial Budget Analysis
+## 2. Proposed Layout & Spacing Adjustments
 
-### Why the Previous Layout Overflowed Mobile Screens
-Previously, the **Welcome Back** screen stacked 11 separate vertical blocks totaling `~690px` of fixed height:
-1. Top bar (`36px`) + top padding (`28px`)
-2. Brand bag logo (`52px` + margins)
-3. Title + Subtitle (`56px`)
-4. Segmented Role Switcher (`44px` + `14px` margin)
-5. Email input block (`68px`)
-6. Password input block (`68px`)
-7. Standalone `Forgot Password?` row (`24px` + `12px` margin)
-8. Primary `Login` button (`48px`)
-9. `or` divider (`36px`)
-10. Two stacked social buttons (`44px + 8px + 44px = 96px`)
-11. Bottom Register link (`36px` + bottom padding `24px`)
+We will separate the **Brand Header Block** from the **Form & Social Block** so the logo + heading sit slightly higher toward the top navigation bar, leaving a clean, balanced gap (`24px–28px`) before the **Email or Phone** input field — while still fitting `100%` within a mobile viewport (`640px–844px`) without vertical scrolling.
 
-### New Mobile-Fitted Spatial Budget (`~510px` Total Content Height)
-By consolidating vertical redundancies while keeping accessible touch targets (`44px` inputs and buttons):
-1. **Top Utility Bar (`36px`)**: Left `Back` button + Right `Skip to Store →` action.
-2. **Compact Brand Header (`78px`)**: `44×44px` animated bag emblem + `20px` bold heading (`Welcome Back` / `Create Your Account`) + 1-line subtitle (`Sign in to continue global shopping` or `Admin Console sign-in mode active` when toggled).
-3. **Streamlined Form (`188px` on Login / `236px` on Register)**:
-   - `Email or Phone` input (`h-10 sm:h-11 rounded-xl`).
-   - `Password` input with **`Forgot Password?` placed inline on the right side of the `Password` label row**, saving `32px`.
-   - On **Create Account**, compact `Full Name`, `Phone Number`, and `Password` (with inline `✓ 8+ chars` indicator on the Password label row, saving another `28px`).
-   - Primary `Login` / `Register` CTA button (`h-11 rounded-xl`).
-4. **Side-by-Side Social Auth Row (`68px`)**:
-   - Compact `or continue with` divider (`my-2.5`).
-   - `grid-cols-2 gap-2.5` row with **Google** and **Facebook** buttons (`h-10 sm:h-11 rounded-xl`, single-line `whitespace-nowrap`).
-5. **Footer Bar with Register/Login Switch & Subtle Admin Link (`48px`)**:
-   - Primary account switch (`Don't have an account? Register` / `Already have an account? Login`).
-   - Subtle secondary footer link on Login: `Staff Admin Console →` (or `← Switch to Customer Sign In` when Admin mode is active) that pre-fills the demo credentials and toggles `loginRole`.
-
----
-
-## 2. Technical Architecture & Layout Diagram
+### Visual Rhythm & Spacing Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│           Mobile Viewport Shell (360px–430px × 100dvh)              │
-│   px-5 py-4 flex flex-col justify-between overflow-y-auto           │
-├─────────────────────────────────────────────────────────────────────┤
-│  1. Top Navigation Row (h-9)                                        │
-│     [ ← Back ]                                  [ Skip to Store → ] │
-│                                                                     │
-│  2. Compact Brand & Title Lockup                                    │
-│                     [ 44×44 BagLogoSvg ]                            │
-│              Welcome Back / Create Your Account                     │
-│          Sign in to your DeshiMart cross-border account             │
-│                                                                     │
-│  3. Compact Auth Form (space-y-2.5)                                 │
-│     ├─ Email or Phone Label                                         │
-│     │  [ tanvir.ahmed@deshimart.bd                             ]    │
-│     ├─ Password Label                        [ Forgot Password? ]   │
-│     │  [ ••••••••••••                                      (👁) ]    │
-│     └─ [                     Login (h-11)                      ]    │
-│                                                                     │
-│  4. 2-Column Social Auth Grid                                       │
-│     ─────────────── or continue with ───────────────                │
-│     [  (G) Google  ]                       [  (f) Facebook  ]       │
-│                                                                     │
-│  5. Compact Footer & Subtle Admin Mode Switch                       │
-│     Don't have an account? Register                                 │
-│     Staff member? Switch to Admin Console →                         │
-└─────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  [←]                                   Skip to Store →   │  ← Top Bar (shrink-0)
+├──────────────────────────────────────────────────────────┤
+│                      ╭───────────╮                       │  ← Elevated Brand Header
+│                      │  [ Bag ]  │ (48×48px with soft    │    Positioned higher (`pt-2`)
+│                      ╰───────────╯  emerald halo)        │    with 10px gap to title
+│                      Welcome Back                        │
+│        Sign in to your DeshiMart cross-border account    │
+│                                                          │
+│  ↕ 24px–28px Clean Architectural Breathing Room ↕        │  ← Clear separation before
+│                                                          │    Email or Phone box
+│  Email or Phone                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ name@example.com                                   │  │
+│  └────────────────────────────────────────────────────┘  │
+│  Password                              Forgot Password?  │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ ••••••••                                       [👁] │  │
+│  └────────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │                       Login                        │  │
+│  └────────────────────────────────────────────────────┘  │
+│  ───────────────── or continue with ───────────────────  │
+│  ┌─────────────────────────┐ ┌─────────────────────────┐ │
+│  │ [G] Google              │ │ [f] Facebook            │ │
+│  └─────────────────────────┘ └─────────────────────────┘ │
+├──────────────────────────────────────────────────────────┤
+│             Don't have an account? Register              │  ← Bottom Footer (shrink-0)
+│          Staff member? Switch to Admin Console →         │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### Interactive State & Handler Mapping
-- **Inline `Forgot Password?`**: Placed in `flex items-center justify-between mb-1` alongside the `Password` `<label>` on Step 4 (`Login`), triggering the password reset toast without consuming an extra row.
-- **Inline Password Length Indicator (Step 5 `Register`)**: Placed in `flex items-center justify-between mb-1` alongside the `Password` `<label>` (`✓ 8+ chars` in emerald when `regPassword.length >= 8`, muted `Min. 8 chars` otherwise), eliminating the standalone hint row below the input.
-- **2-Column Social Buttons**: Both Step 4 (`Login`) and Step 5 (`Register`) render `<div className="grid grid-cols-2 gap-2.5">` containing the Google and Facebook buttons with concise `Google` and `Facebook` labels (`whitespace-nowrap`).
-- **Footer Admin Console Switcher (Step 4 `Login`)**: Clicking `Admin Console Login →` toggles `loginRole` to `'admin'` (pre-filling `admin@deshimart.bd` and showing a subtle emerald indicator badge in the subtitle), while clicking `← Back to Customer Login` restores `'customer'` mode (`tanvir.ahmed@deshimart.bd`).
+### Files to Modify
+1. **`src/components/screens/SplashOnboarding.tsx`**:
+   - **Step 4 (`Welcome Back`)**:
+     - Separate the Brand Header (`BagLogoSvg` + `Welcome Back` + subtitle) into its own upper section (`mt-2 mb-6 sm:mb-7`) so it sits higher on the screen and has **24px–28px** of clean breathing room above the `Email or Phone` input field.
+     - Refine spacing between the bag icon and `Welcome Back` heading (`mt-2.5`) and between the heading and subtitle (`mt-1`).
+   - **Step 5 (`Create Your Account`)**:
+     - Apply the matching upper brand header elevation (`mt-1.5 mb-5 sm:mb-6`) so the logo + `Create Your Account` + subtitle sit cleanly above the `Full Name` input field with zero crowding.
+2. **`src/index.css`**:
+   - Refine `.dm-flow-logo-sm` (`48px × 48px`) so the bag icon and its soft ambient emerald shadow remain crisp and well-proportioned above the title.
