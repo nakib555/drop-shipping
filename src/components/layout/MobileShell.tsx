@@ -4,6 +4,7 @@ import { useDeshiMart } from '../../context/DeshiMartContext';
 import { BottomTabBar } from './BottomTabBar';
 import { TopAppBar } from './TopAppBar';
 import { ToastContainer } from '../shared/ToastContainer';
+import { PWAInstallPopup } from '../shared/PWAInstallPopup';
 // Clean production MobileShell — zero Cultural Vibe or FloatingExperienceModePill UI
 
 export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,6 +49,9 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
       >
         {/* Fixed Top App Bar */}
         <TopAppBar />
+
+        {/* Browser-Style Top Pop-Up PWA Install Notification */}
+        <PWAInstallPopup />
 
         {/* Frame-Anchored Toast Feedback Overlay */}
         <ToastContainer />

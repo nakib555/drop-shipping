@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CreditCard,
+  Download,
   Edit3,
   Globe,
   Heart,
@@ -34,6 +35,7 @@ import {
 // Clean production AccountSupportScreen — zero ExperienceModeStudioCard UI
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { SUPPORT_FAQS } from '../../data/catalogData';
+import { triggerPWAInstallPopup, usePWAInstall } from '../../hooks/usePWAInstall';
 import { AppNotification, PaymentMethodId } from '../../types/deshimart';
 import { ProductCard } from '../shared/ProductCard';
 
@@ -77,6 +79,7 @@ export const AccountSupportScreen: React.FC = () => {
     showToast,
   } = useDeshiMart();
 
+  const { isInstalled } = usePWAInstall();
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'order' | 'price_drop'>('all');
 
   const [chatOpen, setChatOpen] = useState(false);
@@ -1002,6 +1005,34 @@ export const AccountSupportScreen: React.FC = () => {
               className="w-4 h-4 accent-emerald-700"
             />
           </label>
+        </div>
+
+        {/* Progressive Web App Installation & Auto-Update Status */}
+        <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-xs font-semibold text-content-primary">
+              {language === 'BN' ? 'DeshiMart অ্যাপ' : 'DeshiMart Web App'}
+            </h2>
+            <p className="text-[11px] text-content-secondary mt-0.5">
+              {isInstalled
+                ? language === 'BN'
+                  ? 'ইনস্টল করা আছে · স্বয়ংক্রিয় আপডেট চালু'
+                  : 'Installed · Auto-updates active'
+                : language === 'BN'
+                ? 'হোম স্ক্রিনে যোগ করুন · স্বয়ংক্রিয় আপডেট চালু'
+                : 'Add to home screen · Auto-updates active'}
+            </p>
+          </div>
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={() => triggerPWAInstallPopup()}
+              className="h-9 px-3.5 rounded-lg bg-brand-subtle hover:bg-brand-primary text-brand-primary hover:text-white border border-brand-border text-xs font-semibold inline-flex items-center gap-1.5 shrink-0 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{language === 'BN' ? 'ইনস্টল' : 'Install'}</span>
+            </button>
+          )}
         </div>
 
         <button

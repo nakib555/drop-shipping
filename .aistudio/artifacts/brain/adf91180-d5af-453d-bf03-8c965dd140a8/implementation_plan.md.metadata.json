@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for DeshiMart Progressive Web App (PWA) with a browser-style top popup install notification, automatic silent background updates via vite-plugin-pwa, compliant Web App Manifest & icons, and App Settings install trigger.",
-  "updatedAt":  "2026-10-10T12:16:03.102143500Z",
+  "summary":  "Implementation plan to resolve stale file overlaps, Cloudflare caching/routing rules, PWA service worker cache invalidation, and versioned localStorage state.",
+  "updatedAt":  "2026-10-10T12:26:15.727074197Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
