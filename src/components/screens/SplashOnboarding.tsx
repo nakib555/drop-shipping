@@ -962,9 +962,7 @@ export const SplashOnboarding: React.FC = () => {
       triggerShake('login', 'Please enter email/phone and password');
       return;
     }
-    const isAdminLogin =
-      loginRole === 'admin' ||
-      loginIdentifier.toLowerCase().includes('admin');
+    const isAdminLogin = loginRole === 'admin';
     loginUser(
       loginIdentifier.trim(),
       isAdminLogin ? 'Nakib Prince' : 'Tanvir Ahmed',

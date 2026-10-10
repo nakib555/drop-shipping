@@ -17,6 +17,7 @@ import { CheckoutFlowScreen } from './components/screens/CheckoutFlowScreen';
 import { OrdersTrackingScreen } from './components/screens/OrdersTrackingScreen';
 import { AccountSupportScreen } from './components/screens/AccountSupportScreen';
 import { AdminDashboardScreen } from './components/screens/AdminDashboardScreen';
+import { AppErrorBoundary } from './components/shared/AppErrorBoundary';
 
 const ScreenRouter: React.FC = () => {
   const { currentScreen } = useDeshiMart();
@@ -70,7 +71,9 @@ export default function App() {
   return (
     <DeshiMartProvider>
       <MobileShell>
-        <ScreenRouter />
+        <AppErrorBoundary>
+          <ScreenRouter />
+        </AppErrorBoundary>
       </MobileShell>
     </DeshiMartProvider>
   );

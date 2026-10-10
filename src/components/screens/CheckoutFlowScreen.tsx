@@ -751,7 +751,12 @@ export const CheckoutFlowScreen: React.FC = () => {
         }
       } else if (paymentMethod === 'card') {
         const cleanDigits = checkoutDraft.cardNumber.replace(/\D/g, '');
-        if (cleanDigits.length < 13 || cleanDigits.length > 19) {
+        const isAlreadyTokenized =
+          checkoutDraft.cardNumber.includes('••••') && cleanDigits.length >= 4;
+        if (
+          !isAlreadyTokenized &&
+          (cleanDigits.length < 13 || cleanDigits.length > 19)
+        ) {
           setPaymentError('Please enter a valid 16-digit card number.');
           return;
         }
@@ -759,7 +764,10 @@ export const CheckoutFlowScreen: React.FC = () => {
           setPaymentError('Enter card expiry in MM/YY format (e.g., 12/28).');
           return;
         }
-        if (!/^\d{3,4}$/.test(checkoutDraft.cardCvv.trim())) {
+        if (
+          !isAlreadyTokenized &&
+          !/^\d{3,4}$/.test(checkoutDraft.cardCvv.trim())
+        ) {
           setPaymentError('Enter a valid 3 or 4 digit security CVV.');
           return;
         }
@@ -934,6 +942,10 @@ export const CheckoutFlowScreen: React.FC = () => {
 
             {paymentMethod === 'card' && (
               <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-3">
+                <div className="flex items-center justify-between text-[11px] text-brand-primary font-medium bg-brand-subtle/60 border border-brand-border/60 rounded-lg px-2.5 py-1.5">
+                  <span>PCI-DSS Hosted Tokenization</span>
+                  <span>Raw PAN & CVV never stored</span>
+                </div>
                 <div>
                   <label className="block text-[11px] font-medium text-content-secondary mb-1">
                     Cardholder Name
@@ -1066,7 +1078,8 @@ export const CheckoutFlowScreen: React.FC = () => {
           return;
         }
 
-        const created = placeOrder();
+        const idempotencyKey = `${cartTotals.quoteId}-${selectedAddressId}-${paymentMethod}`;
+        const created = placeOrder(idempotencyKey);
         setIsPlacingOrder(false);
         submissionLockRef.current = false;
         navigateTo('order_success', { orderId: created.id });
@@ -1280,6 +1293,9 @@ export const CheckoutFlowScreen: React.FC = () => {
               shippingLabel={deliveryMethodLabels[shippingMethod].name}
               totalBdt={cartTotals.totalBdt}
               formatPrice={formatPrice}
+              quoteId={cartTotals.quoteId}
+              ruleVersion={cartTotals.ruleVersion}
+              quoteStatus="confirmed"
             />
 
             {/* Optional Resilience Test Toggle (Lets user verify Error & Retry state cleanly) */}

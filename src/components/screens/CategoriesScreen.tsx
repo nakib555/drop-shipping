@@ -502,43 +502,78 @@ export const CategoriesScreen: React.FC = () => {
                   animate={{ y: 0 }}
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-4 border-t border-app-border"
+                  className="relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl shadow-2xl border-t border-app-border flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
                 >
-                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
-                  <div className="flex items-center justify-between border-b border-app-border pb-3">
+                  <div className="pt-2.5 pb-1 shrink-0">
+                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                  </div>
+                  <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
                     <h3 className="text-sm font-semibold text-content-primary">
                       Filter Catalog
                     </h3>
                     <button
                       type="button"
+                      aria-label="Close filters"
                       onClick={() => setFilterSheetOpen(false)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  {/* Max Landed Price Range Slidebar */}
-                  <div className="p-3.5 rounded-xl bg-app-bg border border-app-border space-y-3">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-xs font-medium text-content-secondary">
-                        Max Total Landed Price
-                      </span>
-                      <span className="font-mono-num text-sm font-bold text-brand-primary">
-                        {formatPrice(smartFilters.maxPriceBdt)}
-                      </span>
-                    </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4">
+                    {/* Max Landed Price Range Slidebar */}
+                    <div className="p-3.5 rounded-xl bg-app-bg border border-app-border space-y-3">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-xs font-medium text-content-secondary">
+                          Max Total Landed Price
+                        </span>
+                        <span className="font-mono-num text-sm font-bold text-brand-primary">
+                          {formatPrice(smartFilters.maxPriceBdt)}
+                        </span>
+                      </div>
 
-                    {/* Tactile Range Slider Track */}
-                    <div className="relative flex items-center h-7">
-                      <div className="w-full h-2 rounded-full bg-app-border overflow-hidden">
+                      {/* Tactile Range Slider Track */}
+                      <div className="relative flex items-center h-7">
+                        <div className="w-full h-2 rounded-full bg-app-border overflow-hidden">
+                          <div
+                            className="h-full bg-brand-primary rounded-full transition-all duration-75"
+                            style={{
+                              width: `${Math.max(
+                                2,
+                                Math.min(
+                                  100,
+                                  ((smartFilters.maxPriceBdt - 1500) /
+                                    (250000 - 1500)) *
+                                    100
+                                )
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <input
+                          type="range"
+                          aria-label="Maximum total landed price"
+                          min={1500}
+                          max={250000}
+                          step={1000}
+                          value={smartFilters.maxPriceBdt}
+                          onChange={(e) =>
+                            setSmartFilters((prev) => ({
+                              ...prev,
+                              maxPriceBdt: Number(e.target.value),
+                            }))
+                          }
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
                         <div
-                          className="h-full bg-brand-primary rounded-full transition-all duration-75"
+                          aria-hidden="true"
+                          className="pointer-events-none absolute w-5 h-5 rounded-full bg-white border-2 border-brand-primary shadow-sm -translate-x-1/2 transition-all duration-75"
                           style={{
-                            width: `${Math.max(
-                              2,
+                            left: `${Math.max(
+                              3,
                               Math.min(
-                                100,
+                                97,
                                 ((smartFilters.maxPriceBdt - 1500) /
                                   (250000 - 1500)) *
                                   100
@@ -547,119 +582,89 @@ export const CategoriesScreen: React.FC = () => {
                           }}
                         />
                       </div>
-                      <input
-                        type="range"
-                        aria-label="Maximum total landed price"
-                        min={1500}
-                        max={250000}
-                        step={1000}
-                        value={smartFilters.maxPriceBdt}
-                        onChange={(e) =>
-                          setSmartFilters((prev) => ({
-                            ...prev,
-                            maxPriceBdt: Number(e.target.value),
-                          }))
-                        }
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      <div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute w-5 h-5 rounded-full bg-white border-2 border-brand-primary shadow-sm -translate-x-1/2 transition-all duration-75"
-                        style={{
-                          left: `${Math.max(
-                            3,
-                            Math.min(
-                              97,
-                              ((smartFilters.maxPriceBdt - 1500) /
-                                (250000 - 1500)) *
-                                100
-                            )
-                          )}%`,
-                        }}
-                      />
+
+                      {/* Quick Price Preset Buttons */}
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { label: '≤ 5k', value: 5000 },
+                          { label: '≤ 25k', value: 25000 },
+                          { label: '≤ 100k', value: 100000 },
+                          { label: 'Any', value: 250000 },
+                        ].map((preset) => {
+                          const active = smartFilters.maxPriceBdt === preset.value;
+                          return (
+                            <button
+                              key={preset.value}
+                              type="button"
+                              onClick={() =>
+                                setSmartFilters((prev) => ({
+                                  ...prev,
+                                  maxPriceBdt: preset.value,
+                                }))
+                              }
+                              className={`h-8 rounded-lg font-mono-num text-[11px] font-medium transition-colors border ${
+                                active
+                                  ? 'bg-brand-primary text-white border-brand-primary font-semibold'
+                                  : 'bg-white border-app-border text-content-secondary hover:border-app-borderStrong hover:text-content-primary'
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Quick Price Preset Buttons */}
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[
-                        { label: '≤ 5k', value: 5000 },
-                        { label: '≤ 25k', value: 25000 },
-                        { label: '≤ 100k', value: 100000 },
-                        { label: 'Any', value: 250000 },
-                      ].map((preset) => {
-                        const active = smartFilters.maxPriceBdt === preset.value;
-                        return (
-                          <button
-                            key={preset.value}
-                            type="button"
-                            onClick={() =>
-                              setSmartFilters((prev) => ({
-                                ...prev,
-                                maxPriceBdt: preset.value,
-                              }))
-                            }
-                            className={`h-8 rounded-lg font-mono-num text-[11px] font-medium transition-colors border ${
-                              active
-                                ? 'bg-brand-primary text-white border-brand-primary font-semibold'
-                                : 'bg-white border-app-border text-content-secondary hover:border-app-borderStrong hover:text-content-primary'
-                            }`}
-                          >
-                            {preset.label}
-                          </button>
-                        );
-                      })}
+                    {/* Toggles */}
+                    <div className="divide-y divide-app-border border border-app-border rounded-xl bg-white px-3.5">
+                      <label className="min-h-[44px] flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer">
+                        <span>In Stock & Ready to Ship Only</span>
+                        <input
+                          type="checkbox"
+                          checked={smartFilters.inStockOnly}
+                          onChange={(e) =>
+                            setSmartFilters((prev) => ({
+                              ...prev,
+                              inStockOnly: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 accent-emerald-700 rounded"
+                        />
+                      </label>
+
+                      <label className="min-h-[44px] flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer">
+                        <span>Deals & Price Drops Only</span>
+                        <input
+                          type="checkbox"
+                          checked={smartFilters.dealsOnly}
+                          onChange={(e) =>
+                            setSmartFilters((prev) => ({
+                              ...prev,
+                              dealsOnly: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 accent-emerald-700 rounded"
+                        />
+                      </label>
+
+                      <label className="min-h-[44px] flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer">
+                        <span>Verified Factory Exporters Only</span>
+                        <input
+                          type="checkbox"
+                          checked={smartFilters.verifiedOnly}
+                          onChange={(e) =>
+                            setSmartFilters((prev) => ({
+                              ...prev,
+                              verifiedOnly: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 accent-emerald-700 rounded"
+                        />
+                      </label>
                     </div>
                   </div>
 
-                  {/* Toggles */}
-                  <div className="divide-y divide-app-border border border-app-border rounded-xl bg-white px-3.5">
-                    <label className="min-h-[44px] flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer">
-                      <span>In Stock & Ready to Ship Only</span>
-                      <input
-                        type="checkbox"
-                        checked={smartFilters.inStockOnly}
-                        onChange={(e) =>
-                          setSmartFilters((prev) => ({
-                            ...prev,
-                            inStockOnly: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 accent-emerald-700 rounded"
-                      />
-                    </label>
-
-                    <label className="min-h-[44px] flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer">
-                      <span>Deals & Price Drops Only</span>
-                      <input
-                        type="checkbox"
-                        checked={smartFilters.dealsOnly}
-                        onChange={(e) =>
-                          setSmartFilters((prev) => ({
-                            ...prev,
-                            dealsOnly: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 accent-emerald-700 rounded"
-                      />
-                    </label>
-
-                    <label className="min-h-[44px] flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer">
-                      <span>Verified Factory Exporters Only</span>
-                      <input
-                        type="checkbox"
-                        checked={smartFilters.verifiedOnly}
-                        onChange={(e) =>
-                          setSmartFilters((prev) => ({
-                            ...prev,
-                            verifiedOnly: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 accent-emerald-700 rounded"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  <div className="px-4 py-3 border-t border-app-border bg-white grid grid-cols-2 gap-2.5 shrink-0">
                     <button
                       type="button"
                       onClick={resetSmartFilters}

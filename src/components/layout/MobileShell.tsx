@@ -13,12 +13,26 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
     darkMode,
   } = useDeshiMart();
   const mainScrollRef = useRef<HTMLElement | null>(null);
+  const scrollMemoryRef = useRef<Record<string, number>>({});
+  const activeRouteKey =
+    currentScreen === 'product_detail'
+      ? `product_detail:${selectedProductId}`
+      : currentScreen;
 
   useEffect(() => {
-    if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTop = 0;
-    }
-  }, [currentScreen, selectedProductId]);
+    const el = mainScrollRef.current;
+    if (!el) return;
+    const savedScroll = scrollMemoryRef.current[activeRouteKey] ?? 0;
+    requestAnimationFrame(() => {
+      if (mainScrollRef.current) {
+        mainScrollRef.current.scrollTop = savedScroll;
+      }
+    });
+  }, [activeRouteKey]);
+
+  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+    scrollMemoryRef.current[activeRouteKey] = e.currentTarget.scrollTop;
+  };
 
   return (
     <div
@@ -40,6 +54,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
         {/* Dedicated Scrollable Screen Body */}
         <main
           ref={mainScrollRef}
+          onScroll={handleMainScroll}
           className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain no-scrollbar flex flex-col relative"
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -56,10 +71,10 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
           </AnimatePresence>
         </main>
 
-        {/* Viewport-Locked Bottom Sheet Portal Slot (Docked directly above BottomTabBar) */}
+        {/* Viewport-Locked Modal & Bottom Sheet Portal Slot */}
         <div
           id="mobile-sheet-root"
-          className="pointer-events-none absolute inset-x-0 top-14 bottom-16 z-40 overflow-hidden"
+          className="pointer-events-none absolute inset-0 z-[60] overflow-hidden"
         />
 
         {/* Fixed Bottom Navigation Bar */}

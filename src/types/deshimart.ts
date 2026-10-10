@@ -103,6 +103,15 @@ export interface Product {
   name: string;
   nameBn: string;
   subtitle: string;
+  fullDescription?: string;
+  sku?: string;
+  barcode?: string;
+  stockCount?: number;
+  minimumOrderQuantity?: number;
+  returnPolicy?: string;
+  shippingInformation?: string;
+  availabilityStatus?: string;
+  dimensions?: string;
   category: CategoryId;
   image: string;
   gallery?: string[];
@@ -197,6 +206,11 @@ export interface Order {
   shippingBdt: number;
   customsDutyBdt: number;
   totalBdt: number;
+  quoteId?: string;
+  ruleVersion?: string;
+  pricingStatus?: 'estimated' | 'confirmed';
+  paymentTokenId?: string;
+  maskedPaymentAccount?: string;
   paymentMethod: PaymentMethodId;
   shippingMethod: ShippingMethodId;
   shippingAddress: ShippingAddress;

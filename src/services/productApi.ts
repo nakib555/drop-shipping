@@ -1,10 +1,32 @@
-import { CategoryId, Product } from '../types/deshimart';
+import {
+  AppNotification,
+  CategoryId,
+  GuideArticle,
+  Order,
+  Product,
+  ShippingAddress,
+} from '../types/deshimart';
+import { calculateProductLandedQuote } from './pricingAndOrderEngine';
 
 interface DummyJsonReview {
   rating?: number;
   comment?: string;
   date?: string;
   reviewerName?: string;
+  reviewerEmail?: string;
+}
+
+interface DummyJsonDimensions {
+  width?: number;
+  height?: number;
+  depth?: number;
+}
+
+interface DummyJsonMeta {
+  createdAt?: string;
+  updatedAt?: string;
+  barcode?: string;
+  qrCode?: string;
 }
 
 interface DummyJsonProduct {
@@ -16,14 +38,64 @@ interface DummyJsonProduct {
   discountPercentage?: number;
   rating?: number;
   stock?: number;
+  tags?: string[];
   brand?: string;
+  sku?: string;
   weight?: number;
+  dimensions?: DummyJsonDimensions;
   warrantyInformation?: string;
   shippingInformation?: string;
+  availabilityStatus?: string;
+  reviews?: DummyJsonReview[];
+  returnPolicy?: string;
+  minimumOrderQuantity?: number;
+  meta?: DummyJsonMeta;
   thumbnail?: string;
   images?: string[];
-  reviews?: DummyJsonReview[];
+}
+
+interface DummyJsonCartProduct {
+  id: number;
+  title: string;
+  price: number;
+  quantity: number;
+  total: number;
+  discountPercentage: number;
+  discountedTotal: number;
+  thumbnail: string;
+}
+
+interface DummyJsonCart {
+  id: number;
+  products: DummyJsonCartProduct[];
+  total: number;
+  discountedTotal: number;
+  userId: number;
+  totalProducts: number;
+  totalQuantity: number;
+}
+
+interface DummyJsonUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address?: {
+    address?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  };
+}
+
+interface DummyJsonPost {
+  id: number;
+  title: string;
+  body: string;
   tags?: string[];
+  reactions?: { likes?: number; dislikes?: number };
+  views?: number;
 }
 
 interface FakeStoreProduct {
@@ -51,7 +123,7 @@ interface EscuelaProduct {
   };
 }
 
-const SESSION_CACHE_KEY = 'deshimart_api_catalog_v4';
+const SESSION_CACHE_KEY = 'deshimart_live_api_catalog_v6';
 
 const CATEGORY_HS_CODES: Record<CategoryId, string> = {
   all: '8517.62.00',
@@ -180,31 +252,31 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
 
 const ORIGIN_HUBS = [
   {
-    originLabel: 'China · Verified Factory',
+    originLabel: 'Shenzhen · Verified Export Hub',
     corridorTag: 'Shenzhen Air',
     warehouse: 'Shenzhen Export Hub',
     supplier: 'Shenzhen Direct Co.',
   },
   {
-    originLabel: 'South Korea · Official Hub',
+    originLabel: 'Seoul · Official Export Hub',
     corridorTag: 'Seoul Direct',
     warehouse: 'Incheon Air Hub',
     supplier: 'Seoul Global Trade',
   },
   {
-    originLabel: 'Singapore · Regional Hub',
+    originLabel: 'Singapore · Regional Free Zone',
     corridorTag: 'Singapore Hub',
     warehouse: 'Changi Logistics Hub',
     supplier: 'SingaPort Direct',
   },
   {
-    originLabel: 'Japan · Inspected Exporter',
+    originLabel: 'Tokyo · Inspected Exporter',
     corridorTag: 'Tokyo Air',
     warehouse: 'Tokyo Narita Hub',
     supplier: 'Nihon Craft Exports',
   },
   {
-    originLabel: 'Malaysia · Direct Hub',
+    originLabel: 'Kuala Lumpur · Direct Hub',
     corridorTag: 'KL Express',
     warehouse: 'Kuala Lumpur Air Hub',
     supplier: 'Malay Global Hub',
@@ -213,19 +285,10 @@ const ORIGIN_HUBS = [
 
 async function fetchJsonWithTimeout<T>(
   url: string,
-  timeoutMs = 6500,
-  externalSignal?: AbortSignal
+  timeoutMs = 7500
 ): Promise<T | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const onExternalAbort = () => controller.abort();
-  if (externalSignal) {
-    if (externalSignal.aborted) {
-      clearTimeout(timer);
-      return null;
-    }
-    externalSignal.addEventListener('abort', onExternalAbort, { once: true });
-  }
   try {
     const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) return null;
@@ -234,9 +297,6 @@ async function fetchJsonWithTimeout<T>(
     return null;
   } finally {
     clearTimeout(timer);
-    if (externalSignal) {
-      externalSignal.removeEventListener('abort', onExternalAbort);
-    }
   }
 }
 
@@ -252,10 +312,24 @@ function buildNormalizedProduct(params: {
   image: string;
   gallery?: string[];
   brand: string;
+  sku?: string;
+  barcode?: string;
+  stockCount?: number;
+  minimumOrderQuantity?: number;
+  dimensions?: string;
+  returnPolicy?: string;
+  shippingInformation?: string;
+  availabilityStatus?: string;
   weightGrams: number;
   warranty: string;
   tags: string[];
-  rawReviews: { author: string; rating: number; comment: string; date: string }[];
+  rawReviews: {
+    author: string;
+    rating: number;
+    comment: string;
+    date: string;
+    email?: string;
+  }[];
   seedIndex: number;
 }): Product {
   const {
@@ -270,6 +344,14 @@ function buildNormalizedProduct(params: {
     image,
     gallery,
     brand,
+    sku,
+    barcode,
+    stockCount = 25,
+    minimumOrderQuantity = 1,
+    dimensions,
+    returnPolicy = '30-Day Dhaka Return & Exchange Policy',
+    shippingInformation = 'Ships via Cross-Border Air Linehaul',
+    availabilityStatus = 'In Stock',
     weightGrams,
     warranty,
     tags,
@@ -280,44 +362,101 @@ function buildNormalizedProduct(params: {
   const hub = ORIGIN_HUBS[seedIndex % ORIGIN_HUBS.length];
 
   const normalizedUsd =
-    usdPrice > 1500
-      ? 140 + (usdPrice % 320)
-      : usdPrice < 6
-      ? 8 + usdPrice
+    usdPrice > 1800
+      ? 160 + (usdPrice % 360)
+      : usdPrice < 5
+      ? 7 + usdPrice
       : usdPrice;
 
-  const productPriceBdt = Math.max(450, Math.round((normalizedUsd * 115) / 10) * 10);
-  const shippingBdt =
-    productPriceBdt < 1800 ? 180 : productPriceBdt < 6000 ? 340 : 620;
-  const importDutyBdt = Math.round(productPriceBdt * 0.1);
-  const vatBdt = Math.round((productPriceBdt + importDutyBdt) * 0.15);
-  const totalLandedBdt = productPriceBdt + shippingBdt + importDutyBdt + vatBdt;
+  const baseBdt = Math.max(450, Math.round((normalizedUsd * 120) / 10) * 10);
+  const rawFreightBdt =
+    baseBdt < 1800 ? 180 : baseBdt < 6000 ? 340 : 620;
 
-  const cleanDiscount = Math.max(8, Math.min(35, Math.round(discountPercent || 14)));
-  const originalLandedBdt = Math.round(totalLandedBdt / (1 - cleanDiscount / 100) / 10) * 10;
+  // Use authoritative pricing engine for single source of truth
+  const directQuote = calculateProductLandedQuote({
+    productId: id,
+    category,
+    basePriceBdt: baseBdt,
+    shippingBdt: rawFreightBdt,
+    hsCode: CATEGORY_HS_CODES[category],
+  });
+
+  const productPriceBdt = directQuote.basePriceBdt;
+  const shippingBdt = directQuote.freightBdt;
+  const importDutyBdt = directQuote.customsDutyBdt;
+  const vatBdt = directQuote.vatBdt;
+  const totalLandedBdt = directQuote.totalLandedBdt;
+
+  const cleanDiscount = Math.max(
+    5,
+    Math.min(40, Math.round(discountPercent || 12))
+  );
+  const originalLandedBdt =
+    Math.round(totalLandedBdt / (1 - cleanDiscount / 100) / 10) * 10;
   const lowest30dBdt = Math.round(totalLandedBdt * 0.95);
 
   const dropScore = Number(
-    Math.min(9.7, Math.max(8.4, rating * 1.85 + 0.3)).toFixed(1)
+    Math.min(9.8, Math.max(8.4, rating * 1.85 + 0.3)).toFixed(1)
   );
 
   const dropScoreLabel: 'Excellent' | 'Great Choice' | 'Top Value' =
-    dropScore >= 9.1 ? 'Top Value' : dropScore >= 8.8 ? 'Excellent' : 'Great Choice';
+    dropScore >= 9.1
+      ? 'Top Value'
+      : dropScore >= 8.8
+      ? 'Excellent'
+      : 'Great Choice';
 
-  const bdStockBase = Math.round(productPriceBdt * 1.09);
-  const bdStockTotal = bdStockBase + 160 + importDutyBdt + vatBdt;
+  const bdStockQuote = calculateProductLandedQuote({
+    productId: `${id}-bd`,
+    category,
+    basePriceBdt: Math.round(productPriceBdt * 1.08),
+    shippingBdt: 150,
+    hsCode: CATEGORY_HS_CODES[category],
+  });
 
-  const expressBase = Math.round(productPriceBdt * 1.12);
-  const expressTotal = expressBase + shippingBdt + 420 + importDutyBdt + vatBdt;
+  const expressQuote = calculateProductLandedQuote({
+    productId: `${id}-air`,
+    category,
+    basePriceBdt: Math.round(productPriceBdt * 1.11),
+    shippingBdt: shippingBdt + 400,
+    hsCode: CATEGORY_HS_CODES[category],
+  });
 
-  const shortDesc =
-    description.length > 68 ? `${description.slice(0, 65).trim()}...` : description;
+  // Build concise summary specs line for subtitle while keeping full API description
+  const specSummaryParts = [
+    brand && brand !== 'Global Direct' ? brand : null,
+    sku ? `SKU ${sku}` : null,
+    dimensions || `${weightGrams}g`,
+    shippingInformation,
+  ].filter(Boolean);
+
+  const subtitle =
+    specSummaryParts.length >= 2
+      ? specSummaryParts.slice(0, 3).join(' · ')
+      : description;
+
+  const apiHighlights = [
+    ...tags.map((t) => `Category Tag: ${t.charAt(0).toUpperCase() + t.slice(1)}`),
+    shippingInformation ? `Fulfillment: ${shippingInformation}` : null,
+    returnPolicy ? `Return Policy: ${returnPolicy}` : null,
+    warranty ? `Warranty: ${warranty}` : null,
+    dimensions ? `Dimensions: ${dimensions}` : null,
+  ].filter((x): x is string => Boolean(x));
 
   return {
     id,
     name: title,
     nameBn: title,
-    subtitle: `${brand} · ${shortDesc}`,
+    subtitle,
+    fullDescription: description,
+    sku,
+    barcode,
+    stockCount,
+    minimumOrderQuantity,
+    returnPolicy,
+    shippingInformation,
+    availabilityStatus,
+    dimensions,
     category,
     image,
     gallery: gallery && gallery.length > 0 ? gallery : [image],
@@ -325,11 +464,12 @@ function buildNormalizedProduct(params: {
     corridorTag: hub.corridorTag,
     originLabel: hub.originLabel,
     verifiedSupplier: true,
-    supplierName: brand && brand !== 'Global Direct' ? `${brand} Official Hub` : hub.supplier,
-    supplierFollowers: `${(4.2 + (seedIndex % 15) * 1.1).toFixed(1)}k`,
-    supplierProductsCount: `${180 + (seedIndex % 9) * 65}`,
+    supplierName:
+      brand && brand !== 'Global Direct' ? `${brand} Official Store` : hub.supplier,
+    supplierFollowers: `${(3.8 + (seedIndex % 15) * 0.9).toFixed(1)}k`,
+    supplierProductsCount: `${40 + (seedIndex % 9) * 25}`,
     rating: Number(rating.toFixed(1)),
-    reviewCount,
+    reviewCount: Math.max(rawReviews.length, reviewCount),
     dropScore,
     dropScoreLabel,
     productPriceBdt,
@@ -340,156 +480,147 @@ function buildNormalizedProduct(params: {
     originalLandedBdt,
     discountPercent: cleanDiscount,
     lowest30dBdt,
-    arrivesThisWeek: seedIndex % 2 === 0,
-    inStock: true,
+    arrivesThisWeek:
+      shippingInformation.toLowerCase().includes('overnight') ||
+      shippingInformation.toLowerCase().includes('days') ||
+      seedIndex % 2 === 0,
+    inStock: stockCount > 0 && availabilityStatus !== 'Out of Stock',
     colors: [
-      { name: 'Standard Edition', hex: '#0F172A' },
+      { name: 'Standard Factory Finish', hex: '#0F172A' },
       { name: 'Silver / Pearl', hex: '#94A3B8' },
-      { name: 'Emerald Tint', hex: '#059669' },
+      { name: 'Emerald Edition', hex: '#059669' },
     ],
-    sizes: category === 'fashion' ? ['39', '40', '41', '42', '43'] : undefined,
+    sizes:
+      category === 'fashion' || category === 'sports_outdoor'
+        ? ['S / 39', 'M / 40', 'L / 41', 'XL / 42']
+        : undefined,
     highlights:
-      tags.length >= 2
-        ? tags.slice(0, 4).map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-        : ['Customs Pre-Cleared', 'Verified Supplier', '30-Day Dhaka Return'],
+      apiHighlights.length > 0
+        ? apiHighlights.slice(0, 5)
+        : [description],
     specs: {
-      display: `${brand} Authentic Export Grade`,
-      battery: category === 'electronics' ? 'High-Capacity Rechargeable' : undefined,
-      waterproof: 'Export Protective Packaging',
-      heartRate: category === 'beauty_health' ? 'Dermatologist Tested' : undefined,
-      gps: 'Real-Time Air Tracking Included',
-      weight: `${weightGrams}g parcel weight`,
+      display: dimensions
+        ? `${dimensions} (${brand || 'Export Grade'})`
+        : `${brand || 'Authentic'} Standard Form Factor`,
+      battery: sku ? `SKU: ${sku}${barcode ? ` · EAN ${barcode}` : ''}` : undefined,
+      waterproof: shippingInformation || 'Export Protective Packaging',
+      heartRate: availabilityStatus
+        ? `${availabilityStatus} (${stockCount} units in warehouse)`
+        : undefined,
+      gps: returnPolicy || '30-Day Return Eligible',
+      weight: `${weightGrams}g net weight`,
       warranty,
     },
     routes: [
       {
         id: `${id}-route-direct`,
         name: 'Global Direct',
-        badge: 'Lowest Cost',
+        badge: 'Lowest Landed',
         originCountry: hub.warehouse,
         basePriceBdt: productPriceBdt,
         shippingBdt,
         dutyBdt: importDutyBdt,
         vatBdt,
         totalLandedBdt,
-        deliveryDays: '9–14 days',
+        deliveryDays: shippingInformation || '7–12 business days',
         rating: Number(rating.toFixed(1)),
         reliabilityScore: dropScore,
         verified: true,
-        onTimeRate: '97.4%',
-        returnRate: '1.8%',
-        responseTime: '< 4h',
+        onTimeRate: '97.8%',
+        returnRate: '1.4%',
+        responseTime: '< 3h',
       },
       {
         id: `${id}-route-bd`,
-        name: 'Bangladesh Stock',
+        name: 'Dhaka Ready Hub',
         badge: 'Fast Local',
-        originCountry: 'Dhaka Ready Hub',
-        basePriceBdt: bdStockBase,
-        shippingBdt: 160,
-        dutyBdt: importDutyBdt,
-        vatBdt,
-        totalLandedBdt: bdStockTotal,
-        deliveryDays: '3–6 days',
+        originCountry: 'Dhaka Consolidation Hub',
+        basePriceBdt: bdStockQuote.basePriceBdt,
+        shippingBdt: bdStockQuote.freightBdt,
+        dutyBdt: bdStockQuote.customsDutyBdt,
+        vatBdt: bdStockQuote.vatBdt,
+        totalLandedBdt: bdStockQuote.totalLandedBdt,
+        deliveryDays: '3–5 business days',
         rating: Number(Math.min(4.9, rating + 0.1).toFixed(1)),
         reliabilityScore: Number(Math.min(9.8, dropScore + 0.2).toFixed(1)),
         verified: true,
-        onTimeRate: '98.9%',
-        returnRate: '1.2%',
-        responseTime: '< 2h',
+        onTimeRate: '99.1%',
+        returnRate: '0.9%',
+        responseTime: '< 1h',
       },
       {
         id: `${id}-route-air`,
         name: 'Priority Air Express',
-        badge: 'Express Charter',
-        originCountry: 'Singapore Air Hub',
-        basePriceBdt: expressBase,
-        shippingBdt: shippingBdt + 420,
-        dutyBdt: importDutyBdt,
-        vatBdt,
-        totalLandedBdt: expressTotal,
-        deliveryDays: '4–7 days',
+        badge: 'Express Air',
+        originCountry: 'Singapore Changi Air Hub',
+        basePriceBdt: expressQuote.basePriceBdt,
+        shippingBdt: expressQuote.freightBdt,
+        dutyBdt: expressQuote.customsDutyBdt,
+        vatBdt: expressQuote.vatBdt,
+        totalLandedBdt: expressQuote.totalLandedBdt,
+        deliveryDays: '4–7 business days',
         rating: 4.9,
         reliabilityScore: 9.6,
         verified: true,
         onTimeRate: '99.4%',
-        returnRate: '0.9%',
+        returnRate: '0.8%',
         responseTime: '< 1h',
       },
     ],
     priceHistory: {
       '7D': [
-        { dateLabel: 'Oct 2', priceBdt: Math.round(totalLandedBdt * 1.06) },
-        { dateLabel: 'Oct 3', priceBdt: Math.round(totalLandedBdt * 1.05) },
-        { dateLabel: 'Oct 4', priceBdt: Math.round(totalLandedBdt * 1.03) },
-        { dateLabel: 'Oct 5', priceBdt: Math.round(totalLandedBdt * 1.02) },
-        { dateLabel: 'Oct 6', priceBdt: Math.round(totalLandedBdt * 1.01) },
-        { dateLabel: 'Oct 7', priceBdt: totalLandedBdt },
+        { dateLabel: '7d ago', priceBdt: Math.round(totalLandedBdt * 1.05) },
+        { dateLabel: '5d ago', priceBdt: Math.round(totalLandedBdt * 1.04) },
+        { dateLabel: '3d ago', priceBdt: Math.round(totalLandedBdt * 1.02) },
+        { dateLabel: 'Yesterday', priceBdt: Math.round(totalLandedBdt * 1.01) },
         { dateLabel: 'Today', priceBdt: totalLandedBdt },
       ],
       '30D': [
-        { dateLabel: 'Sep 10', priceBdt: originalLandedBdt },
-        { dateLabel: 'Sep 15', priceBdt: Math.round(totalLandedBdt * 1.11) },
-        { dateLabel: 'Sep 20', priceBdt: Math.round(totalLandedBdt * 1.07) },
-        { dateLabel: 'Sep 25', priceBdt: lowest30dBdt },
-        { dateLabel: 'Sep 30', priceBdt: Math.round(totalLandedBdt * 1.03) },
-        { dateLabel: 'Oct 4', priceBdt: Math.round(totalLandedBdt * 1.01) },
+        { dateLabel: '30d ago', priceBdt: originalLandedBdt },
+        { dateLabel: '20d ago', priceBdt: Math.round(totalLandedBdt * 1.08) },
+        { dateLabel: '12d ago', priceBdt: lowest30dBdt },
+        { dateLabel: '5d ago', priceBdt: Math.round(totalLandedBdt * 1.02) },
         { dateLabel: 'Today', priceBdt: totalLandedBdt },
       ],
       '90D': [
-        { dateLabel: 'Jul', priceBdt: Math.round(originalLandedBdt * 1.05) },
-        { dateLabel: 'Aug 1', priceBdt: originalLandedBdt },
-        { dateLabel: 'Aug 15', priceBdt: Math.round(totalLandedBdt * 1.09) },
-        { dateLabel: 'Sep 1', priceBdt: Math.round(totalLandedBdt * 1.06) },
-        { dateLabel: 'Sep 15', priceBdt: lowest30dBdt },
-        { dateLabel: 'Oct 1', priceBdt: Math.round(totalLandedBdt * 1.02) },
+        { dateLabel: '90d ago', priceBdt: Math.round(originalLandedBdt * 1.04) },
+        { dateLabel: '60d ago', priceBdt: originalLandedBdt },
+        { dateLabel: '30d ago', priceBdt: lowest30dBdt },
         { dateLabel: 'Today', priceBdt: totalLandedBdt },
       ],
       '1Y': [
-        { dateLabel: 'Jan', priceBdt: Math.round(originalLandedBdt * 1.12) },
-        { dateLabel: 'Mar', priceBdt: Math.round(originalLandedBdt * 1.08) },
-        { dateLabel: 'May', priceBdt: originalLandedBdt },
-        { dateLabel: 'Jul', priceBdt: Math.round(totalLandedBdt * 1.07) },
-        { dateLabel: 'Aug', priceBdt: Math.round(totalLandedBdt * 1.04) },
-        { dateLabel: 'Sep', priceBdt: lowest30dBdt },
+        { dateLabel: '12m ago', priceBdt: Math.round(originalLandedBdt * 1.09) },
+        { dateLabel: '6m ago', priceBdt: originalLandedBdt },
+        { dateLabel: '1m ago', priceBdt: lowest30dBdt },
         { dateLabel: 'Today', priceBdt: totalLandedBdt },
       ],
     },
-    reviews:
-      rawReviews.length > 0
-        ? rawReviews.map((r, idx) => ({
-            id: `${id}-rev-${idx}`,
-            author: r.author,
-            verified: true,
-            rating: r.rating,
-            date: r.date,
-            comment: r.comment,
-            variantChosen: 'Global Direct · Customs Pre-Cleared',
-          }))
-        : [
-            {
-              id: `${id}-rev-default`,
-              author: 'Tanvir R.',
-              verified: true,
-              rating: 5,
-              date: '3 days ago',
-              comment:
-                'Delivered to Dhaka in 8 days with zero extra customs fee. Authentic quality.',
-              variantChosen: 'Standard Edition',
-            },
-          ],
+    reviews: rawReviews.map((r, idx) => ({
+      id: `${id}-rev-${idx}`,
+      author: r.author,
+      verified: true,
+      rating: r.rating,
+      date: r.date,
+      comment: r.comment,
+      variantChosen: sku ? `SKU ${sku} · Verified API Review` : 'Verified API Purchase',
+    })),
   };
 }
 
-function normalizeDummyJsonItem(item: DummyJsonProduct, seedIndex: number): Product | null {
+function normalizeDummyJsonItem(
+  item: DummyJsonProduct,
+  seedIndex: number
+): Product | null {
   if (!item || !item.title) return null;
   if ((item.category || '').toLowerCase().includes('groceries')) {
     return null;
   }
+
   const primaryImage =
     sanitizeImageUrl(item.thumbnail) ||
     (Array.isArray(item.images)
-      ? item.images.map(sanitizeImageUrl).find((u): u is string => Boolean(u)) || null
+      ? item.images.map(sanitizeImageUrl).find((u): u is string => Boolean(u)) ||
+        null
       : null);
 
   if (!primaryImage) return null;
@@ -501,44 +632,69 @@ function normalizeDummyJsonItem(item: DummyJsonProduct, seedIndex: number): Prod
             (u): u is string => Boolean(u)
           )
         )
-      ).slice(0, 4)
+      ).slice(0, 5)
     : [primaryImage];
 
   const category = mapExternalCategory(item.category || '', item.title || '');
   const reviews = Array.isArray(item.reviews)
-    ? item.reviews.slice(0, 3).map((rv) => ({
-        author: rv.reviewerName || 'Verified Buyer',
-        rating: rv.rating || 5,
-        comment:
-          rv.comment ||
-          'Fast delivery to Bangladesh with exact landed cost as shown.',
-        date: 'Verified Purchase',
-      }))
+    ? item.reviews.map((rv) => {
+        const formattedDate = rv.date
+          ? new Date(rv.date).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })
+          : 'Verified API Review';
+        return {
+          author: rv.reviewerName || 'Verified Buyer',
+          rating: Number(rv.rating) || 5,
+          comment: rv.comment || '',
+          date: formattedDate,
+          email: rv.reviewerEmail,
+        };
+      })
     : [];
+
+  const dims =
+    item.dimensions &&
+    item.dimensions.width &&
+    item.dimensions.height &&
+    item.dimensions.depth
+      ? `${item.dimensions.width} × ${item.dimensions.height} × ${item.dimensions.depth} cm`
+      : undefined;
 
   return buildNormalizedProduct({
     id: `api-dj-${item.id}`,
     title: item.title,
-    description: item.description || 'Verified cross-border export product.',
+    description: item.description || '',
     category,
     usdPrice: Number(item.price) || 19.99,
-    discountPercent: Number(item.discountPercentage) || 12,
+    discountPercent: Number(item.discountPercentage) || 10,
     rating: Number(item.rating) || 4.6,
-    reviewCount: 45 + ((item.id * 17) % 420),
+    reviewCount: reviews.length > 0 ? reviews.length * 14 : 42,
     image: primaryImage,
     gallery: rawGallery,
     brand: item.brand || 'Global Direct',
-    weightGrams: Math.max(120, Math.round((item.weight || 4) * 110)),
-    warranty:
-      item.warrantyInformation ||
-      'Up to 30 days return · 1 year local warranty',
+    sku: item.sku,
+    barcode: item.meta?.barcode,
+    stockCount: typeof item.stock === 'number' ? item.stock : 30,
+    minimumOrderQuantity: item.minimumOrderQuantity || 1,
+    dimensions: dims,
+    returnPolicy: item.returnPolicy || '30 days return policy',
+    shippingInformation: item.shippingInformation || 'Ships in 3–5 business days',
+    availabilityStatus: item.availabilityStatus || 'In Stock',
+    weightGrams: Math.max(100, Math.round((item.weight || 3) * 100)),
+    warranty: item.warrantyInformation || '1 year official warranty',
     tags: Array.isArray(item.tags) ? item.tags : [item.category],
     rawReviews: reviews,
     seedIndex,
   });
 }
 
-function normalizeEscuelaItem(item: EscuelaProduct, seedIndex: number): Product | null {
+function normalizeEscuelaItem(
+  item: EscuelaProduct,
+  seedIndex: number
+): Product | null {
   if (!item || !item.title || item.title.length < 4) return null;
   const lowerTitle = item.title.toLowerCase();
   if (
@@ -566,27 +722,34 @@ function normalizeEscuelaItem(item: EscuelaProduct, seedIndex: number): Product 
   return buildNormalizedProduct({
     id: `api-esc-${item.id}`,
     title: item.title.trim(),
-    description:
-      item.description && item.description.length > 12
-        ? item.description
-        : 'Verified cross-border factory export with customs pre-clearance.',
+    description: item.description || '',
     category,
     usdPrice: Number(item.price) || 29.0,
-    discountPercent: 10 + (item.id % 18),
-    rating: Number((4.4 + ((item.id % 6) * 0.1)).toFixed(1)),
-    reviewCount: 32 + ((item.id * 13) % 240),
+    discountPercent: 12 + (item.id % 15),
+    rating: Number((4.5 + (item.id % 5) * 0.1).toFixed(1)),
+    reviewCount: 18 + (item.id % 40),
     image: validImages[0],
     gallery: validImages.slice(0, 4),
-    brand: categoryName ? `${categoryName} Direct` : 'Global Direct',
+    brand: categoryName ? `${categoryName} Official` : 'Global Direct',
+    sku: `ESC-${item.id}`,
+    stockCount: 24,
     weightGrams: 280 + ((item.id * 25) % 650),
-    warranty: 'Up to 30 days return · 1 year local warranty',
-    tags: [categoryName || 'Export Direct', 'Customs Pre-Cleared'],
+    warranty: '1 year international warranty',
+    tags: [categoryName || 'Export Direct'],
     rawReviews: [],
     seedIndex,
   });
 }
 
-export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<Product[]> {
+/**
+ * Fetches the full global product catalog from live public APIs:
+ * 1. DummyJSON Products API (`https://dummyjson.com/products?limit=0`)
+ * 2. FakeStoreAPI (`https://fakestoreapi.com/products`)
+ * 3. Platzi Fake Store API (`https://api.escuelajs.co/api/v1/products`)
+ */
+export async function fetchGlobalCatalogFromApi(
+  forceRefresh = false
+): Promise<Product[]> {
   if (!forceRefresh) {
     try {
       const cached = sessionStorage.getItem(SESSION_CACHE_KEY);
@@ -601,10 +764,6 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
     }
   }
 
-  // Fetch concurrently from 3 free public no-key product APIs:
-  // 1. DummyJSON (all 194 products)
-  // 2. FakeStoreAPI (20 products)
-  // 3. Platzi Fake Store API (first 36 products)
   const [dummyData, fakeStoreData, escuelaData] = await Promise.all([
     fetchJsonWithTimeout<{ products?: DummyJsonProduct[] }>(
       'https://dummyjson.com/products?limit=0'
@@ -633,16 +792,18 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
         buildNormalizedProduct({
           id: `api-fs-${item.id}`,
           title: item.title,
-          description: item.description || 'Verified global export item.',
+          description: item.description || '',
           category,
           usdPrice: Number(item.price) || 24.99,
-          discountPercent: 15,
+          discountPercent: 14,
           rating: Number(item.rating?.rate) || 4.6,
-          reviewCount: Number(item.rating?.count) || 120,
+          reviewCount: Number(item.rating?.count) || 85,
           image: cleanImg,
-          brand: 'Global Direct',
-          weightGrams: 380,
-          warranty: 'Up to 30 days return · 1 year local warranty',
+          brand: 'FakeStore Global',
+          sku: `FS-${item.id}`,
+          stockCount: 40,
+          weightGrams: 360,
+          warranty: '1 year international warranty',
           tags: [item.category],
           rawReviews: [],
           seedIndex: 200 + idx,
@@ -660,7 +821,10 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
 
   if (combinedProducts.length > 0) {
     try {
-      sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(combinedProducts));
+      sessionStorage.setItem(
+        SESSION_CACHE_KEY,
+        JSON.stringify(combinedProducts)
+      );
     } catch {
       // ignore storage quota
     }
@@ -670,10 +834,234 @@ export async function fetchGlobalCatalogFromApi(forceRefresh = false): Promise<P
 }
 
 /**
- * Fetches incremental live batches from free APIs for continuous background polling
- * and infinite scroll pagination.
+ * Fetches live operational data (Orders from DummyJSON Carts API, Addresses from DummyJSON Users API,
+ * Shopping Guides from DummyJSON Posts API, and Notifications derived from live API entities).
  */
-export async function fetchContinuousProductBatch(batchCursor: number): Promise<Product[]> {
+export async function fetchLiveOperationalDataFromApis(
+  catalogProducts: Product[]
+): Promise<{
+  addresses: ShippingAddress[];
+  orders: Order[];
+  notifications: AppNotification[];
+  guides: GuideArticle[];
+}> {
+  const [cartsRes, usersRes, postsRes] = await Promise.all([
+    fetchJsonWithTimeout<{ carts?: DummyJsonCart[] }>(
+      'https://dummyjson.com/carts?limit=4'
+    ),
+    fetchJsonWithTimeout<{ users?: DummyJsonUser[] }>(
+      'https://dummyjson.com/users?limit=4'
+    ),
+    fetchJsonWithTimeout<{ posts?: DummyJsonPost[] }>(
+      'https://dummyjson.com/posts?limit=6'
+    ),
+  ]);
+
+  const bdCities = ['Dhaka', 'Chattogram', 'Sylhet', 'Rajshahi'];
+  const addresses: ShippingAddress[] =
+    usersRes?.users && usersRes.users.length > 0
+      ? usersRes.users.slice(0, 3).map((u, idx) => ({
+          id: `api-addr-${u.id}`,
+          label: idx === 0 ? 'Home' : idx === 1 ? 'Office' : 'Other',
+          fullName: `${u.firstName} ${u.lastName}`,
+          phone: '+880 1712 345678',
+          address: `${u.address?.address || 'Road 11, Banani'}, ${
+            bdCities[idx % bdCities.length]
+          }`,
+          city: bdCities[idx % bdCities.length],
+          postalCode: `121${idx + 2}`,
+          isDefault: idx === 0,
+        }))
+      : [
+          {
+            id: 'api-addr-default',
+            label: 'Home',
+            fullName: 'Tanvir Ahmed',
+            phone: '+880 1712 345678',
+            address: 'Road 11, Banani, Dhaka',
+            city: 'Dhaka',
+            postalCode: '1213',
+            isDefault: true,
+          },
+        ];
+
+  const primaryAddress = addresses[0];
+  const statuses: Order['status'][] = ['Shipped', 'Processing', 'Delivered'];
+  const couriers = [
+    'eCourier Bangladesh',
+    'DHL / Pathao Priority Air',
+    'RedX Cross-Border',
+  ];
+
+  const orders: Order[] =
+    cartsRes?.carts && cartsRes.carts.length > 0
+      ? cartsRes.carts.slice(0, 3).map((c, idx) => {
+          const status = statuses[idx % statuses.length];
+          const mappedItems = c.products.slice(0, 3).map((cp) => {
+            const matchedCatalog = catalogProducts.find(
+              (p) => p.id === `api-dj-${cp.id}`
+            );
+            const unitLandedBdt = matchedCatalog
+              ? matchedCatalog.totalLandedBdt
+              : Math.round(cp.price * 120 * 1.25);
+            return {
+              productId: matchedCatalog ? matchedCatalog.id : `api-dj-${cp.id}`,
+              name: cp.title,
+              image:
+                sanitizeImageUrl(cp.thumbnail) ||
+                matchedCatalog?.image ||
+                catalogProducts[0]?.image ||
+                '',
+              quantity: cp.quantity || 1,
+              variant: matchedCatalog?.sku
+                ? `SKU ${matchedCatalog.sku} · Global Direct`
+                : 'Global Direct · Customs Pre-Cleared',
+              landedUnitBdt: unitLandedBdt,
+            };
+          });
+
+          const subtotalBdt = mappedItems.reduce(
+            (sum, item) => sum + item.landedUnitBdt * item.quantity,
+            0
+          );
+          const customsDutyBdt = Math.round(subtotalBdt * 0.18);
+
+          return {
+            id: `DM${100000 + c.id * 1423}`,
+            placedDate: 'Synced from Live API',
+            estimatedDelivery:
+              status === 'Delivered'
+                ? 'Delivered to Recipient'
+                : status === 'Shipped'
+                ? 'Est. 2–4 business days'
+                : 'Est. 5–9 business days',
+            status,
+            items: mappedItems,
+            subtotalBdt,
+            shippingBdt: 0,
+            customsDutyBdt,
+            totalBdt: subtotalBdt,
+            quoteId: `QT-API-${c.id}`,
+            ruleVersion: 'v2.4.0-BD-NBR',
+            pricingStatus: 'confirmed',
+            paymentMethod: idx === 0 ? 'bkash' : idx === 1 ? 'cod' : 'card',
+            shippingMethod: idx === 0 ? 'express' : 'standard',
+            shippingAddress: addresses[idx % addresses.length] || primaryAddress,
+            courierName: couriers[idx % couriers.length],
+            trackingCode: `BD${840000 + c.id * 319}API`,
+            milestones: [
+              {
+                title:
+                  status === 'Delivered'
+                    ? 'Delivered to Recipient'
+                    : status === 'Shipped'
+                    ? 'Cleared Dhaka Customs & Out with Courier'
+                    : 'Order Synced & Customs Manifest Prepared',
+                location: `${primaryAddress.city}, Bangladesh`,
+                timestamp: 'Live API Status',
+                completed: true,
+                current: true,
+              },
+              {
+                title: 'International Linehaul & NBR HS Assessment',
+                location: 'Hazrat Shahjalal Int. Airport Customs, Dhaka',
+                timestamp: 'Completed',
+                completed: status !== 'Processing',
+              },
+              {
+                title: 'Supplier Quality Verification & Export Dispatch',
+                location: 'Verified Global Warehouse',
+                timestamp: 'Completed',
+                completed: true,
+              },
+            ],
+          };
+        })
+      : [];
+
+  const notifications: AppNotification[] = [];
+  if (orders[0]) {
+    notifications.push({
+      id: `api-notif-ord-${orders[0].id}`,
+      type: 'order',
+      title: `Live Order #${orders[0].id} (${orders[0].status})`,
+      body: `${orders[0].items[0]?.name || 'Parcel'} via ${
+        orders[0].courierName
+      } (${orders[0].trackingCode}).`,
+      timestamp: 'Live API Sync',
+      read: false,
+      targetScreen: 'order_tracking',
+      targetOrderId: orders[0].id,
+    });
+  }
+
+  if (catalogProducts[0]) {
+    notifications.push({
+      id: `api-notif-prod-${catalogProducts[0].id}`,
+      type: 'price_drop',
+      title: `Verified Landed Quote: ${catalogProducts[0].name}`,
+      body: `Landed price ${
+        catalogProducts[0].totalLandedBdt
+      } BDT (${catalogProducts[0].discountPercent}% off) including 10% Duty & 15% BD VAT.`,
+      timestamp: 'Live API Sync',
+      read: false,
+      targetScreen: 'product_detail',
+      targetProductId: catalogProducts[0].id,
+    });
+  }
+
+  if (catalogProducts[1]) {
+    notifications.push({
+      id: `api-notif-tracker-${catalogProducts[1].id}`,
+      type: 'price_drop',
+      title: `30-Day Price History: ${catalogProducts[1].name}`,
+      body: `Inspect live API rating (${catalogProducts[1].rating}★) and landed route comparison.`,
+      timestamp: 'Live API Sync',
+      read: true,
+      targetScreen: 'price_tracker',
+      targetProductId: catalogProducts[1].id,
+    });
+  }
+
+  const guideCategories: GuideArticle['category'][] = [
+    'Tips',
+    'Trends',
+    'Safety',
+  ];
+  const guides: GuideArticle[] =
+    postsRes?.posts && postsRes.posts.length > 0
+      ? postsRes.posts.slice(0, 4).map((post, idx) => {
+          const sentences = post.body
+            .split('.')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 15);
+          return {
+            id: `api-guide-${post.id}`,
+            title: post.title,
+            subtitle: `Tags: ${(post.tags || ['cross-border', 'customs']).join(
+              ', '
+            )} · ${post.views || 420} views`,
+            category: guideCategories[idx % guideCategories.length],
+            date: 'Live API Article',
+            readTime: '3 min read',
+            summary: post.body,
+            bulletPoints:
+              sentences.length >= 2
+                ? sentences.slice(0, 3).map((s) => `${s}.`)
+                : [post.body],
+          };
+        })
+      : [];
+
+  return { addresses, orders, notifications, guides };
+}
+
+/**
+ * Fetches incremental live batches from free APIs for infinite scroll pagination.
+ */
+export async function fetchContinuousProductBatch(
+  batchCursor: number
+): Promise<Product[]> {
   const dummySkip = (batchCursor * 24) % 160;
   const escuelaOffset = ((batchCursor + 1) * 20) % 120;
 
@@ -708,28 +1096,19 @@ export async function fetchContinuousProductBatch(batchCursor: number): Promise<
 /**
  * Live search against free public product APIs when the user types a search query.
  */
-export async function searchFreeProductApis(
-  query: string,
-  signal?: AbortSignal
-): Promise<Product[]> {
+export async function searchFreeProductApis(query: string): Promise<Product[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
   const encoded = encodeURIComponent(trimmed);
   const [dummySearch, escuelaSearch] = await Promise.all([
     fetchJsonWithTimeout<{ products?: DummyJsonProduct[] }>(
-      `https://dummyjson.com/products/search?q=${encoded}&limit=24`,
-      6500,
-      signal
+      `https://dummyjson.com/products/search?q=${encoded}&limit=24`
     ),
     fetchJsonWithTimeout<EscuelaProduct[]>(
-      `https://api.escuelajs.co/api/v1/products/?title=${encoded}`,
-      6500,
-      signal
+      `https://api.escuelajs.co/api/v1/products/?title=${encoded}`
     ),
   ]);
-
-  if (signal?.aborted) return [];
 
   const results: Product[] = [];
 
@@ -749,3 +1128,4 @@ export async function searchFreeProductApis(
 
   return results;
 }
+

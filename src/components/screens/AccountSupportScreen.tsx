@@ -33,7 +33,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
-import { SHOPPING_GUIDES, SUPPORT_FAQS } from '../../data/catalogData';
+import { SUPPORT_FAQS } from '../../data/catalogData';
 import { AppNotification, PaymentMethodId } from '../../types/deshimart';
 import { ProductCard } from '../shared/ProductCard';
 
@@ -55,6 +55,7 @@ export const AccountSupportScreen: React.FC = () => {
     addToCart,
     formatPrice,
     notifications,
+    shoppingGuides,
     unreadNotificationCount,
     markNotificationRead,
     markAllNotificationsRead,
@@ -898,7 +899,7 @@ export const AccountSupportScreen: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          {SHOPPING_GUIDES.map((guide) => (
+          {shoppingGuides.map((guide) => (
             <article
               key={guide.id}
               className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
@@ -1141,32 +1142,34 @@ export const AccountSupportScreen: React.FC = () => {
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                    className="relative z-10 w-full max-h-full bg-white rounded-t-2xl p-4 shadow-2xl flex flex-col h-[420px] border-t border-app-border"
+                    className="relative z-10 w-full max-h-[85%] h-[420px] bg-white rounded-t-2xl shadow-2xl flex flex-col border-t border-app-border overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
                   >
-                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-2 shrink-0" />
-                    <div className="flex items-center justify-between pb-3 border-b border-app-border shrink-0">
-                      <div>
-                        <h3 className="text-xs font-bold text-content-primary">
+                    <div className="pt-2.5 pb-1 shrink-0">
+                      <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                    </div>
+                    <div className="px-4 py-2.5 flex items-center justify-between border-b border-app-border shrink-0">
+                      <div className="min-w-0">
+                        <h3 className="text-xs font-bold text-content-primary truncate">
                           DeshiMart Live Support (Dhaka Hub)
                         </h3>
-                        <span className="text-[10px] text-status-success font-medium">
+                        <span className="text-[10px] text-status-success font-medium block truncate">
                           Online · Customs & Order Specialist
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setChatOpen(false)}
-                        className="text-xs font-semibold text-content-muted px-2 py-1"
+                        className="text-xs font-semibold text-content-muted hover:text-content-primary px-2 py-1 shrink-0"
                       >
                         Close
                       </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto py-3 space-y-2.5">
+                    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-2.5">
                       {chatMessages.map((m, idx) => (
                         <div
                           key={idx}
-                          className={`max-w-[82%] p-3 rounded-xl text-xs leading-relaxed ${
+                          className={`max-w-[82%] p-3 rounded-xl text-xs leading-relaxed break-words ${
                             m.sender === 'user'
                               ? 'ml-auto bg-brand-primary text-white'
                               : 'bg-app-subtle border border-app-border text-content-primary'
@@ -1177,7 +1180,10 @@ export const AccountSupportScreen: React.FC = () => {
                       ))}
                     </div>
 
-                    <form onSubmit={handleSendChat} className="pt-2 flex gap-2 shrink-0">
+                    <form
+                      onSubmit={handleSendChat}
+                      className="px-4 py-3 border-t border-app-border bg-white flex gap-2 shrink-0"
+                    >
                       <input
                         type="text"
                         value={chatInput}
@@ -1526,59 +1532,72 @@ export const AccountSupportScreen: React.FC = () => {
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                   onSubmit={handleSaveProfile}
-                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-5 shadow-2xl space-y-3 border-t border-app-border"
+                  className="relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl shadow-2xl border-t border-app-border flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
                 >
-                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto -mt-1" />
-                  <h3 className="text-sm font-bold text-content-primary">
-                    {language === 'BN' ? 'প্রোফাইল আপডেট করুন' : 'Edit Profile Details'}
-                  </h3>
-                  <div>
-                    <label className="block text-xs font-medium text-content-secondary mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
-                    />
+                  <div className="pt-2.5 pb-1 shrink-0">
+                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-content-secondary mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={editEmail}
-                      onChange={(e) => setEditEmail(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-content-secondary mb-1">
-                      Phone Number (Bangladesh)
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={editPhone}
-                      onChange={(e) => setEditPhone(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
-                    />
-                  </div>
-                  <div className="flex gap-2 pt-1">
+                  <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                    <h3 className="text-sm font-bold text-content-primary truncate">
+                      {language === 'BN' ? 'প্রোফাইল আপডেট করুন' : 'Edit Profile Details'}
+                    </h3>
                     <button
                       type="button"
                       onClick={() => setEditProfileOpen(false)}
-                      className="flex-1 h-11 rounded-lg border border-app-border text-xs font-semibold text-content-primary"
+                      className="text-xs font-semibold text-content-muted hover:text-content-primary px-2 py-1 shrink-0"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-content-secondary mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-content-secondary mb-1">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-content-secondary mb-1">
+                        Phone Number (Bangladesh)
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
+                      />
+                    </div>
+                  </div>
+                  <div className="px-4 py-3 border-t border-app-border bg-white flex gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setEditProfileOpen(false)}
+                      className="flex-1 h-11 rounded-xl border border-app-border text-xs font-semibold text-content-primary hover:bg-app-subtle"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 h-11 rounded-lg bg-brand-primary text-white text-xs font-semibold"
+                      className="flex-1 h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold"
                     >
                       Save Profile
                     </button>

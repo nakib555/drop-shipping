@@ -578,6 +578,9 @@ export const CartScreen: React.FC = () => {
           shippingLabel="Doorstep Delivery (Selected at Checkout)"
           totalBdt={cartTotals.subtotalBdt}
           formatPrice={formatPrice}
+          quoteId={cartTotals.quoteId}
+          ruleVersion={cartTotals.ruleVersion}
+          quoteStatus={cartTotals.status}
         />
       </div>
 

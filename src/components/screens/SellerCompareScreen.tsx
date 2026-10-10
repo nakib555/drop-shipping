@@ -34,7 +34,17 @@ export const SellerCompareScreen: React.FC = () => {
     const prodA =
       products.find((p) => p.id === compareProductIds[0]) || products[0];
     const prodB =
-      products.find((p) => p.id === compareProductIds[1]) || products[1];
+      products.find((p) => p.id === compareProductIds[1]) ||
+      products[1] ||
+      products[0];
+
+    if (!prodA || !prodB) {
+      return (
+        <div className="p-6 text-center text-xs text-content-secondary">
+          Syncing live product specifications from API...
+        </div>
+      );
+    }
 
     const specRows = [
       {

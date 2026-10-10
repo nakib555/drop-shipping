@@ -643,256 +643,11 @@ export const HomeScreen: React.FC = () => {
         </section>
       )}
 
-      {/* 4, 5, 6 & 7. Global Catalog Heading, Category Filters, Smart Filters & Two-Column Product Grid */}
-      <section
-        id="home-catalog-section"
-        aria-label={isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Product Catalog'}
-        className="space-y-3"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <h2 className="text-sm font-bold text-content-primary">
-              {isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Catalog'}
-            </h2>
-            <p className="text-[11px] text-content-secondary truncate">
-              {isBn
-                ? 'আনুমানিক কাস্টমস ও ডেলিভারি চার্জসহ ল্যান্ডেড মূল্য'
-                : currency === 'USD'
-                ? `Est. landed prices ($1 = ৳${EXCHANGE_RATE_SNAPSHOT.bdtPerUsd} · Settles in BDT)`
-                : 'Estimated total landed prices including freight & customs'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigateTo('categories')}
-            className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1 shrink-0 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
-          >
-            <span>{isBn ? 'সব বিভাগ' : 'All Categories'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* 5. Horizontally Scrollable Category Filter Chips (Shared Context State) */}
-        <div
-          role="group"
-          aria-label={isBn ? 'ক্যাটাগরি ফিল্টার' : 'Category filters'}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
-        >
-          <button
-            type="button"
-            aria-pressed={selectedCategoryId === 'all'}
-            onClick={() => setSelectedCategoryId('all')}
-            className={`h-8 px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-              selectedCategoryId === 'all'
-                ? 'bg-brand-primary text-white border-brand-primary'
-                : 'bg-white border-app-border text-content-secondary hover:text-content-primary'
-            }`}
-          >
-            {isBn ? 'সব পণ্য' : 'All'}
-          </button>
-
-          {CATEGORIES.map((cat) => {
-            const active = selectedCategoryId === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setSelectedCategoryId(active ? 'all' : cat.id)}
-                className={`h-8 px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-                  active
-                    ? 'bg-brand-primary text-white border-brand-primary'
-                    : 'bg-white border-app-border text-content-secondary hover:text-content-primary'
-                }`}
-              >
-                {isBn ? cat.nameBn : cat.name}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 6. Smart Product Filters with Clear Individual & Reset All Controls */}
-        <div
-          role="group"
-          aria-label={isBn ? 'স্মার্ট ফিল্টার' : 'Smart product filters'}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
-        >
-          {(
-            [
-              {
-                key: 'under2000Bdt',
-                label: isBn
-                  ? `${formatPrice(2000)}-এর নিচে`
-                  : `Under ${formatPrice(2000)}`,
-                active: smartFilters.under2000Bdt,
-              },
-              {
-                key: 'arrivesThisWeek',
-                label: isBn ? 'এই সপ্তাহেই ডেলিভারি' : 'Arrives this week',
-                active: smartFilters.arrivesThisWeek,
-              },
-              {
-                key: 'lowestLandedCost',
-                label: isBn ? 'সবচেয়ে কম ল্যান্ডেড দাম' : 'Lowest landed price',
-                active: smartFilters.lowestLandedCost,
-              },
-              {
-                key: 'verifiedOnly',
-                label: isBn ? 'ভেরিফায়েড সাপ্লায়ার' : 'Verified supplier',
-                active: smartFilters.verifiedOnly,
-              },
-            ] as const
-          ).map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              aria-pressed={f.active}
-              onClick={() =>
-                setSmartFilters((prev) => ({
-                  ...prev,
-                  [f.key]: !prev[f.key],
-                }))
-              }
-              className={`h-7 px-3 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-                f.active
-                  ? 'bg-brand-subtle text-brand-primary border border-brand-border font-semibold'
-                  : 'bg-app-subtle text-content-secondary hover:text-content-primary border border-transparent'
-              }`}
-            >
-              <span>{f.label}</span>
-              {f.active && <X className="w-3 h-3 shrink-0" />}
-            </button>
-          ))}
-
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearAllCatalogFilters}
-              className="h-7 px-2.5 rounded-lg text-xs font-semibold text-brand-primary hover:bg-brand-subtle whitespace-nowrap shrink-0 flex items-center gap-1 transition-colors"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>{isBn ? 'রিসেট' : 'Reset'}</span>
-            </button>
-          )}
-        </div>
-
-        {/* Optional Recoverable API Sync Notice */}
-        {catalogSyncError && (
-          <div
-            role="alert"
-            className="p-3 rounded-xl bg-white border border-app-border flex items-center justify-between gap-2 text-xs text-content-secondary"
-          >
-            <span className="truncate">{catalogSyncError}</span>
-            <button
-              type="button"
-              onClick={() => void refreshCatalogFromApi()}
-              className="px-2.5 py-1 rounded-lg bg-brand-subtle text-brand-primary font-semibold shrink-0"
-            >
-              {isBn ? 'আবার চেষ্টা করুন' : 'Retry'}
-            </button>
-          </div>
-        )}
-
-        {/* 7. Two-Column Product Grid */}
-        <div
-          id="home-items-area"
-          aria-busy={isLoadingProducts || isLoadingMore}
-          className="relative min-h-[260px] pt-0.5"
-        >
-          {isLoadingProducts && slicedProducts.length === 0 ? (
-            <div role="status" aria-live="polite">
-              <span className="sr-only">
-                {isBn ? 'পণ্য লোড হচ্ছে...' : 'Loading products...'}
-              </span>
-              <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 6 }).map((_, idx) => (
-                  <ProductCardGhost key={`home-init-ghost-${idx}`} />
-                ))}
-              </div>
-            </div>
-          ) : slicedProducts.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                {slicedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-
-                {isLoadingMore &&
-                  Array.from({ length: 2 }).map((_, idx) => (
-                    <ProductCardGhost key={`home-more-ghost-${idx}`} />
-                  ))}
-              </div>
-
-              {loadMoreError && (
-                <div className="pt-3 text-center">
-                  <p className="text-xs text-content-secondary mb-2">
-                    {isBn
-                      ? 'অতিরিক্ত পণ্য লোড করা যায়নি।'
-                      : 'Could not load additional products.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void handleLoadMore()}
-                    className="h-9 px-4 rounded-xl bg-brand-subtle text-brand-primary text-xs font-semibold"
-                  >
-                    {isBn ? 'পুনরায় চেষ্টা করুন' : 'Retry Loading'}
-                  </button>
-                </div>
-              )}
-
-              {hasMoreProducts && !loadMoreError && (
-                <div ref={loadMoreTriggerRef} className="pt-4">
-                  <button
-                    type="button"
-                    disabled={isLoadingMore}
-                    onClick={() => void handleLoadMore()}
-                    className="w-full min-h-[44px] rounded-xl bg-white border border-app-border hover:border-app-borderStrong text-xs font-semibold text-content-primary flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
-                  >
-                    {isLoadingMore && (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-primary" />
-                    )}
-                    <span>
-                      {isLoadingMore
-                        ? isBn
-                          ? 'লোড হচ্ছে...'
-                          : 'Loading more products...'
-                        : isBn
-                        ? 'আরও পণ্য দেখুন'
-                        : 'Load More Products'}
-                    </span>
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="bg-white rounded-2xl p-6 text-center border border-app-border">
-              <p className="text-xs font-semibold text-content-primary">
-                {isBn
-                  ? 'কোনো মিলে যাওয়া পণ্য পাওয়া যায়নি'
-                  : 'No matching products found'}
-              </p>
-              <p className="text-xs text-content-secondary mt-1">
-                {isBn
-                  ? 'আপনার সার্চ বা সক্রিয় ফিল্টার পরিবর্তন করে দেখুন।'
-                  : 'Try clearing your search query or resetting active filters.'}
-              </p>
-              <button
-                type="button"
-                onClick={clearAllCatalogFilters}
-                className="mt-3 h-9 px-4 rounded-xl bg-brand-primary text-white text-xs font-semibold"
-              >
-                {isBn ? 'ফিল্টার রিসেট করুন' : 'Reset Filters'}
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* 8. Featured Landed Drops Horizontal Rail (Shown when qualifying deals >= 15% exist) */}
+      {/* 4. Featured Landed Drops Horizontal Rail (Placed above the infinite catalog grid so deals are never buried) */}
       {!searchQuery.trim() && flashDeals.length > 0 && (
         <section
           aria-label={isBn ? 'সেরা ল্যান্ডেড ডিল' : 'Featured Landed Drops'}
-          className="space-y-2.5 pt-1"
+          className="space-y-2.5"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -1014,11 +769,11 @@ export const HomeScreen: React.FC = () => {
         </section>
       )}
 
-      {/* 9. Recently Viewed Horizontal Rail (Deduplicated, ordered by most recent view) */}
+      {/* 5. Recently Viewed Horizontal Rail (Deduplicated, ordered by most recent view, reachable above infinite catalog) */}
       {!searchQuery.trim() && recentlyViewedProducts.length > 0 && (
         <section
           aria-label={isBn ? 'সম্প্রতি দেখা পণ্য' : 'Recently Viewed Products'}
-          className="space-y-2 pt-1"
+          className="space-y-2"
         >
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-content-primary">
@@ -1072,6 +827,251 @@ export const HomeScreen: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* 6, 7, 8 & 9. Global Catalog Heading, Category Filters, Smart Filters & Two-Column Product Grid */}
+      <section
+        id="home-catalog-section"
+        aria-label={isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Product Catalog'}
+        className="space-y-3"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-content-primary">
+              {isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Catalog'}
+            </h2>
+            <p className="text-[11px] text-content-secondary truncate">
+              {isBn
+                ? 'আনুমানিক কাস্টমস ও ডেলিভারি চার্জসহ ল্যান্ডেড মূল্য'
+                : currency === 'USD'
+                ? `Est. landed prices ($1 = ৳${EXCHANGE_RATE_SNAPSHOT.bdtPerUsd} · Settles in BDT)`
+                : 'Estimated total landed prices including freight & customs'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigateTo('categories')}
+            className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1 shrink-0 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
+          >
+            <span>{isBn ? 'সব বিভাগ' : 'All Categories'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Horizontally Scrollable Category Filter Chips (Shared Context State) */}
+        <div
+          role="group"
+          aria-label={isBn ? 'ক্যাটাগরি ফিল্টার' : 'Category filters'}
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+        >
+          <button
+            type="button"
+            aria-pressed={selectedCategoryId === 'all'}
+            onClick={() => setSelectedCategoryId('all')}
+            className={`h-8 px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+              selectedCategoryId === 'all'
+                ? 'bg-brand-primary text-white border-brand-primary'
+                : 'bg-white border-app-border text-content-secondary hover:text-content-primary'
+            }`}
+          >
+            {isBn ? 'সব পণ্য' : 'All'}
+          </button>
+
+          {CATEGORIES.map((cat) => {
+            const active = selectedCategoryId === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setSelectedCategoryId(active ? 'all' : cat.id)}
+                className={`h-8 px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  active
+                    ? 'bg-brand-primary text-white border-brand-primary'
+                    : 'bg-white border-app-border text-content-secondary hover:text-content-primary'
+                }`}
+              >
+                {isBn ? cat.nameBn : cat.name}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Smart Product Filters with Clear Individual & Reset All Controls */}
+        <div
+          role="group"
+          aria-label={isBn ? 'স্মার্ট ফিল্টার' : 'Smart product filters'}
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+        >
+          {(
+            [
+              {
+                key: 'under2000Bdt',
+                label: isBn
+                  ? `${formatPrice(2000)}-এর নিচে`
+                  : `Under ${formatPrice(2000)}`,
+                active: smartFilters.under2000Bdt,
+              },
+              {
+                key: 'arrivesThisWeek',
+                label: isBn ? 'এই সপ্তাহেই ডেলিভারি' : 'Arrives this week',
+                active: smartFilters.arrivesThisWeek,
+              },
+              {
+                key: 'lowestLandedCost',
+                label: isBn ? 'সবচেয়ে কম ল্যান্ডেড দাম' : 'Lowest landed price',
+                active: smartFilters.lowestLandedCost,
+              },
+              {
+                key: 'verifiedOnly',
+                label: isBn ? 'ভেরিফায়েড সাপ্লায়ার' : 'Verified supplier',
+                active: smartFilters.verifiedOnly,
+              },
+            ] as const
+          ).map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              aria-pressed={f.active}
+              onClick={() =>
+                setSmartFilters((prev) => ({
+                  ...prev,
+                  [f.key]: !prev[f.key],
+                }))
+              }
+              className={`h-7 px-3 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                f.active
+                  ? 'bg-brand-subtle text-brand-primary border border-brand-border font-semibold'
+                  : 'bg-app-subtle text-content-secondary hover:text-content-primary border border-transparent'
+              }`}
+            >
+              <span>{f.label}</span>
+              {f.active && <X className="w-3 h-3 shrink-0" />}
+            </button>
+          ))}
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearAllCatalogFilters}
+              className="h-7 px-2.5 rounded-lg text-xs font-semibold text-brand-primary hover:bg-brand-subtle whitespace-nowrap shrink-0 flex items-center gap-1 transition-colors"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>{isBn ? 'রিসেট' : 'Reset'}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Optional Recoverable API Sync Notice */}
+        {catalogSyncError && (
+          <div
+            role="alert"
+            className="p-3 rounded-xl bg-white border border-app-border flex items-center justify-between gap-2 text-xs text-content-secondary"
+          >
+            <span className="truncate">{catalogSyncError}</span>
+            <button
+              type="button"
+              onClick={() => void refreshCatalogFromApi()}
+              className="px-2.5 py-1 rounded-lg bg-brand-subtle text-brand-primary font-semibold shrink-0"
+            >
+              {isBn ? 'আবার চেষ্টা করুন' : 'Retry'}
+            </button>
+          </div>
+        )}
+
+        {/* Two-Column Product Grid */}
+        <div
+          id="home-items-area"
+          aria-busy={isLoadingProducts || isLoadingMore}
+          className="relative min-h-[260px] pt-0.5"
+        >
+          {isLoadingProducts && slicedProducts.length === 0 ? (
+            <div role="status" aria-live="polite">
+              <span className="sr-only">
+                {isBn ? 'পণ্য লোড হচ্ছে...' : 'Loading products...'}
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <ProductCardGhost key={`home-init-ghost-${idx}`} />
+                ))}
+              </div>
+            </div>
+          ) : slicedProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                {slicedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+
+                {isLoadingMore &&
+                  Array.from({ length: 2 }).map((_, idx) => (
+                    <ProductCardGhost key={`home-more-ghost-${idx}`} />
+                  ))}
+              </div>
+
+              {loadMoreError && (
+                <div className="pt-3 text-center">
+                  <p className="text-xs text-content-secondary mb-2">
+                    {isBn
+                      ? 'অতিরিক্ত পণ্য লোড করা যায়নি।'
+                      : 'Could not load additional products.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void handleLoadMore()}
+                    className="h-9 px-4 rounded-xl bg-brand-subtle text-brand-primary text-xs font-semibold"
+                  >
+                    {isBn ? 'পুনরায় চেষ্টা করুন' : 'Retry Loading'}
+                  </button>
+                </div>
+              )}
+
+              {hasMoreProducts && !loadMoreError && (
+                <div ref={loadMoreTriggerRef} className="pt-4">
+                  <button
+                    type="button"
+                    disabled={isLoadingMore}
+                    onClick={() => void handleLoadMore()}
+                    className="w-full min-h-[44px] rounded-xl bg-white border border-app-border hover:border-app-borderStrong text-xs font-semibold text-content-primary flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+                  >
+                    {isLoadingMore && (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-primary" />
+                    )}
+                    <span>
+                      {isLoadingMore
+                        ? isBn
+                          ? 'লোড হচ্ছে...'
+                          : 'Loading more products...'
+                        : isBn
+                        ? 'আরও পণ্য দেখুন'
+                        : 'Load More Products'}
+                    </span>
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl p-6 text-center border border-app-border">
+              <p className="text-xs font-semibold text-content-primary">
+                {isBn
+                  ? 'কোনো মিলে যাওয়া পণ্য পাওয়া যায়নি'
+                  : 'No matching products found'}
+              </p>
+              <p className="text-xs text-content-secondary mt-1">
+                {isBn
+                  ? 'আপনার সার্চ বা সক্রিয় ফিল্টার পরিবর্তন করে দেখুন।'
+                  : 'Try clearing your search query or resetting active filters.'}
+              </p>
+              <button
+                type="button"
+                onClick={clearAllCatalogFilters}
+                className="mt-3 h-9 px-4 rounded-xl bg-brand-primary text-white text-xs font-semibold"
+              >
+                {isBn ? 'ফিল্টার রিসেট করুন' : 'Reset Filters'}
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

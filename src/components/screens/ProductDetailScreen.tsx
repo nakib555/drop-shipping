@@ -442,152 +442,218 @@ export const ProductDetailScreen: React.FC = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setActiveInfoModal(null)}
-                  className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+                  className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
                 />
                 <motion.div
                   initial={{ y: '100%' }}
                   animate={{ y: 0 }}
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  className="relative z-10 w-full max-h-[82%] overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
+                  className="relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl shadow-2xl border-t border-app-border flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
                 >
-                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                  {/* Drag Handle */}
+                  <div className="pt-2.5 pb-1 shrink-0">
+                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                  </div>
 
                   {activeInfoModal === 'size_guide' ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-content-primary">
+                    <>
+                      <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                        <h3 className="text-sm font-semibold text-content-primary truncate">
                           Size & Regional Compatibility Guide
                         </h3>
                         <button
                           type="button"
+                          aria-label="Close size guide"
                           onClick={() => setActiveInfoModal(null)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                      <div className="border border-app-border rounded-xl overflow-hidden text-xs">
-                        <div className="grid grid-cols-3 bg-app-subtle p-2 font-semibold text-content-primary">
-                          <span>EU Size</span>
-                          <span>UK / BD</span>
-                          <span>Foot Length</span>
-                        </div>
-                        {[
-                          { eu: '39', uk: '6', cm: '24.5 cm' },
-                          { eu: '40', uk: '6.5', cm: '25.0 cm' },
-                          { eu: '41', uk: '7.5', cm: '26.0 cm' },
-                          { eu: '42', uk: '8', cm: '26.5 cm' },
-                          { eu: '43', uk: '9', cm: '27.5 cm' },
-                        ].map((r) => (
-                          <div
-                            key={r.eu}
-                            className="grid grid-cols-3 p-2 border-t border-app-border tabular-nums text-content-secondary"
-                          >
-                            <span className="font-semibold text-content-primary">
-                              {r.eu}
-                            </span>
-                            <span>{r.uk}</span>
-                            <span>{r.cm}</span>
+                      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4">
+                        <div className="border border-app-border rounded-xl overflow-hidden text-xs">
+                          <div className="grid grid-cols-3 bg-app-subtle p-2.5 font-semibold text-content-primary">
+                            <span>EU Size</span>
+                            <span>UK / BD</span>
+                            <span>Foot Length</span>
                           </div>
-                        ))}
+                          {[
+                            { eu: '39', uk: '6', cm: '24.5 cm' },
+                            { eu: '40', uk: '6.5', cm: '25.0 cm' },
+                            { eu: '41', uk: '7.5', cm: '26.0 cm' },
+                            { eu: '42', uk: '8', cm: '26.5 cm' },
+                            { eu: '43', uk: '9', cm: '27.5 cm' },
+                          ].map((r) => (
+                            <div
+                              key={r.eu}
+                              className="grid grid-cols-3 p-2.5 border-t border-app-border tabular-nums text-content-secondary"
+                            >
+                              <span className="font-semibold text-content-primary">
+                                {r.eu}
+                              </span>
+                              <span>{r.uk}</span>
+                              <span>{r.cm}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveInfoModal(null)}
-                        className="w-full h-11 rounded-xl bg-brand-primary text-white text-xs font-semibold"
-                      >
-                        Got It
-                      </button>
-                    </div>
-                  ) : activeInfoModal === 'all_reviews' ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-app-border pb-2.5">
-                        <h3 className="text-sm font-semibold text-content-primary">
-                          All Verified Reviews ({selectedProduct.reviewCount})
-                        </h3>
+                      <div className="px-4 py-3 border-t border-app-border bg-white shrink-0">
                         <button
                           type="button"
                           onClick={() => setActiveInfoModal(null)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted"
+                          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
+                        >
+                          Got It
+                        </button>
+                      </div>
+                    </>
+                  ) : activeInfoModal === 'all_reviews' ? (
+                    <>
+                      {/* Pinned Header */}
+                      <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-semibold text-content-primary truncate">
+                            All Verified Reviews ({selectedProduct.reviewCount.toLocaleString()})
+                          </h3>
+                          <p className="text-[11px] text-content-secondary truncate">
+                            {selectedProduct.rating.toFixed(1)} ★ average · 100% verified buyers
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label="Close reviews"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                      <div className="divide-y divide-app-border max-h-64 overflow-y-auto">
+
+                      {/* Single Scrollable Reviews List (No nested scroll traps or box overlap) */}
+                      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-2.5">
                         {selectedProduct.reviews.map((rev) => (
-                          <div key={rev.id} className="py-2.5 space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-semibold text-content-primary">
-                                {rev.author}{' '}
-                                <span className="text-brand-primary font-medium">
-                                  · Verified
+                          <div
+                            key={rev.id}
+                            className="p-3 rounded-xl bg-app-bg border border-app-border space-y-1.5"
+                          >
+                            <div className="flex items-start justify-between gap-2 text-xs">
+                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <span className="font-semibold text-content-primary truncate max-w-[170px]">
+                                  {rev.author}
                                 </span>
+                                {rev.verified && (
+                                  <span className="px-1.5 py-0.5 rounded bg-brand-subtle text-[10px] text-brand-primary font-semibold shrink-0">
+                                    Verified
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-content-muted tabular-nums shrink-0">
+                                {rev.date}
                               </span>
-                              <span className="text-content-muted">{rev.date}</span>
                             </div>
-                            <p className="text-xs text-content-secondary">
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                {[1, 2, 3, 4, 5].map((st) => (
+                                  <Star
+                                    key={st}
+                                    className={`w-3 h-3 ${
+                                      st <= rev.rating
+                                        ? 'fill-amber-400 text-amber-400'
+                                        : 'text-slate-300'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              {rev.variantChosen && (
+                                <span className="text-[11px] text-content-muted truncate max-w-full">
+                                  {rev.variantChosen}
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-content-secondary leading-relaxed break-words">
                               {rev.comment}
                             </p>
                           </div>
                         ))}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveInfoModal('review')}
-                        className="w-full h-11 rounded-xl bg-brand-primary text-white text-xs font-semibold"
-                      >
-                        Write a Review
-                      </button>
-                    </div>
+
+                      {/* Pinned Bottom Action Footer */}
+                      <div className="px-4 py-3 border-t border-app-border bg-white shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setActiveInfoModal('review')}
+                          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
+                        >
+                          Write a Review
+                        </button>
+                      </div>
+                    </>
                   ) : activeInfoModal === 'review' ? (
-                    <form onSubmit={handleReviewSubmit} className="space-y-3">
-                      <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                        {language === 'BN'
-                          ? 'আপনার রিভিউ দিন'
-                          : 'Write a Verified Review'}
-                      </h3>
-                      <div>
-                        <span className="block text-xs leading-4 font-medium text-content-secondary mb-1">
-                          Rating
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => setReviewRating(star)}
-                              className="p-1"
-                            >
-                              <Star
-                                className={`w-6 h-6 ${
-                                  star <= reviewRating
-                                    ? 'fill-amber-400 text-amber-400'
-                                    : 'text-slate-300'
-                                }`}
-                              />
-                            </button>
-                          ))}
+                    <form
+                      onSubmit={handleReviewSubmit}
+                      className="flex flex-col flex-1 min-h-0 overflow-hidden"
+                    >
+                      <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                        <h3 className="text-sm leading-5 font-semibold text-content-primary truncate">
+                          {language === 'BN'
+                            ? 'আপনার রিভিউ দিন'
+                            : 'Write a Verified Review'}
+                        </h3>
+                        <button
+                          type="button"
+                          aria-label="Close write review"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-3">
+                        <div>
+                          <span className="block text-xs leading-4 font-medium text-content-secondary mb-1">
+                            Rating
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewRating(star)}
+                                className="p-1"
+                              >
+                                <Star
+                                  className={`w-6 h-6 ${
+                                    star <= reviewRating
+                                      ? 'fill-amber-400 text-amber-400'
+                                      : 'text-slate-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs leading-4 font-medium text-content-secondary mb-1">
+                            Your Experience
+                          </label>
+                          <textarea
+                            rows={3}
+                            required
+                            value={reviewComment}
+                            onChange={(e) => setReviewComment(e.target.value)}
+                            placeholder="Share your experience with product quality and landed delivery..."
+                            className="w-full p-3 rounded-xl bg-app-bg border border-app-border text-xs leading-4 text-content-primary focus:outline-none focus:border-brand-primary"
+                          />
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-xs leading-4 font-medium text-content-secondary mb-1">
-                          Your Experience
-                        </label>
-                        <textarea
-                          rows={3}
-                          required
-                          value={reviewComment}
-                          onChange={(e) => setReviewComment(e.target.value)}
-                          placeholder="Share your experience with product quality and landed delivery..."
-                          className="w-full p-3 rounded-xl bg-app-bg border border-app-border text-xs leading-4 text-content-primary focus:outline-none focus:border-brand-primary"
-                        />
-                      </div>
-                      <div className="flex gap-2">
+                      <div className="px-4 py-3 border-t border-app-border bg-white flex gap-2 shrink-0">
                         <button
                           type="button"
                           onClick={() => setActiveInfoModal(null)}
-                          className="flex-1 h-11 rounded-xl border border-app-border text-xs leading-4 font-semibold text-content-secondary"
+                          className="flex-1 h-11 rounded-xl border border-app-border text-xs leading-4 font-semibold text-content-secondary hover:bg-app-subtle"
                         >
                           Cancel
                         </button>
@@ -601,113 +667,141 @@ export const ProductDetailScreen: React.FC = () => {
                     </form>
                   ) : activeInfoModal === 'supplier' ? (
                     <>
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
-                          <Store className="w-5 h-5" />
+                      <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
+                            <Store className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-sm leading-5 font-semibold text-content-primary truncate">
+                              {selectedProduct.supplierName}
+                            </h3>
+                            <p className="text-xs leading-4 text-brand-primary font-medium truncate">
+                              Verified Tier-1 Global Exporter
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                            {selectedProduct.supplierName}
-                          </h3>
-                          <p className="text-xs leading-4 text-brand-primary font-medium">
-                            Verified Tier-1 Global Exporter
-                          </p>
+                        <button
+                          type="button"
+                          aria-label="Close supplier modal"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-3">
+                        <div className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-app-bg border border-app-border text-xs leading-4">
+                          <span className="text-content-secondary">
+                            Catalog:{' '}
+                            <strong className="tabular-nums text-content-primary">
+                              {selectedProduct.supplierProductsCount}
+                            </strong>
+                          </span>
+                          <span className="text-content-secondary">
+                            Followers:{' '}
+                            <strong className="tabular-nums text-content-primary">
+                              {selectedProduct.supplierFollowers}
+                            </strong>
+                          </span>
                         </div>
+                        <p className="text-xs leading-relaxed text-content-secondary">
+                          All shipments from {selectedProduct.supplierName} undergo
+                          physical QC verification before boarding air freight.
+                        </p>
                       </div>
-                      <div className="flex items-center justify-between py-2 border-y border-app-border text-xs leading-4">
-                        <span className="text-content-secondary">
-                          Catalog:{' '}
-                          <strong className="tabular-nums text-content-primary">
-                            {selectedProduct.supplierProductsCount}
-                          </strong>
-                        </span>
-                        <span className="text-content-secondary">
-                          Followers:{' '}
-                          <strong className="tabular-nums text-content-primary">
-                            {selectedProduct.supplierFollowers}
-                          </strong>
-                        </span>
+                      <div className="px-4 py-3 border-t border-app-border bg-white shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveInfoModal(null);
+                            navigateTo('supplier_store');
+                          }}
+                          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
+                        >
+                          Open Supplier Storefront
+                        </button>
                       </div>
-                      <p className="text-xs leading-4 text-content-secondary">
-                        All shipments from {selectedProduct.supplierName} undergo
-                        physical QC verification before boarding air freight.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveInfoModal(null);
-                          navigateTo('supplier_store');
-                        }}
-                        className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold"
-                      >
-                        Open Supplier Storefront
-                      </button>
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
-                          <ShieldCheck className="w-5 h-5" />
+                      <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-sm leading-5 font-semibold text-content-primary truncate">
+                              Warranty & Return Protection
+                            </h3>
+                            <p className="text-xs leading-4 text-content-secondary truncate">
+                              {selectedProduct.returnPolicy || 'Up to 30 days return'} · {selectedProduct.specs.warranty || '1 year warranty'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-sm leading-5 font-semibold text-content-primary">
-                            Warranty & Return Protection
-                          </h3>
-                          <p className="text-xs leading-4 text-content-secondary">
-                            Up to 30 days return · 1 year local warranty
-                          </p>
+                        <button
+                          type="button"
+                          aria-label="Close warranty modal"
+                          onClick={() => setActiveInfoModal(null)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4">
+                        <div className="divide-y divide-app-border text-xs leading-4 text-content-primary">
+                          <div className="py-2.5 first:pt-0 flex items-start gap-2.5">
+                            <RefreshCcw className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold block">
+                                Easy Local Return Process
+                              </span>
+                              <span className="text-content-secondary leading-relaxed">
+                                Drop off at our Dhaka hub or schedule free eCourier
+                                pickup within 30 days.
+                              </span>
+                            </div>
+                          </div>
+                          <div className="py-2.5 flex items-start gap-2.5">
+                            <Clock className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold block">
+                                24-Hour bKash / Card Refund
+                              </span>
+                              <span className="text-content-secondary leading-relaxed">
+                                Refunds are processed within 24 hours of return
+                                inspection.
+                              </span>
+                            </div>
+                          </div>
+                          <div className="py-2.5 last:pb-0 flex items-start gap-2.5">
+                            <MessageSquare className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold block">
+                                24/7 Claims Support
+                              </span>
+                              <span className="text-content-secondary leading-relaxed">
+                                Dedicated Bengali & English warranty support team.
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="divide-y divide-app-border text-xs leading-4 text-content-primary">
-                        <div className="py-2.5 flex items-start gap-2.5">
-                          <RefreshCcw className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-semibold block">
-                              Easy Local Return Process
-                            </span>
-                            <span className="text-content-secondary">
-                              Drop off at our Dhaka hub or schedule free eCourier
-                              pickup within 30 days.
-                            </span>
-                          </div>
-                        </div>
-                        <div className="py-2.5 flex items-start gap-2.5">
-                          <Clock className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-semibold block">
-                              24-Hour bKash / Card Refund
-                            </span>
-                            <span className="text-content-secondary">
-                              Refunds are processed within 24 hours of return
-                              inspection.
-                            </span>
-                          </div>
-                        </div>
-                        <div className="py-2.5 flex items-start gap-2.5">
-                          <MessageSquare className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-semibold block">
-                              24/7 Claims Support
-                            </span>
-                            <span className="text-content-secondary">
-                              Dedicated Bengali & English warranty support team.
-                            </span>
-                          </div>
-                        </div>
+                      <div className="px-4 py-3 border-t border-app-border bg-white shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveInfoModal(null);
+                            showToast(
+                              'Verified guarantee active on your order',
+                              'info'
+                            );
+                          }}
+                          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold transition-colors"
+                        >
+                          Close
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveInfoModal(null);
-                          showToast(
-                            'Verified guarantee active on your order',
-                            'info'
-                          );
-                        }}
-                        className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold transition-colors"
-                      >
-                        Close
-                      </button>
                     </>
                   )}
                 </motion.div>

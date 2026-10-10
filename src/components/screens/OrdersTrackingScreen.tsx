@@ -397,61 +397,66 @@ export const OrdersTrackingScreen: React.FC = () => {
                   animate={{ y: 0 }}
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  className="relative z-10 w-full max-h-full overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
+                  className="relative z-10 w-full max-h-[85%] bg-white rounded-t-2xl shadow-2xl border-t border-app-border flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
                 >
-                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
-                  <div className="flex items-center justify-between border-b border-app-border pb-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-content-primary">
+                  <div className="pt-2.5 pb-1 shrink-0">
+                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                  </div>
+                  <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-content-primary truncate">
                         Customs-Cleared Tax Invoice
                       </h3>
-                      <p className="tabular-nums text-xs text-content-secondary">
+                      <p className="tabular-nums text-xs text-content-secondary truncate">
                         Order #{selectedOrder.id} · {selectedOrder.placedDate}
                       </p>
                     </div>
                     <button
                       type="button"
+                      aria-label="Close invoice"
                       onClick={() => setInvoiceOpen(false)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:text-content-primary"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-content-muted hover:bg-app-subtle shrink-0"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="space-y-2 text-xs">
+                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-2.5 text-xs">
                     {selectedOrder.items.map((item, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span className="text-content-secondary">
+                      <div key={i} className="flex items-start justify-between gap-3">
+                        <span className="text-content-secondary min-w-0 break-words">
                           {item.name} × {item.quantity}
                         </span>
-                        <span className="tabular-nums font-semibold text-content-primary">
+                        <span className="tabular-nums font-semibold text-content-primary shrink-0">
                           {formatPrice(item.landedUnitBdt * item.quantity)}
                         </span>
                       </div>
                     ))}
-                    <div className="pt-2 border-t border-app-border flex justify-between text-content-secondary">
+                    <div className="pt-2.5 border-t border-app-border flex justify-between gap-2 text-content-secondary">
                       <span>Bangladesh Customs Duty & VAT</span>
-                      <span className="text-content-primary font-medium">
+                      <span className="text-content-primary font-medium shrink-0">
                         Pre-Paid Included
                       </span>
                     </div>
-                    <div className="pt-2 border-t border-app-border flex justify-between items-baseline">
+                    <div className="pt-2.5 border-t border-app-border flex justify-between items-baseline gap-2">
                       <span className="text-sm font-semibold text-content-primary">
                         Total Landed Paid
                       </span>
-                      <span className="tabular-nums text-lg font-bold text-content-primary">
+                      <span className="tabular-nums text-lg font-bold text-content-primary shrink-0">
                         {formatPrice(selectedOrder.totalBdt)}
                       </span>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setInvoiceOpen(false)}
-                    className="w-full min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
-                  >
-                    Close Invoice
-                  </button>
+                  <div className="px-4 py-3 border-t border-app-border bg-white shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setInvoiceOpen(false)}
+                      className="w-full min-h-[44px] rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
+                    >
+                      Close Invoice
+                    </button>
+                  </div>
                 </motion.div>
               </div>
             )}

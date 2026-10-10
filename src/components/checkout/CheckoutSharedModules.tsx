@@ -94,6 +94,9 @@ export interface CheckoutPriceBreakdownProps {
   totalBdt: number;
   formatPrice: (bdt: number) => string;
   compact?: boolean;
+  quoteId?: string;
+  ruleVersion?: string;
+  quoteStatus?: 'estimated' | 'confirmed';
 }
 
 export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
@@ -109,6 +112,9 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
   totalBdt,
   formatPrice,
   compact = false,
+  quoteId,
+  ruleVersion,
+  quoteStatus = 'estimated',
 }) => {
   return (
     <div
@@ -116,13 +122,24 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
         compact ? 'p-3.5 space-y-2.5' : 'p-4 space-y-3'
       }`}
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-content-primary">
-          Landed Cost Summary
-        </h3>
-        <span className="text-[11px] font-medium text-brand-primary inline-flex items-center gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="text-xs font-semibold text-content-primary">
+            Landed Cost Summary
+          </h3>
+          {quoteId && (
+            <span className="text-[10px] font-mono-num text-content-muted block mt-0.5">
+              {quoteId} · {ruleVersion || 'NBR Tariff'}
+            </span>
+          )}
+        </div>
+        <span className="text-[11px] font-medium text-brand-primary inline-flex items-center gap-1 shrink-0">
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Duty & 15% VAT Included</span>
+          <span>
+            {quoteStatus === 'confirmed'
+              ? 'Confirmed Total'
+              : 'Estimated Landed'}
+          </span>
         </span>
       </div>
 

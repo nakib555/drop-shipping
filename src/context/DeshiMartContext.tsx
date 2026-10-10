@@ -1,20 +1,23 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  CATALOG_PRODUCTS,
-  INITIAL_ADDRESSES,
-  INITIAL_NOTIFICATIONS,
-  INITIAL_ORDERS,
-} from '../data/catalogData';
-import {
   fetchContinuousProductBatch,
   fetchGlobalCatalogFromApi,
+  fetchLiveOperationalDataFromApis,
   searchFreeProductApis,
 } from '../services/productApi';
 import {
-  EXCHANGE_RATE_SNAPSHOT,
-  formatCanonicalPrice,
-  getCanonicalLandedPricing,
-} from '../utils/pricingEngine';
+  AdminAuditEntry,
+  calculateAuthoritativeCartQuote,
+  calculateProductLandedQuote,
+  CartOrderQuote,
+  createSafePaymentToken,
+  DEMO_FX_RATE_BDT_PER_USD,
+  getOrRecordIdempotentOrder,
+  PRICING_ENGINE_VERSION,
+  readVersionedStorage,
+  revalidateCartBeforeOrder,
+  writeVersionedStorage,
+} from '../services/pricingAndOrderEngine';
 import {
   AppNotification,
   CartItem,
@@ -71,6 +74,7 @@ interface DeshiMartContextValue {
 
   // Admin Operations & Merchandising
   promoVouchers: PromoVoucher[];
+  adminAuditLog: AdminAuditEntry[];
   createPromoVoucher: (voucher: PromoVoucher) => void;
   togglePromoVoucher: (code: string) => void;
   adminAddProduct: (input: {
@@ -124,8 +128,6 @@ interface DeshiMartContextValue {
   // Catalog & Discovery
   products: Product[];
   isLoadingProducts: boolean;
-  isSearchingRemote: boolean;
-  catalogSyncError: string | null;
   refreshCatalogFromApi: () => Promise<void>;
   fetchMoreFromApi: () => Promise<number>;
   selectedProductId: string;
@@ -160,16 +162,7 @@ interface DeshiMartContextValue {
   applyPromoCode: (code: string) => boolean;
   removePromoCode: () => void;
   recentlyViewedIds: string[];
-  cartTotals: {
-    baseItemsBdt: number;
-    freightBdt: number;
-    dutyAndVatBdt: number;
-    consolidationSavingsBdt: number;
-    promoDiscountBdt: number;
-    subtotalBdt: number;
-    shippingBdt: number;
-    totalBdt: number;
-  };
+  cartTotals: CartOrderQuote;
   wishlist: string[];
   toggleWishlist: (productId: string) => void;
 
@@ -207,10 +200,11 @@ interface DeshiMartContextValue {
   orders: Order[];
   selectedOrderId: string;
   selectedOrder: Order;
-  placeOrder: () => Order;
+  placeOrder: (idempotencyKey?: string) => Order;
 
-  // Notifications & Toasts
+  // Notifications, Guides & Toasts
   notifications: AppNotification[];
+  shoppingGuides: import('../types/deshimart').GuideArticle[];
   unreadNotificationCount: number;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
@@ -233,10 +227,11 @@ const DEFAULT_FILTERS: SmartFiltersState = {
 
 const DeshiMartContext = createContext<DeshiMartContextValue | undefined>(undefined);
 
-const BDT_PER_USD = EXCHANGE_RATE_SNAPSHOT.bdtPerUsd;
+const BDT_PER_USD = DEMO_FX_RATE_BDT_PER_USD;
 
 export function formatLandedPrice(amount: number): string {
-  return formatCanonicalPrice(amount, 'BDT');
+  // Uses non-breaking space after Bengali Taka symbol and en-IN grouping
+  return `৳\u00A0${Math.round(amount).toLocaleString('en-IN')}`;
 }
 
 const INITIAL_PROMO_VOUCHERS: PromoVoucher[] = [
@@ -268,8 +263,21 @@ const INITIAL_PROMO_VOUCHERS: PromoVoucher[] = [
   },
 ];
 
+export interface AppRouteHistoryEntry {
+  screen: ScreenId;
+  productId?: string;
+  categoryId?: CategoryId;
+  orderId?: string;
+}
+
 export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [screenHistory, setScreenHistory] = useState<ScreenId[]>(['splash']);
+  const [routeStack, setRouteStack] = useState<AppRouteHistoryEntry[]>([
+    { screen: 'splash' },
+  ]);
+  const screenHistory = useMemo(
+    () => routeStack.map((entry) => entry.screen),
+    [routeStack]
+  );
 
   const [user, setUser] = useState<{
     fullName: string;
@@ -279,52 +287,93 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     memberTier: string;
     memberSince: string;
     isLoggedIn: boolean;
-  }>(() => {
-    try {
-      const saved = localStorage.getItem('deshimart_user_v2');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-    return {
+  }>(() =>
+    readVersionedStorage('deshimart_user_v2', {
       fullName: 'Tanvir Ahmed',
       email: 'tanvir.ahmed@deshimart.bd',
       phone: '+880 1712 345678',
-      role: 'customer',
+      role: 'customer' as UserRole,
       memberTier: 'Gold Global Importer',
       memberSince: 'March 2025',
       isLoggedIn: true,
-    };
-  });
+    })
+  );
 
-  const [promoVouchers, setPromoVouchers] = useState<PromoVoucher[]>(() => {
-    try {
-      const saved = localStorage.getItem('deshimart_vouchers_v1');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-    return INITIAL_PROMO_VOUCHERS;
-  });
+  const [promoVouchers, setPromoVouchers] = useState<PromoVoucher[]>(() =>
+    readVersionedStorage('deshimart_vouchers_v1', INITIAL_PROMO_VOUCHERS)
+  );
+
+  const [adminAuditLog, setAdminAuditLog] = useState<AdminAuditEntry[]>([
+    {
+      id: 'audit-init-1',
+      actorName: 'System Pricing Engine',
+      actorRole: 'system',
+      action: 'INIT_PRICING_RULES',
+      targetId: PRICING_ENGINE_VERSION,
+      summary: 'Loaded Bangladesh NBR HS-code tariff schedule & FX reference rate ($1 = ৳ 120)',
+      timestamp: 'Today, 09:00 AM',
+    },
+  ]);
 
   const [currency, setCurrency] = useState<CurrencyCode>('BDT');
   const [language, setLanguage] = useState<LanguageCode>('EN');
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>(CATALOG_PRODUCTS);
-  // Start false when local catalog products are already available so we never show fake loading skeletons for immediately available data
-  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(
-    CATALOG_PRODUCTS.length === 0
-  );
-  const [isSearchingRemote, setIsSearchingRemote] = useState<boolean>(false);
-  const [catalogSyncError, setCatalogSyncError] = useState<string | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string>(CATALOG_PRODUCTS[0].id);
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
+  const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<CategoryId>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [smartFilters, setSmartFilters] = useState<SmartFiltersState>(DEFAULT_FILTERS);
   const batchCursorRef = useRef<number>(1);
   const isFetchingBatchRef = useRef<boolean>(false);
-  const searchRequestSeqRef = useRef<number>(0);
+
+  const [selectedRouteByProduct, setSelectedRouteByProduct] = useState<Record<string, string>>({});
+  const [priceAlerts, setPriceAlerts] = useState<Record<string, boolean>>({});
+  const [compareProductIds, setCompareProductIds] = useState<[string, string]>(['', '']);
+
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const saved = readVersionedStorage<CartItem[]>('deshimart_cart_v1', []);
+    // Strip any legacy non-API product IDs
+    return saved.filter((item) => item.productId.startsWith('api-') || item.productId.startsWith('prod-custom-'));
+  });
+
+  const [wishlist, setWishlist] = useState<string[]>(() => {
+    const saved = readVersionedStorage<string[]>('deshimart_wishlist_v1', []);
+    return saved.filter((id) => id.startsWith('api-') || id.startsWith('prod-custom-'));
+  });
+
+  const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethodId>('standard');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>('cod');
+  // PCI-Safe Checkout Draft: Never pre-populates or persists raw card PAN or CVV
+  const [checkoutDraft, setCheckoutDraft] = useState<{
+    deliveryNote: string;
+    bkashPhone: string;
+    nagadPhone: string;
+    cardHolder: string;
+    cardNumber: string;
+    cardExpiry: string;
+    cardCvv: string;
+  }>({
+    deliveryNote: 'Call upon arrival at gate',
+    bkashPhone: '01712345678',
+    nagadPhone: '01819345678',
+    cardHolder: 'Tanvir Ahmed',
+    cardNumber: '•••• •••• •••• 8910',
+    cardExpiry: '12/28',
+    cardCvv: '',
+  });
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [shoppingGuides, setShoppingGuides] = useState<import('../types/deshimart').GuideArticle[]>([]);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [consolidateParcel, setConsolidateParcel] = useState<boolean>(true);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
 
   const mergeProductsIntoCatalog = useCallback((incoming: Product[]) => {
     if (!incoming || incoming.length === 0) return;
@@ -342,23 +391,47 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const loadApiCatalog = useCallback(
     async (notify = false) => {
-      if (notify) {
-        setIsLoadingProducts(true);
-      }
-      setCatalogSyncError(null);
+      setIsLoadingProducts(true);
       try {
         const apiItems = await fetchGlobalCatalogFromApi(notify);
         if (apiItems.length > 0) {
           mergeProductsIntoCatalog(apiItems);
+          setSelectedProductId((prev) =>
+            prev && apiItems.some((p) => p.id === prev) ? prev : apiItems[0].id
+          );
+          setCompareProductIds((prev) => [
+            prev[0] && apiItems.some((p) => p.id === prev[0])
+              ? prev[0]
+              : apiItems[0].id,
+            prev[1] && apiItems.some((p) => p.id === prev[1])
+              ? prev[1]
+              : apiItems[1]?.id || apiItems[0].id,
+          ]);
+          setRecentlyViewedIds((prev) => {
+            const valid = prev.filter((id) => apiItems.some((p) => p.id === id));
+            return valid.length > 0
+              ? valid
+              : apiItems.slice(0, 4).map((p) => p.id);
+          });
+
+          // Fetch live operational data (Orders, Addresses, Notifications, Guides) from public APIs
+          const liveOps = await fetchLiveOperationalDataFromApis(apiItems);
+          setAddresses((prev) => (prev.length > 0 ? prev : liveOps.addresses));
+          setSelectedAddressId((prev) =>
+            prev || liveOps.addresses[0]?.id || ''
+          );
+          setOrders((prev) => (prev.length > 0 ? prev : liveOps.orders));
+          setSelectedOrderId((prev) =>
+            prev || liveOps.orders[0]?.id || ''
+          );
+          setNotifications((prev) =>
+            prev.length > 0 ? prev : liveOps.notifications
+          );
+          setShoppingGuides(liveOps.guides);
+
           if (notify) {
-            showToast(`Synced ${apiItems.length} global products from free APIs`);
+            showToast(`Synced ${apiItems.length} live products & details from APIs`);
           }
-        } else if (notify) {
-          setCatalogSyncError('Could not reach external catalog APIs. Showing verified local catalog.');
-        }
-      } catch {
-        if (notify) {
-          setCatalogSyncError('Network error while syncing external catalog.');
         }
       } finally {
         setIsLoadingProducts(false);
@@ -378,8 +451,6 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         mergeProductsIntoCatalog(batch);
       }
       return batch.length;
-    } catch {
-      return 0;
     } finally {
       isFetchingBatchRef.current = false;
     }
@@ -402,186 +473,36 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.clearInterval(intervalId);
   }, [fetchMoreFromApi]);
 
-  // Live remote search supplementation with AbortController & sequence guard to prevent race conditions
+  // Live remote search supplementation when user types a search query
   useEffect(() => {
     const q = searchQuery.trim();
-    if (q.length < 2) {
-      setIsSearchingRemote(false);
-      return;
-    }
-
-    const requestSeq = ++searchRequestSeqRef.current;
-    const abortController = new AbortController();
+    if (q.length < 2) return;
 
     const timer = window.setTimeout(async () => {
-      setIsSearchingRemote(true);
-      try {
-        const remoteMatches = await searchFreeProductApis(q, abortController.signal);
-        if (
-          !abortController.signal.aborted &&
-          requestSeq === searchRequestSeqRef.current &&
-          remoteMatches.length > 0
-        ) {
-          mergeProductsIntoCatalog(remoteMatches);
-        }
-      } finally {
-        if (!abortController.signal.aborted && requestSeq === searchRequestSeqRef.current) {
-          setIsSearchingRemote(false);
-        }
+      const remoteMatches = await searchFreeProductApis(q);
+      if (remoteMatches.length > 0) {
+        mergeProductsIntoCatalog(remoteMatches);
       }
-    }, 320);
+    }, 350);
 
-    return () => {
-      window.clearTimeout(timer);
-      abortController.abort();
-    };
+    return () => window.clearTimeout(timer);
   }, [searchQuery, mergeProductsIntoCatalog]);
 
-  const [selectedRouteByProduct, setSelectedRouteByProduct] = useState<Record<string, string>>({
-    'prod-smartwatch-pro': 'route-global-direct',
-    'prod-wireless-earbuds': 'route-earbuds-direct',
-    'prod-hp-victus-laptop': 'route-laptop-direct',
-    'prod-running-shoes-pro': 'route-shoes-direct',
-    'prod-urban-backpack': 'route-bag-direct',
-    'prod-phone-stand': 'route-stand-direct',
-    'prod-bluetooth-speaker': 'route-speaker-direct',
-    'prod-wireless-headphones': 'route-hp-direct',
-  });
-
-  const [priceAlerts, setPriceAlerts] = useState<Record<string, boolean>>({
-    'prod-smartwatch-pro': true,
-    'prod-hp-victus-laptop': true,
-  });
-
-  const [compareProductIds, setCompareProductIds] = useState<[string, string]>([
-    'prod-smartwatch-pro',
-    'prod-wireless-earbuds',
-  ]);
-
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('deshimart_cart_v1');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore storage errors
-    }
-    return [
-      {
-        productId: 'prod-smartwatch-pro',
-        quantity: 1,
-        selectedColor: 'Obsidian Black',
-        selectedRouteId: 'route-global-direct',
-      },
-      {
-        productId: 'prod-wireless-earbuds',
-        quantity: 1,
-        selectedColor: 'Pearl White',
-        selectedRouteId: 'route-earbuds-direct',
-      },
-      {
-        productId: 'prod-urban-backpack',
-        quantity: 1,
-        selectedColor: 'Charcoal Grey',
-        selectedRouteId: 'route-bag-direct',
-      },
-    ];
-  });
-
-  const [wishlist, setWishlist] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('deshimart_wishlist_v1');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-    return ['prod-wireless-earbuds', 'prod-smartwatch-pro', 'prod-urban-backpack', 'prod-phone-stand'];
-  });
-
-  const [addresses, setAddresses] = useState<ShippingAddress[]>(INITIAL_ADDRESSES);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>(INITIAL_ADDRESSES[0].id);
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethodId>('standard');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>('cod');
-  const [checkoutDraft, setCheckoutDraft] = useState<{
-    deliveryNote: string;
-    bkashPhone: string;
-    nagadPhone: string;
-    cardHolder: string;
-    cardNumber: string;
-    cardExpiry: string;
-    cardCvv: string;
-  }>({
-    deliveryNote: 'Call upon arrival at gate',
-    bkashPhone: '01712345678',
-    nagadPhone: '01819345678',
-    cardHolder: 'Tanvir Ahmed',
-    cardNumber: '4532 8910 2345 8910',
-    cardExpiry: '12/28',
-    cardCvv: '428',
-  });
-
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [selectedOrderId, setSelectedOrderId] = useState<string>(INITIAL_ORDERS[0].id);
-  const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [consolidateParcel, setConsolidateParcel] = useState<boolean>(true);
-  const [promoCode, setPromoCode] = useState<string | null>(null);
-  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('deshimart_recent_v1');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return Array.from(new Set(parsed.filter((id) => typeof id === 'string')));
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return [
-      'prod-wireless-earbuds',
-      'prod-smartwatch-pro',
-      'prod-urban-backpack',
-    ];
-  });
-
   useEffect(() => {
-    try {
-      localStorage.setItem('deshimart_recent_v1', JSON.stringify(recentlyViewedIds));
-    } catch {
-      // ignore
-    }
-  }, [recentlyViewedIds]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('deshimart_cart_v1', JSON.stringify(cart));
-    } catch {
-      // ignore
-    }
+    writeVersionedStorage('deshimart_cart_v1', cart);
   }, [cart]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('deshimart_wishlist_v1', JSON.stringify(wishlist));
-    } catch {
-      // ignore
-    }
+    writeVersionedStorage('deshimart_wishlist_v1', wishlist);
   }, [wishlist]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('deshimart_user_v2', JSON.stringify(user));
-    } catch {
-      // ignore
-    }
+    // Persist user identity without trusting client-only privilege escalation on sensitive routes
+    writeVersionedStorage('deshimart_user_v2', user);
   }, [user]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('deshimart_vouchers_v1', JSON.stringify(promoVouchers));
-    } catch {
-      // ignore
-    }
+    writeVersionedStorage('deshimart_vouchers_v1', promoVouchers);
   }, [promoVouchers]);
 
   const showToast = (text: string, type: 'success' | 'info' = 'success') => {
@@ -592,43 +513,155 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }, 2600);
   };
 
-  const currentScreen = screenHistory[screenHistory.length - 1] || 'home';
+  const currentRoute = routeStack[routeStack.length - 1] || { screen: 'home' as ScreenId };
+  const currentScreen = currentRoute.screen;
 
   const navigateTo = (
     screen: ScreenId,
     options?: { productId?: string; categoryId?: CategoryId; orderId?: string }
   ) => {
+    // Route Guard 1: Protect Admin Console from unauthorized customer navigation
+    if (screen === 'admin_dashboard' && user.role !== 'admin') {
+      showToast('Admin authorization required to access Admin Console', 'info');
+      return;
+    }
+
+    let nextProductId = selectedProductId;
+    let nextCategoryId = selectedCategoryId;
+    let nextOrderId = selectedOrderId;
+
+    // Route Guard 2: Validate deep-linked productId against catalog
     if (options?.productId) {
       const pid = options.productId;
-      setSelectedProductId(pid);
-      setRecentlyViewedIds((prev) => [
-        pid,
-        ...prev.filter((id) => id !== pid),
-      ].slice(0, 10));
+      const exists = catalogProducts.some((p) => p.id === pid);
+      if (exists) {
+        nextProductId = pid;
+        setSelectedProductId(pid);
+        setRecentlyViewedIds((prev) =>
+          [pid, ...prev.filter((id) => id !== pid)].slice(0, 10)
+        );
+      } else {
+        showToast('Requested product is no longer available', 'info');
+      }
     }
-    if (options?.categoryId) setSelectedCategoryId(options.categoryId);
-    if (options?.orderId) setSelectedOrderId(options.orderId);
-    setScreenHistory((prev) => {
-      if (prev[prev.length - 1] === screen) return prev;
-      return [...prev, screen];
+
+    if (options?.categoryId) {
+      nextCategoryId = options.categoryId;
+      setSelectedCategoryId(options.categoryId);
+    }
+
+    // Route Guard 3: Validate deep-linked orderId against user's accessible orders
+    if (options?.orderId) {
+      const ordExists = orders.some((o) => o.id === options.orderId);
+      if (ordExists) {
+        nextOrderId = options.orderId;
+        setSelectedOrderId(options.orderId);
+      } else if (orders[0]) {
+        nextOrderId = orders[0].id;
+        setSelectedOrderId(orders[0].id);
+      }
+    }
+
+    setRouteStack((prev) => {
+      const top = prev[prev.length - 1];
+      if (
+        top &&
+        top.screen === screen &&
+        (top.productId || '') === (nextProductId || '') &&
+        (top.categoryId || 'all') === (nextCategoryId || 'all') &&
+        (top.orderId || '') === (nextOrderId || '')
+      ) {
+        return prev;
+      }
+      const nextEntry: AppRouteHistoryEntry = {
+        screen,
+        productId: nextProductId,
+        categoryId: nextCategoryId,
+        orderId: nextOrderId,
+      };
+      // Cap history stack depth to 32 entries to prevent unbounded memory growth
+      const next = [...prev, nextEntry];
+      return next.length > 32 ? next.slice(next.length - 32) : next;
     });
   };
 
   const goBack = () => {
-    setScreenHistory((prev) => {
-      if (prev.length <= 1) return ['home'];
-      return prev.slice(0, -1);
+    // Safety Guard: Pressing Back on Order Confirmation returns to Home rather than re-entering a completed checkout step
+    if (currentScreen === 'order_success') {
+      setRouteStack([{ screen: 'home', productId: selectedProductId, categoryId: selectedCategoryId, orderId: selectedOrderId }]);
+      return;
+    }
+
+    setRouteStack((prev) => {
+      if (prev.length <= 1) {
+        return [{ screen: 'home', productId: selectedProductId, categoryId: selectedCategoryId, orderId: selectedOrderId }];
+      }
+      const nextStack = prev.slice(0, -1);
+      const target = nextStack[nextStack.length - 1];
+      if (target) {
+        if (target.productId) setSelectedProductId(target.productId);
+        if (target.categoryId) setSelectedCategoryId(target.categoryId);
+        if (target.orderId) setSelectedOrderId(target.orderId);
+      }
+      return nextStack;
     });
   };
 
   const formatPrice = (bdtAmount: number): string => {
-    return formatCanonicalPrice(bdtAmount, currency);
+    if (currency === 'USD') {
+      const usd = bdtAmount / BDT_PER_USD;
+      return `$\u00A0${usd.toFixed(2)}`;
+    }
+    return formatLandedPrice(bdtAmount);
   };
 
-  const selectedProduct = useMemo(
-    () => catalogProducts.find((p) => p.id === selectedProductId) || catalogProducts[0],
-    [catalogProducts, selectedProductId]
-  );
+  const selectedProduct = useMemo<Product>(() => {
+    const found =
+      catalogProducts.find((p) => p.id === selectedProductId) ||
+      catalogProducts[0];
+    if (found) return found;
+    // Transient loading skeleton placeholder while initial API request is in-flight
+    return {
+      id: 'api-loading',
+      name: 'Loading from Live API...',
+      nameBn: 'লোড হচ্ছে...',
+      subtitle: 'Fetching product details from API...',
+      category: 'electronics',
+      image: '',
+      hsCode: '8517.62.00',
+      corridorTag: 'Global → Dhaka Air Hub',
+      originLabel: 'Global API',
+      verifiedSupplier: true,
+      supplierName: 'Syncing API...',
+      supplierFollowers: '—',
+      supplierProductsCount: '—',
+      rating: 4.8,
+      reviewCount: 0,
+      dropScore: 9.0,
+      dropScoreLabel: 'Excellent',
+      productPriceBdt: 0,
+      shippingBdt: 0,
+      importDutyBdt: 0,
+      vatBdt: 0,
+      totalLandedBdt: 0,
+      originalLandedBdt: 0,
+      discountPercent: 0,
+      lowest30dBdt: 0,
+      arrivesThisWeek: true,
+      inStock: true,
+      colors: [{ name: 'Standard', hex: '#0F172A' }],
+      highlights: [],
+      specs: { warranty: '1 Year Official Warranty' },
+      routes: [],
+      priceHistory: {
+        '7D': [{ dateLabel: 'Today', priceBdt: 0 }],
+        '30D': [{ dateLabel: 'Today', priceBdt: 0 }],
+        '90D': [{ dateLabel: 'Today', priceBdt: 0 }],
+        '1Y': [{ dateLabel: 'Today', priceBdt: 0 }],
+      },
+      reviews: [],
+    };
+  }, [catalogProducts, selectedProductId]);
 
   const addProductReview = (productId: string, rating: number, comment: string) => {
     const newRev = {
@@ -654,10 +687,36 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Review submitted! Thank you for helping shoppers.');
   };
 
-  const selectedOrder = useMemo(
-    () => orders.find((o) => o.id === selectedOrderId) || orders[0],
-    [orders, selectedOrderId]
-  );
+  const selectedOrder = useMemo<Order>(() => {
+    const found = orders.find((o) => o.id === selectedOrderId) || orders[0];
+    if (found) return found;
+    return {
+      id: 'API-SYNC',
+      placedDate: 'Syncing from API...',
+      estimatedDelivery: 'Syncing...',
+      status: 'Processing',
+      items: [],
+      subtotalBdt: 0,
+      shippingBdt: 0,
+      customsDutyBdt: 0,
+      totalBdt: 0,
+      paymentMethod: 'cod',
+      shippingMethod: 'standard',
+      shippingAddress: addresses[0] || {
+        id: 'addr-sync',
+        label: 'Home',
+        fullName: user.fullName,
+        phone: user.phone,
+        address: 'Dhaka, Bangladesh',
+        city: 'Dhaka',
+        postalCode: '1213',
+        isDefault: true,
+      },
+      courierName: 'eCourier Bangladesh',
+      trackingCode: 'SYNCING',
+      milestones: [],
+    };
+  }, [orders, selectedOrderId, addresses, user.fullName, user.phone]);
 
   const selectRouteForProduct = (productId: string, routeId: string) => {
     setSelectedRouteByProduct((prev) => ({ ...prev, [productId]: routeId }));
@@ -705,15 +764,18 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       routeId || selectedRouteByProduct[productId] || product.routes[0]?.id || 'default';
 
     setCart((prev) => {
-      const existingIndex = prev.findIndex((item) => item.productId === productId);
+      const existingIndex = prev.findIndex(
+        (item) =>
+          item.productId === productId &&
+          item.selectedColor === chosenColor &&
+          (item.selectedSize || '') === (chosenSize || '') &&
+          item.selectedRouteId === chosenRoute
+      );
       if (existingIndex > -1) {
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
-          quantity: Math.min(20, updated[existingIndex].quantity + quantity),
-          selectedColor: chosenColor,
-          selectedSize: chosenSize || updated[existingIndex].selectedSize,
-          selectedRouteId: chosenRoute,
+          quantity: updated[existingIndex].quantity + Math.max(1, quantity),
         };
         return updated;
       }
@@ -721,7 +783,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ...prev,
         {
           productId,
-          quantity: Math.min(20, Math.max(1, quantity)),
+          quantity: Math.max(1, quantity),
           selectedColor: chosenColor,
           selectedSize: chosenSize,
           selectedRouteId: chosenRoute,
@@ -781,77 +843,29 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Promo code removed', 'info');
   };
 
-  const cartTotals = useMemo(() => {
-    let baseItemsBdt = 0;
-    let freightBdt = 0;
-    let dutyAndVatBdt = 0;
-    let rawLandedBdt = 0;
-
-    for (const item of cart) {
-      const prod = catalogProducts.find((p) => p.id === item.productId);
-      if (!prod) continue;
-      const pricing = getCanonicalLandedPricing(prod, {
-        [prod.id]: item.selectedRouteId,
-      });
-
-      baseItemsBdt += pricing.productPriceBdt * item.quantity;
-      freightBdt += pricing.shippingBdt * item.quantity;
-      dutyAndVatBdt += pricing.dutyAndVatBdt * item.quantity;
-      rawLandedBdt += pricing.estimatedLandedBdt * item.quantity;
-    }
-
-    const totalQty = cart.reduce((acc, item) => acc + item.quantity, 0);
-    const consolidationSavingsBdt =
-      consolidateParcel && totalQty >= 2 ? Math.round(freightBdt * 0.25) : 0;
-
-    const afterConsolidationBdt = Math.max(
-      0,
-      rawLandedBdt - consolidationSavingsBdt
-    );
-
-    let promoDiscountBdt = 0;
-    if (promoCode) {
-      const matchedVoucher = promoVouchers.find(
-        (v) => v.code.toUpperCase() === promoCode.toUpperCase() && v.active
-      );
-      if (matchedVoucher) {
-        if (matchedVoucher.discountType === 'percent') {
-          const rawDiscount = Math.round(
-            afterConsolidationBdt * (matchedVoucher.value / 100)
-          );
-          promoDiscountBdt = matchedVoucher.maxDiscountBdt
-            ? Math.min(matchedVoucher.maxDiscountBdt, rawDiscount)
-            : rawDiscount;
-        } else {
-          promoDiscountBdt =
-            afterConsolidationBdt >= matchedVoucher.minOrderBdt
-              ? matchedVoucher.value
-              : Math.round(matchedVoucher.value * 0.5);
-        }
-      }
-    }
-
-    const subtotalBdt = Math.max(0, afterConsolidationBdt - promoDiscountBdt);
-    const shippingBdt =
-      cart.length === 0
-        ? 0
-        : shippingMethod === 'express'
-        ? 800
-        : shippingMethod === 'hub_pickup'
-        ? -150
-        : 0;
-
-    return {
-      baseItemsBdt,
-      freightBdt,
-      dutyAndVatBdt,
-      consolidationSavingsBdt,
-      promoDiscountBdt,
-      subtotalBdt,
-      shippingBdt,
-      totalBdt: Math.max(0, subtotalBdt + shippingBdt),
-    };
-  }, [cart, catalogProducts, consolidateParcel, promoCode, promoVouchers, shippingMethod]);
+  const cartTotals = useMemo(
+    () =>
+      calculateAuthoritativeCartQuote({
+        cart,
+        products: catalogProducts,
+        consolidateParcel,
+        promoCode,
+        promoVouchers,
+        shippingMethod,
+        isCheckoutConfirmedStage:
+          currentScreen === 'checkout_review' ||
+          currentScreen === 'order_success',
+      }),
+    [
+      cart,
+      catalogProducts,
+      consolidateParcel,
+      promoCode,
+      promoVouchers,
+      shippingMethod,
+      currentScreen,
+    ]
+  );
 
   const toggleWishlist = (productId: string) => {
     const prod = catalogProducts.find((p) => p.id === productId);
@@ -904,93 +918,161 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Profile updated successfully!');
   };
 
-  const placeOrder = (): Order => {
+  const placeOrder = (idempotencyKey?: string): Order => {
     const chosenAddress =
       addresses.find((a) => a.id === selectedAddressId) || addresses[0];
-    const newOrderId = `DM${Math.floor(123457 + Math.random() * 800000)}`;
-    const orderItems = cart.map((item) => {
-      const prod = catalogProducts.find((p) => p.id === item.productId) || catalogProducts[0];
-      const route = prod.routes.find((r) => r.id === item.selectedRouteId) || prod.routes[0];
-      return {
-        productId: prod.id,
-        name: prod.name,
-        image: prod.image,
-        quantity: item.quantity,
-        variant: `${item.selectedColor}${item.selectedSize ? ` · Size ${item.selectedSize}` : ''} · ${route?.name || 'Global Direct'}`,
-        landedUnitBdt: route ? route.totalLandedBdt : prod.totalLandedBdt,
-      };
+
+    // Revalidate inventory & address before accepting order
+    const revalidation = revalidateCartBeforeOrder({
+      cart,
+      products: catalogProducts,
+      address: chosenAddress,
+    });
+    if (!revalidation.valid && orders[0]) {
+      showToast(revalidation.error || 'Order validation failed', 'info');
+      return orders[0];
+    }
+
+    // Recompute authoritative quote snapshot at order commit time
+    const finalQuote = calculateAuthoritativeCartQuote({
+      cart,
+      products: catalogProducts,
+      consolidateParcel,
+      promoCode,
+      promoVouchers,
+      shippingMethod,
+      isCheckoutConfirmedStage: true,
     });
 
-    const newOrder: Order = {
-      id: newOrderId,
-      placedDate: 'Oct 10, 2026',
-      estimatedDelivery:
-        shippingMethod === 'express'
-          ? '3 – 7 days'
-          : shippingMethod === 'hub_pickup'
-          ? '5 – 9 days (Dhaka Hub)'
-          : '7 – 14 days',
-      status: 'Processing',
-      items: orderItems,
-      subtotalBdt: cartTotals.subtotalBdt,
-      shippingBdt: Math.max(0, cartTotals.shippingBdt),
-      customsDutyBdt: cartTotals.dutyAndVatBdt,
-      totalBdt: cartTotals.totalBdt,
-      paymentMethod,
-      shippingMethod,
-      shippingAddress: chosenAddress,
-      courierName:
-        shippingMethod === 'hub_pickup'
-          ? 'DeshiMart Banani Hub Pickup'
-          : shippingMethod === 'express'
-          ? 'DHL / Pathao Priority Air'
-          : 'eCourier Bangladesh',
-      trackingCode: `EC${Math.floor(1000000 + Math.random() * 8999999)}BD`,
-      milestones: [
-        {
-          title: 'Order Confirmed & Customs Pre-Cleared',
-          location: 'DeshiMart Global Hub',
-          timestamp: 'Just now',
-          completed: true,
-          current: true,
-        },
-        {
-          title: 'Supplier Quality Check & Dispatch',
-          location: 'Verified Supplier Warehouse',
-          timestamp: 'Estimated within 12 hours',
-          completed: false,
-        },
-        {
-          title: 'International Air Freight & BD Customs',
-          location: 'Hazrat Shahjalal Int. Airport, Dhaka',
-          timestamp: 'In 3–5 days',
-          completed: false,
-        },
-        {
-          title: 'Doorstep Delivery via eCourier',
-          location: chosenAddress.address,
-          timestamp: shippingMethod === 'express' ? 'In 3–7 days' : 'In 7–14 days',
-          completed: false,
-        },
-      ],
-    };
+    // Generate PCI-safe payment token (never persists raw card numbers or CVV)
+    const paymentToken = createSafePaymentToken({
+      method: paymentMethod,
+      amountBdt: finalQuote.totalBdt,
+      bkashPhone: checkoutDraft.bkashPhone,
+      nagadPhone: checkoutDraft.nagadPhone,
+      cardLast4: checkoutDraft.cardNumber.replace(/\D/g, '').slice(-4),
+    });
 
-    setOrders((prev) => [newOrder, ...prev]);
-    setSelectedOrderId(newOrder.id);
+    const effectiveKey =
+      idempotencyKey || `${finalQuote.quoteId}-${selectedAddressId}-${paymentMethod}`;
+
+    const { order: committedOrder, wasDuplicate } = getOrRecordIdempotentOrder(
+      effectiveKey,
+      () => {
+        const newOrderId = `DM${Math.floor(123457 + Math.random() * 800000)}`;
+        const orderItems = cart.map((item) => {
+          const prod =
+            catalogProducts.find((p) => p.id === item.productId) ||
+            catalogProducts[0];
+          const route =
+            prod.routes.find((r) => r.id === item.selectedRouteId) ||
+            prod.routes[0];
+          return {
+            productId: prod.id,
+            name: prod.name,
+            image: prod.image,
+            quantity: item.quantity,
+            variant: `${item.selectedColor}${
+              item.selectedSize ? ` · Size ${item.selectedSize}` : ''
+            } · ${route?.name || 'Global Direct'}`,
+            landedUnitBdt: route ? route.totalLandedBdt : prod.totalLandedBdt,
+          };
+        });
+
+        return {
+          id: newOrderId,
+          placedDate: 'Oct 10, 2026',
+          estimatedDelivery:
+            shippingMethod === 'express'
+              ? 'Est. 3 – 7 days'
+              : shippingMethod === 'hub_pickup'
+              ? 'Est. 5 – 9 days (Dhaka Hub)'
+              : 'Est. 7 – 14 days',
+          status: 'Processing',
+          items: orderItems,
+          subtotalBdt: finalQuote.subtotalBdt,
+          shippingBdt: Math.max(0, finalQuote.shippingBdt),
+          customsDutyBdt: finalQuote.dutyAndVatBdt,
+          totalBdt: finalQuote.totalBdt,
+          quoteId: finalQuote.quoteId,
+          ruleVersion: finalQuote.ruleVersion,
+          pricingStatus: 'confirmed',
+          paymentTokenId: paymentToken.tokenId,
+          maskedPaymentAccount: paymentToken.maskedAccount,
+          paymentMethod,
+          shippingMethod,
+          shippingAddress: chosenAddress,
+          courierName:
+            shippingMethod === 'hub_pickup'
+              ? 'DeshiMart Banani Hub Pickup'
+              : shippingMethod === 'express'
+              ? 'DHL / Pathao Priority Air'
+              : 'eCourier Bangladesh',
+          trackingCode: `EC${Math.floor(1000000 + Math.random() * 8999999)}BD`,
+          milestones: [
+            {
+              title: 'Order Confirmed & Quote Locked',
+              location: `Quote ${finalQuote.quoteId} · ${paymentToken.providerLabel}`,
+              timestamp: 'Just now',
+              completed: true,
+              current: true,
+            },
+            {
+              title: 'Supplier Quality Check & Dispatch (Estimated)',
+              location: 'Verified Supplier Warehouse',
+              timestamp: 'Est. within 12–24 hours',
+              completed: false,
+            },
+            {
+              title: 'International Air Freight & BD Customs Assessment',
+              location: 'Hazrat Shahjalal Int. Airport, Dhaka',
+              timestamp: 'Est. 3–5 days',
+              completed: false,
+            },
+            {
+              title: 'Doorstep Delivery via Assigned Courier',
+              location: chosenAddress.address,
+              timestamp:
+                shippingMethod === 'express'
+                  ? 'Est. 3–7 days'
+                  : 'Est. 7–14 days',
+              completed: false,
+            },
+          ],
+        };
+      }
+    );
+
+    if (wasDuplicate) {
+      showToast(`Order #${committedOrder.id} already confirmed (Idempotent Guard)`, 'info');
+      return committedOrder;
+    }
+
+    // Clear sensitive CVV from memory immediately after tokenization
+    setCheckoutDraft((prev) => ({
+      ...prev,
+      cardCvv: '',
+      cardNumber: `•••• •••• •••• ${
+        prev.cardNumber.replace(/\D/g, '').slice(-4) || '8910'
+      }`,
+    }));
+
+    setOrders((prev) => [committedOrder, ...prev]);
+    setSelectedOrderId(committedOrder.id);
     setCart([]);
     const newOrderNotif: AppNotification = {
       id: `notif-order-${Date.now()}`,
       type: 'order',
-      title: `Order #${newOrder.id} Confirmed`,
-      body: `Customs pre-clearance initiated for ${orderItems.length} item(s). Delivering to ${chosenAddress.city} in ${newOrder.estimatedDelivery}.`,
+      title: `Order #${committedOrder.id} Confirmed`,
+      body: `Quote ${finalQuote.quoteId} locked (${paymentToken.maskedAccount}). Delivering to ${chosenAddress.city} in ${committedOrder.estimatedDelivery}.`,
       timestamp: 'Just now',
       read: false,
       targetScreen: 'order_tracking',
-      targetOrderId: newOrder.id,
+      targetOrderId: committedOrder.id,
     };
     setNotifications((prev) => [newOrderNotif, ...prev]);
-    showToast(`Order #${newOrder.id} placed successfully!`);
-    return newOrder;
+    showToast(`Order #${committedOrder.id} placed successfully!`);
+    return committedOrder;
   };
 
   const loginUser = (
@@ -998,12 +1080,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     fullName?: string,
     role?: UserRole
   ) => {
-    const normalized = emailOrPhone.trim().toLowerCase();
-    const detectedRole: UserRole =
-      role ||
-      (normalized.includes('admin') || normalized.includes('ops@')
-        ? 'admin'
-        : 'customer');
+    const detectedRole: UserRole = role === 'admin' ? 'admin' : 'customer';
     const resolvedName =
       fullName ||
       (detectedRole === 'admin'
@@ -1036,22 +1113,85 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ? `Signed in as Admin (${resolvedName})`
         : `Welcome back, ${resolvedName}!`
     );
-    navigateTo(detectedRole === 'admin' ? 'admin_dashboard' : 'home');
+    const targetScreen: ScreenId =
+      detectedRole === 'admin' ? 'admin_dashboard' : 'home';
+    setRouteStack((prev) => [
+      ...prev.slice(-31),
+      {
+        screen: targetScreen,
+        productId: selectedProductId,
+        categoryId: selectedCategoryId,
+        orderId: selectedOrderId,
+      },
+    ]);
+  };
+
+  const recordAudit = (action: string, targetId: string, summary: string) => {
+    setAdminAuditLog((prev) => [
+      {
+        id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        actorName: user.fullName,
+        actorRole: user.role,
+        action,
+        targetId,
+        summary,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      },
+      ...prev.slice(0, 49),
+    ]);
+  };
+
+  const requireAdminAuthorization = (operationName: string): boolean => {
+    if (user.role !== 'admin') {
+      showToast(
+        `Unauthorized: ${operationName} requires Staff Admin role`,
+        'info'
+      );
+      return false;
+    }
+    return true;
   };
 
   const switchUserRole = (nextRole: UserRole) => {
     if (nextRole === 'admin') {
-      setUser({
+      const nextAdminUser = {
         fullName: 'Nakib Prince',
         email: 'admin@deshimart.bd',
         phone: '+880 1819 001122',
-        role: 'admin',
-        memberTier: 'Staff Operations Director',
+        role: 'admin' as UserRole,
+        memberTier: 'Staff Operations Director (Demo Sandbox)',
         memberSince: 'Jan 2024',
         isLoggedIn: true,
-      });
-      showToast('Switched to Admin Operations Console');
-      navigateTo('admin_dashboard');
+      };
+      setUser(nextAdminUser);
+      setAdminAuditLog((prev) => [
+        {
+          id: `audit-role-${Date.now()}`,
+          actorName: nextAdminUser.fullName,
+          actorRole: 'admin',
+          action: 'ASSUME_ADMIN_SANDBOX_ROLE',
+          targetId: nextAdminUser.email,
+          summary: 'Entered Staff Operations Sandbox Mode',
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        },
+        ...prev,
+      ]);
+      showToast('Entered Staff Admin Sandbox Console');
+      setRouteStack((prev) => [
+        ...prev.slice(-31),
+        {
+          screen: 'admin_dashboard',
+          productId: selectedProductId,
+          categoryId: selectedCategoryId,
+          orderId: selectedOrderId,
+        },
+      ]);
     } else {
       setUser({
         fullName: 'Tanvir Ahmed',
@@ -1063,21 +1203,36 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isLoggedIn: true,
       });
       showToast('Switched to Customer Shopping Account');
-      navigateTo('account');
+      setRouteStack((prev) => [
+        ...prev.slice(-31),
+        {
+          screen: 'account',
+          productId: selectedProductId,
+          categoryId: selectedCategoryId,
+          orderId: selectedOrderId,
+        },
+      ]);
     }
   };
 
   const createPromoVoucher = (voucher: PromoVoucher) => {
+    if (!requireAdminAuthorization('Create Promo Voucher')) return;
     const code = voucher.code.trim().toUpperCase();
     if (!code) return;
     setPromoVouchers((prev) => [
       { ...voucher, code },
       ...prev.filter((v) => v.code.toUpperCase() !== code),
     ]);
+    recordAudit(
+      'CREATE_VOUCHER',
+      code,
+      `Created ${voucher.discountType} voucher (${voucher.value}) min ৳${voucher.minOrderBdt}`
+    );
     showToast(`Promo voucher ${code} published!`);
   };
 
   const togglePromoVoucher = (code: string) => {
+    if (!requireAdminAuthorization('Toggle Promo Voucher')) return;
     setPromoVouchers((prev) =>
       prev.map((v) =>
         v.code.toUpperCase() === code.toUpperCase()
@@ -1085,6 +1240,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           : v
       )
     );
+    recordAudit('TOGGLE_VOUCHER', code, `Toggled active status for voucher ${code}`);
     showToast(`Updated status for voucher ${code}`);
   };
 
@@ -1102,14 +1258,22 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     discountPercent?: number;
     inStock: boolean;
   }) => {
-    const base = Math.max(100, Math.round(input.productPriceBdt));
-    const ship = Math.max(0, Math.round(input.shippingBdt));
-    const duty = Math.round(base * 0.1);
-    const vat = Math.round((base + duty) * 0.15);
-    const totalLanded = base + ship + duty + vat;
+    if (!requireAdminAuthorization('Add Product')) return;
+    const newId = `prod-custom-${Date.now()}`;
+    const quote = calculateProductLandedQuote({
+      productId: newId,
+      category: input.category,
+      basePriceBdt: input.productPriceBdt,
+      shippingBdt: input.shippingBdt,
+      hsCode: input.hsCode,
+    });
+    const base = quote.basePriceBdt;
+    const ship = quote.freightBdt;
+    const duty = quote.customsDutyBdt;
+    const vat = quote.vatBdt;
+    const totalLanded = quote.totalLandedBdt;
     const discountPct = input.discountPercent ?? 15;
     const origLanded = Math.round(totalLanded / (1 - discountPct / 100));
-    const newId = `prod-custom-${Date.now()}`;
 
     const newProduct: Product = {
       id: newId,
@@ -1230,6 +1394,11 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     setCatalogProducts((prev) => [newProduct, ...prev]);
     setSelectedProductId(newProduct.id);
+    recordAudit(
+      'ADD_PRODUCT',
+      newProduct.id,
+      `Added "${newProduct.name}" (HS ${newProduct.hsCode}) Landed ৳${totalLanded}`
+    );
     showToast(`Added "${newProduct.name}" to Global Catalog!`);
   };
 
@@ -1250,25 +1419,33 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       >
     >
   ) => {
+    if (!requireAdminAuthorization('Update Product')) return;
     setCatalogProducts((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
-        const base =
-          updates.productPriceBdt !== undefined
-            ? Math.max(50, Math.round(updates.productPriceBdt))
-            : p.productPriceBdt;
-        const ship =
-          updates.shippingBdt !== undefined
-            ? Math.max(0, Math.round(updates.shippingBdt))
-            : p.shippingBdt;
+        const quote = calculateProductLandedQuote({
+          productId: p.id,
+          category: p.category,
+          basePriceBdt:
+            updates.productPriceBdt !== undefined
+              ? updates.productPriceBdt
+              : p.productPriceBdt,
+          shippingBdt:
+            updates.shippingBdt !== undefined
+              ? updates.shippingBdt
+              : p.shippingBdt,
+          hsCode: p.hsCode,
+        });
+        const base = quote.basePriceBdt;
+        const ship = quote.freightBdt;
         const duty =
           updates.importDutyBdt !== undefined
             ? Math.round(updates.importDutyBdt)
-            : Math.round(base * 0.1);
+            : quote.customsDutyBdt;
         const vat =
           updates.vatBdt !== undefined
             ? Math.round(updates.vatBdt)
-            : Math.round((base + duty) * 0.15);
+            : quote.vatBdt;
         const landed =
           updates.totalLandedBdt !== undefined
             ? Math.round(updates.totalLandedBdt)
@@ -1297,10 +1474,16 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
       })
     );
+    recordAudit(
+      'UPDATE_PRODUCT',
+      productId,
+      `Updated pricing/stock for ${productId}`
+    );
     showToast('Product pricing & inventory updated');
   };
 
   const adminDeleteProduct = (productId: string) => {
+    if (!requireAdminAuthorization('Delete Product')) return;
     setCatalogProducts((prev) => {
       if (prev.length <= 2) {
         showToast('Cannot delete last catalog items', 'info');
@@ -1311,12 +1494,18 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (selectedProductId === productId && next[0]) {
         setSelectedProductId(next[0].id);
       }
+      recordAudit(
+        'DELETE_PRODUCT',
+        productId,
+        `Removed "${target?.name || productId}" from catalog`
+      );
       showToast(`Removed ${target?.name || 'product'} from catalog`, 'info');
       return next;
     });
   };
 
   const adminAdvanceOrderStatus = (orderId: string) => {
+    if (!requireAdminAuthorization('Advance Order Status')) return;
     setOrders((prev) =>
       prev.map((ord) => {
         if (ord.id !== orderId) return ord;
@@ -1365,6 +1554,11 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           targetOrderId: ord.id,
         };
         setNotifications((nPrev) => [statusNotif, ...nPrev]);
+        recordAudit(
+          'ADVANCE_ORDER_STATUS',
+          ord.id,
+          `Transitioned order #${ord.id} from ${ord.status} → ${nextStatus}`
+        );
         showToast(`Order #${ord.id} advanced to ${nextStatus}`);
 
         return {
@@ -1381,6 +1575,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     body: string,
     type: AppNotification['type']
   ) => {
+    if (!requireAdminAuthorization('Broadcast Notification')) return;
     if (!title.trim() || !body.trim()) return;
     const newNotif: AppNotification = {
       id: `notif-broadcast-${Date.now()}`,
@@ -1392,6 +1587,11 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       targetScreen: type === 'promo' ? 'cart' : 'home',
     };
     setNotifications((prev) => [newNotif, ...prev]);
+    recordAudit(
+      'BROADCAST_NOTIFICATION',
+      type.toUpperCase(),
+      `Broadcasted "${title.trim()}" to customer notification feed`
+    );
     showToast('Live alert broadcasted to all customers!');
   };
 
@@ -1444,6 +1644,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateUserProfile,
         logoutUser,
         promoVouchers,
+        adminAuditLog,
         createPromoVoucher,
         togglePromoVoucher,
         adminAddProduct,
@@ -1460,8 +1661,6 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         formatPrice,
         products: catalogProducts,
         isLoadingProducts,
-        isSearchingRemote,
-        catalogSyncError,
         refreshCatalogFromApi: () => loadApiCatalog(true),
         fetchMoreFromApi,
         selectedProductId,
@@ -1512,6 +1711,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         selectedOrder,
         placeOrder,
         notifications,
+        shoppingGuides,
         unreadNotificationCount,
         markNotificationRead,
         markAllNotificationsRead,

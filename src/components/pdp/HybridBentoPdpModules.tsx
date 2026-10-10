@@ -274,8 +274,21 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
               product.inStock ? 'text-brand-primary' : 'text-content-muted'
             }`}
           >
-            {product.inStock ? 'In Stock' : 'Out of Stock'}
+            {product.availabilityStatus || (product.inStock ? 'In Stock' : 'Out of Stock')}
+            {typeof product.stockCount === 'number' && product.stockCount > 0
+              ? ` (${product.stockCount} units)`
+              : ''}
           </span>
+          {product.sku && (
+            <>
+              <span aria-hidden="true" className="text-content-muted">
+                ·
+              </span>
+              <span className="text-[11px] text-content-muted tabular-nums">
+                SKU: {product.sku}
+              </span>
+            </>
+          )}
         </div>
 
         <button
@@ -755,10 +768,29 @@ export const PdpAccordionSections: React.FC<PdpAccordionSectionsProps> = ({
     activeRoute?.originCountry?.toLowerCase().includes('dhaka') ||
     (dutyBdt === 0 && vatBdt === 0);
 
-  // Category-adaptive factual specification rows (omitting any missing/irrelevant fields)
+  // Category-adaptive factual specification rows (surfacing all rich API metadata)
   const adaptiveSpecRows = React.useMemo(() => {
     const rows: { label: string; value?: string }[] = [
       { label: 'Brand / Supplier', value: product.supplierName },
+      { label: 'API Product SKU', value: product.sku || product.specs.sku },
+      { label: 'EAN / Barcode', value: product.barcode || product.specs.barcode },
+      {
+        label: 'Physical Dimensions',
+        value: product.dimensions || product.specs.dimensions,
+      },
+      {
+        label: 'Live Inventory Status',
+        value:
+          typeof product.stockCount === 'number'
+            ? `${product.stockCount} units (${product.availabilityStatus || 'In Stock'})`
+            : product.specs.stock,
+      },
+      {
+        label: 'Minimum Order Quantity',
+        value: product.minimumOrderQuantity
+          ? `${product.minimumOrderQuantity} unit(s)`
+          : product.specs.moq,
+      },
       {
         label: isFashion
           ? 'Material & Weave'
@@ -798,6 +830,8 @@ export const PdpAccordionSections: React.FC<PdpAccordionSectionsProps> = ({
         value: product.specs.gps,
       },
       { label: 'Net Parcel Weight', value: product.specs.weight },
+      { label: 'Shipping Lead Time', value: product.shippingInformation || product.specs.shippingInfo },
+      { label: 'Return Policy', value: product.returnPolicy || product.specs.returnPolicy },
       { label: 'Origin Dispatch Hub', value: product.originLabel },
       { label: 'Warranty Coverage', value: product.specs.warranty },
     ];
@@ -906,7 +940,22 @@ export const PdpAccordionSections: React.FC<PdpAccordionSectionsProps> = ({
               className="overflow-hidden"
             >
               <div className="pb-3 pt-1 space-y-3 text-xs text-content-secondary leading-relaxed">
-                <p className="text-content-primary/90">{product.subtitle}</p>
+                <p className="text-content-primary/90">
+                  {product.fullDescription || product.subtitle}
+                </p>
+
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {product.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 rounded-md bg-app-subtle border border-app-border text-[11px] font-medium text-content-secondary"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {product.highlights.length > 0 && (
                   <div className="space-y-1.5">
@@ -1289,22 +1338,24 @@ export const PdpReviewsSection: React.FC<PdpReviewsSectionProps> = ({
       {/* Review Previews */}
       <div className="divide-y divide-app-border">
         {product.reviews.slice(0, 2).map((rev) => (
-          <div key={rev.id} className="py-3 first:pt-0 last:pb-0 space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-semibold text-content-primary">
+          <div key={rev.id} className="py-3 first:pt-0 last:pb-0 space-y-1.5">
+            <div className="flex items-start justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                <span className="font-semibold text-content-primary truncate max-w-[180px]">
                   {rev.author}
                 </span>
                 {rev.verified && (
-                  <span className="text-[11px] text-brand-primary font-medium">
-                    · Verified
+                  <span className="px-1.5 py-0.5 rounded bg-brand-subtle text-[10px] text-brand-primary font-semibold shrink-0">
+                    Verified
                   </span>
                 )}
               </div>
-              <span className="text-[11px] text-content-muted">{rev.date}</span>
+              <span className="text-[11px] text-content-muted tabular-nums shrink-0">
+                {rev.date}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-0.5 shrink-0">
                 {[1, 2, 3, 4, 5].map((st) => (
                   <Star
                     key={st}
@@ -1317,12 +1368,12 @@ export const PdpReviewsSection: React.FC<PdpReviewsSectionProps> = ({
                 ))}
               </div>
               {rev.variantChosen && (
-                <span className="text-[11px] text-content-muted">
-                  · {rev.variantChosen}
+                <span className="text-[11px] text-content-muted truncate max-w-full">
+                  {rev.variantChosen}
                 </span>
               )}
             </div>
-            <p className="text-xs text-content-secondary leading-relaxed">
+            <p className="text-xs text-content-secondary leading-relaxed break-words">
               {rev.comment}
             </p>
           </div>

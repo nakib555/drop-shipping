@@ -11,12 +11,14 @@ import {
   RefreshCw,
   Search,
   Send,
+  ShieldAlert,
   Trash2,
   Truck,
   X,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { CATEGORIES } from '../../data/catalogData';
+import { calculateProductLandedQuote } from '../../services/pricingAndOrderEngine';
 import { AppNotification, CategoryId, Product } from '../../types/deshimart';
 
 type AdminTabId = 'overview' | 'orders' | 'catalog' | 'vouchers';
@@ -29,6 +31,7 @@ export const AdminDashboardScreen: React.FC = () => {
     products,
     orders,
     promoVouchers,
+    adminAuditLog,
     createPromoVoucher,
     togglePromoVoucher,
     adminAddProduct,
@@ -39,7 +42,10 @@ export const AdminDashboardScreen: React.FC = () => {
     formatPrice,
     refreshCatalogFromApi,
     isLoadingProducts,
+    language,
   } = useDeshiMart();
+
+  const isBn = language === 'BN';
 
   const [activeTab, setActiveTab] = useState<AdminTabId>('overview');
 
@@ -52,9 +58,12 @@ export const AdminDashboardScreen: React.FC = () => {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [catalogCategory, setCatalogCategory] = useState<CategoryId>('all');
 
-  // Product Modal (Add / Edit) docked above BottomTabBar via #mobile-sheet-root
+  // Product Modal (Add / Edit) docked in #mobile-sheet-root
   const [productSheetOpen, setProductSheetOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  //Destructive Delete Confirmation State
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
 
   const [formName, setFormName] = useState('');
   const [formSubtitle, setFormSubtitle] = useState('Direct Factory Import');
@@ -83,9 +92,15 @@ export const AdminDashboardScreen: React.FC = () => {
   const [broadcastType, setBroadcastType] =
     useState<AppNotification['type']>('promo');
 
-  // Clean Store Metrics
+  // Clean Store Metrics (Separates Gross Order Value, Delivered Settled Revenue, and Pending COD/Pipeline)
   const metrics = useMemo(() => {
     const totalRevenueBdt = orders.reduce((sum, o) => sum + o.totalBdt, 0);
+    const settledRevenueBdt = orders
+      .filter((o) => o.status === 'Delivered')
+      .reduce((sum, o) => sum + o.totalBdt, 0);
+    const pendingCodBdt = orders
+      .filter((o) => o.status !== 'Delivered' && o.paymentMethod === 'cod')
+      .reduce((sum, o) => sum + o.totalBdt, 0);
     const processingCount = orders.filter((o) => o.status === 'Processing').length;
     const shippedCount = orders.filter((o) => o.status === 'Shipped').length;
     const deliveredCount = orders.filter((o) => o.status === 'Delivered').length;
@@ -94,6 +109,8 @@ export const AdminDashboardScreen: React.FC = () => {
 
     return {
       totalRevenueBdt,
+      settledRevenueBdt,
+      pendingCodBdt,
       processingCount,
       shippedCount,
       deliveredCount,
@@ -119,6 +136,43 @@ export const AdminDashboardScreen: React.FC = () => {
       return matchesCat && matchesSearch;
     });
   }, [products, catalogCategory, catalogSearch]);
+
+  // Screen-level Role Guard: Only authorized admins can access Admin Console
+  if (!user.isLoggedIn || user.role !== 'admin') {
+    return (
+      <div className="p-6 flex-1 flex flex-col items-center justify-center text-center bg-app-bg space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center">
+          <ShieldAlert className="w-7 h-7" />
+        </div>
+        <div className="space-y-1 max-w-[280px]">
+          <h2 className="text-base font-bold text-content-primary">
+            {isBn ? 'অ্যাডমিন অ্যাক্সেস আবশ্যক' : 'Admin Access Required'}
+          </h2>
+          <p className="text-xs text-content-secondary leading-relaxed">
+            {isBn
+              ? 'এই কনসোলটি শুধুমাত্র অনুমোদিত DeshiMart স্টোর অ্যাডমিনিস্ট্রেটরদের জন্য সংরক্ষিত।'
+              : 'This console is restricted to authorized DeshiMart store administrators.'}
+          </p>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => navigateTo('home')}
+            className="h-10 px-4 rounded-xl border border-app-border bg-white text-xs font-semibold text-content-primary"
+          >
+            {isBn ? 'হোমে ফিরুন' : 'Return Home'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('auth')}
+            className="h-10 px-4 rounded-xl bg-brand-primary text-white text-xs font-semibold"
+          >
+            {isBn ? 'অ্যাডমিন লগইন' : 'Admin Sign In'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const openAddProductModal = () => {
     setEditingProduct(null);
@@ -152,21 +206,36 @@ export const AdminDashboardScreen: React.FC = () => {
     setProductSheetOpen(true);
   };
 
+  // Authoritative Landed Quote Preview via unified pricing engine (Zero inline formula duplication)
+  const previewQuote = calculateProductLandedQuote({
+    productId: editingProduct?.id || 'ADMIN-PREVIEW',
+    category: formCategory,
+    basePriceBdt: Math.max(50, Number(formBasePrice) || 0),
+    shippingBdt: Math.max(0, Number(formShipping) || 0),
+    hsCode: formHsCode,
+  });
+
   const handleSaveProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const baseNum = Math.max(100, Number(formBasePrice) || 1500);
     const shipNum = Math.max(0, Number(formShipping) || 300);
 
     if (editingProduct) {
-      const duty = Math.round(baseNum * 0.1);
-      const vat = Math.round((baseNum + duty) * 0.15);
+      const updatedQuote = calculateProductLandedQuote({
+        productId: editingProduct.id,
+        category: editingProduct.category,
+        basePriceBdt: baseNum,
+        shippingBdt: shipNum,
+        hsCode: editingProduct.hsCode,
+      });
+
       adminUpdateProduct(editingProduct.id, {
         name: formName.trim() || editingProduct.name,
-        productPriceBdt: baseNum,
-        shippingBdt: shipNum,
-        importDutyBdt: duty,
-        vatBdt: vat,
-        totalLandedBdt: baseNum + shipNum + duty + vat,
+        productPriceBdt: updatedQuote.basePriceBdt,
+        shippingBdt: updatedQuote.freightBdt,
+        importDutyBdt: updatedQuote.customsDutyBdt,
+        vatBdt: updatedQuote.vatBdt,
+        totalLandedBdt: updatedQuote.totalLandedBdt,
         inStock: formInStock,
       });
     } else {
@@ -212,12 +281,6 @@ export const AdminDashboardScreen: React.FC = () => {
     setShowBroadcastForm(false);
   };
 
-  const previewBase = Math.max(0, Number(formBasePrice) || 0);
-  const previewShip = Math.max(0, Number(formShipping) || 0);
-  const previewDuty = Math.round(previewBase * 0.1);
-  const previewVat = Math.round((previewBase + previewDuty) * 0.15);
-  const previewLanded = previewBase + previewShip + previewDuty + previewVat;
-
   return (
     <div className="p-4 space-y-4 pb-8 bg-app-bg">
       {/* 1. Clean Executive Header & Segmented Navigation */}
@@ -237,7 +300,7 @@ export const AdminDashboardScreen: React.FC = () => {
                 {user.fullName}
               </h2>
               <p className="text-xs text-content-secondary truncate mt-0.5">
-                Admin Account · {user.email}
+                {isBn ? 'অ্যাডমিন কনসোল' : 'Admin Account'} · {user.email}
               </p>
             </div>
           </div>
@@ -247,7 +310,7 @@ export const AdminDashboardScreen: React.FC = () => {
             onClick={() => switchUserRole('customer')}
             className="min-h-[36px] px-3 rounded-lg bg-app-subtle hover:bg-slate-200/70 border border-app-border text-content-primary text-xs font-semibold shrink-0 transition-colors whitespace-nowrap"
           >
-            Customer View
+            {isBn ? 'কাস্টমার ভিউ' : 'Customer View'}
           </button>
         </div>
 
@@ -255,10 +318,10 @@ export const AdminDashboardScreen: React.FC = () => {
         <div className="px-2 py-1.5 bg-app-subtle border-t border-app-border grid grid-cols-4 gap-1">
           {(
             [
-              { id: 'overview', label: 'Overview' },
-              { id: 'orders', label: 'Orders' },
-              { id: 'catalog', label: 'Catalog' },
-              { id: 'vouchers', label: 'Vouchers' },
+              { id: 'overview', label: isBn ? 'ওভারভিউ' : 'Overview' },
+              { id: 'orders', label: isBn ? 'অর্ডার' : 'Orders' },
+              { id: 'catalog', label: isBn ? 'ক্যাটালগ' : 'Catalog' },
+              { id: 'vouchers', label: isBn ? 'ভাউচার' : 'Vouchers' },
             ] as const
           ).map((tab) => {
             const active = activeTab === tab.id;
@@ -287,19 +350,24 @@ export const AdminDashboardScreen: React.FC = () => {
           <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
             <div className="grid grid-cols-2 divide-x divide-y divide-app-border">
               <div className="p-4">
-                <p className="text-xs text-content-secondary">Total Revenue</p>
+                <p className="text-xs text-content-secondary">
+                  {isBn ? 'মোট অর্ডার মূল্য' : 'Gross Order Volume'}
+                </p>
                 <p className="font-mono-num text-lg font-bold text-content-primary mt-1">
                   {formatPrice(metrics.totalRevenueBdt)}
                 </p>
-                <p className="text-xs text-content-secondary mt-0.5">
-                  {orders.length} total orders
+                <p className="text-[11px] text-content-secondary mt-0.5 tabular-nums">
+                  Settled: {formatPrice(metrics.settledRevenueBdt)} · COD Due:{' '}
+                  {formatPrice(metrics.pendingCodBdt)}
                 </p>
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-content-secondary">Order Fulfillment</p>
+                <p className="text-xs text-content-secondary">
+                  {isBn ? 'অর্ডার ফুলফিলমেন্ট' : 'Order Fulfillment'}
+                </p>
                 <p className="font-mono-num text-lg font-bold text-content-primary mt-1">
-                  {metrics.processingCount} Pending
+                  {metrics.processingCount} {isBn ? 'পেন্ডিং' : 'Pending'}
                 </p>
                 <p className="text-xs text-content-secondary mt-0.5">
                   {metrics.shippedCount} shipped · {metrics.deliveredCount} delivered
@@ -307,9 +375,11 @@ export const AdminDashboardScreen: React.FC = () => {
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-content-secondary">Catalog Inventory</p>
+                <p className="text-xs text-content-secondary">
+                  {isBn ? 'ক্যাটালগ স্টক' : 'Catalog Inventory'}
+                </p>
                 <p className="font-mono-num text-lg font-bold text-content-primary mt-1">
-                  {metrics.inStockCount} In Stock
+                  {metrics.inStockCount} {isBn ? 'স্টকে আছে' : 'In Stock'}
                 </p>
                 <p className="text-xs text-content-secondary mt-0.5">
                   {products.length} total products
@@ -317,9 +387,11 @@ export const AdminDashboardScreen: React.FC = () => {
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-content-secondary">Active Vouchers</p>
+                <p className="text-xs text-content-secondary">
+                  {isBn ? 'সক্রিয় ভাউচার' : 'Active Vouchers'}
+                </p>
                 <p className="font-mono-num text-lg font-bold text-brand-primary mt-1">
-                  {metrics.activeVouchersCount} Active
+                  {metrics.activeVouchersCount} {isBn ? 'সক্রিয়' : 'Active'}
                 </p>
                 <p className="text-xs text-content-secondary mt-0.5">
                   {promoVouchers.length} configured
@@ -332,14 +404,14 @@ export const AdminDashboardScreen: React.FC = () => {
           <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
             <div className="px-4 py-3.5 border-b border-app-border flex items-center justify-between">
               <h3 className="text-sm font-bold text-content-primary">
-                Recent Orders
+                {isBn ? 'সাম্প্রতিক অর্ডার' : 'Recent Orders'}
               </h3>
               <button
                 type="button"
                 onClick={() => setActiveTab('orders')}
                 className="text-xs font-semibold text-brand-primary hover:underline"
               >
-                View All ({orders.length})
+                {isBn ? `সব দেখুন (${orders.length})` : `View All (${orders.length})`}
               </button>
             </div>
             <div className="divide-y divide-app-border">
@@ -380,7 +452,7 @@ export const AdminDashboardScreen: React.FC = () => {
               className="min-h-[44px] px-4 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
             >
               <Plus className="w-4 h-4 shrink-0" />
-              <span>Add Product</span>
+              <span>{isBn ? 'পণ্য যোগ করুন' : 'Add Product'}</span>
             </button>
 
             <button
@@ -394,8 +466,40 @@ export const AdminDashboardScreen: React.FC = () => {
                   isLoadingProducts ? 'animate-spin' : ''
                 }`}
               />
-              <span>Sync Catalog</span>
+              <span>{isBn ? 'ক্যাটালগ সিঙ্ক' : 'Sync Catalog'}</span>
             </button>
+          </div>
+
+          {/* Immutable Operations Audit Log */}
+          <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-app-border flex items-center justify-between">
+              <h3 className="text-xs font-bold text-content-primary">
+                {isBn ? 'অ্যাডমিন অপারেশন অডিট লগ' : 'Admin Operations Audit Trail'}
+              </h3>
+              <span className="text-[10px] font-mono-num text-content-muted">
+                {adminAuditLog.length} events
+              </span>
+            </div>
+            <div className="divide-y divide-app-border max-h-48 overflow-y-auto no-scrollbar">
+              {adminAuditLog.slice(0, 8).map((entry) => (
+                <div key={entry.id} className="px-4 py-2.5 text-xs space-y-0.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono-num text-[10px] font-semibold text-brand-primary">
+                      {entry.action}
+                    </span>
+                    <span className="text-[10px] font-mono-num text-content-muted">
+                      {entry.timestamp}
+                    </span>
+                  </div>
+                  <p className="text-xs text-content-primary leading-snug">
+                    {entry.summary}
+                  </p>
+                  <p className="text-[10px] text-content-muted">
+                    Actor: {entry.actorName} ({entry.actorRole})
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -672,8 +776,8 @@ export const AdminDashboardScreen: React.FC = () => {
 
                   <button
                     type="button"
-                    aria-label="Delete product"
-                    onClick={() => adminDeleteProduct(prod.id)}
+                    aria-label={`Delete ${prod.name}`}
+                    onClick={() => setDeletingProduct(prod)}
                     className="w-8 h-8 rounded-lg text-content-muted hover:text-promo-accent hover:bg-promo-subtle flex items-center justify-center transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -928,7 +1032,7 @@ export const AdminDashboardScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Viewport-Docked Add/Edit Product Bottom Sheet Modal */}
+      {/* Viewport-Docked Add/Edit Product Bottom Sheet Modal (3-Zone Layout) */}
       {typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
@@ -952,111 +1056,125 @@ export const AdminDashboardScreen: React.FC = () => {
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                   onSubmit={handleSaveProductSubmit}
-                  className="relative z-10 w-full max-h-[88%] overflow-y-auto bg-white rounded-t-2xl p-4 shadow-2xl space-y-3 border-t border-app-border"
+                  className="relative z-10 w-full max-h-[85%] flex flex-col bg-white rounded-t-3xl shadow-2xl border-t border-app-border overflow-hidden"
                 >
-                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto -mt-1" />
-                  <div className="flex items-center justify-between pb-2 border-b border-app-border">
-                    <h3 className="text-sm font-bold text-content-primary">
-                      {editingProduct ? 'Edit Product Price' : 'Add New Product'}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setProductSheetOpen(false)}
-                      className="text-xs font-semibold text-content-secondary hover:text-content-primary px-2 py-1"
-                    >
-                      Close
-                    </button>
+                  {/* Zone 1: Pinned Header */}
+                  <div className="px-4 pt-3 pb-3 border-b border-app-border shrink-0 bg-white">
+                    <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-2.5" />
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold text-content-primary">
+                        {editingProduct ? 'Edit Product Price' : 'Add New Product'}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setProductSheetOpen(false)}
+                        className="h-8 px-2.5 rounded-lg bg-app-subtle hover:bg-slate-200/70 text-xs font-semibold text-content-secondary hover:text-content-primary"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-content-secondary mb-1">
-                      Product Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder="Sony WH-1000XM5 Wireless Headphones"
-                      className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary"
-                    />
-                  </div>
+                  {/* Zone 2: Scrollable Form Body */}
+                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3.5 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-content-secondary mb-1">
+                        Product Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        placeholder="Sony WH-1000XM5 Wireless Headphones"
+                        className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary"
+                      />
+                    </div>
 
-                  {!editingProduct && (
+                    {!editingProduct && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-medium text-content-secondary mb-1">
+                            Category
+                          </label>
+                          <select
+                            value={formCategory}
+                            onChange={(e) =>
+                              setFormCategory(e.target.value as CategoryId)
+                            }
+                            className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary"
+                          >
+                            {CATEGORIES.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-content-secondary mb-1">
+                            Supplier
+                          </label>
+                          <input
+                            type="text"
+                            value={formSupplier}
+                            onChange={(e) => setFormSupplier(e.target.value)}
+                            placeholder="Anker Official"
+                            className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary"
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-xs font-medium text-content-secondary mb-1">
-                          Category
+                          Base Price (৳)
                         </label>
-                        <select
-                          value={formCategory}
-                          onChange={(e) =>
-                            setFormCategory(e.target.value as CategoryId)
-                          }
-                          className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary"
-                        >
-                          {CATEGORIES.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
+                        <input
+                          type="number"
+                          required
+                          min={50}
+                          value={formBasePrice}
+                          onChange={(e) => setFormBasePrice(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border font-mono-num text-xs text-content-primary"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-content-secondary mb-1">
-                          Supplier
+                          Shipping (৳)
                         </label>
                         <input
-                          type="text"
-                          value={formSupplier}
-                          onChange={(e) => setFormSupplier(e.target.value)}
-                          placeholder="Anker Official"
-                          className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary"
+                          type="number"
+                          required
+                          min={0}
+                          value={formShipping}
+                          onChange={(e) => setFormShipping(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border font-mono-num text-xs text-content-primary"
                         />
                       </div>
                     </div>
-                  )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-medium text-content-secondary mb-1">
-                        Base Price (৳)
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min={50}
-                        value={formBasePrice}
-                        onChange={(e) => setFormBasePrice(e.target.value)}
-                        className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border font-mono-num text-xs text-content-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-content-secondary mb-1">
-                        Shipping (৳)
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min={0}
-                        value={formShipping}
-                        onChange={(e) => setFormShipping(e.target.value)}
-                        className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border font-mono-num text-xs text-content-primary"
-                      />
+                    {/* Authoritative Landed Quote Summary */}
+                    <div className="p-3 rounded-xl bg-brand-subtle border border-brand-border space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-content-primary">
+                          Landed Total (incl. Duty & VAT)
+                        </span>
+                        <span className="font-mono-num text-sm font-bold text-brand-primary">
+                          {formatPrice(previewQuote.totalLandedBdt)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-content-secondary tabular-nums">
+                        Duty: {formatPrice(previewQuote.customsDutyBdt)} · VAT:{' '}
+                        {formatPrice(previewQuote.vatBdt)} · Rule:{' '}
+                        {previewQuote.ruleVersion}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Clean Landed Total Summary */}
-                  <div className="p-3 rounded-xl bg-brand-subtle border border-brand-border flex items-center justify-between">
-                    <span className="text-xs font-medium text-content-primary">
-                      Landed Total (incl. Duty & VAT)
-                    </span>
-                    <span className="font-mono-num text-sm font-bold text-brand-primary">
-                      {formatPrice(previewLanded)}
-                    </span>
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
+                  {/* Zone 3: Pinned Footer */}
+                  <div className="px-4 pt-3 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-app-border bg-white shrink-0 flex gap-2">
                     <button
                       type="button"
                       onClick={() => setProductSheetOpen(false)}
@@ -1072,6 +1190,64 @@ export const AdminDashboardScreen: React.FC = () => {
                     </button>
                   </div>
                 </motion.form>
+              </div>
+            )}
+
+            {/* Destructive Product Deletion Confirmation Sheet */}
+            {deletingProduct && (
+              <div
+                role="alertdialog"
+                aria-modal="true"
+                aria-label="Confirm product deletion"
+                className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
+              >
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setDeletingProduct(null)}
+                  className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs"
+                />
+                <motion.div
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  className="relative z-10 w-full bg-white rounded-t-3xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl border-t border-app-border space-y-3.5"
+                >
+                  <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-content-primary">
+                      Delete Product from Catalog?
+                    </h3>
+                    <p className="text-xs text-content-secondary leading-relaxed">
+                      Are you sure you want to remove{' '}
+                      <strong className="text-content-primary font-semibold">
+                        {deletingProduct.name}
+                      </strong>
+                      ? This action will be recorded in the admin audit trail.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeletingProduct(null)}
+                      className="flex-1 h-11 rounded-xl border border-app-border text-xs font-semibold text-content-primary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        adminDeleteProduct(deletingProduct.id);
+                        setDeletingProduct(null);
+                      }}
+                      className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors"
+                    >
+                      Confirm Delete
+                    </button>
+                  </div>
+                </motion.div>
               </div>
             )}
           </AnimatePresence>,
