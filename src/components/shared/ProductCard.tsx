@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, Heart, Package, Plus } from 'lucide-react';
+import { Check, Heart, Package, Plus, Star } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { Product } from '../../types/deshimart';
 import { getCanonicalLandedPricing } from '../../utils/pricingEngine';
@@ -26,6 +26,7 @@ export const ProductCardGhost: React.FC = () => {
 
       <div className="p-3 space-y-2">
         <div className="h-4 w-4/5 rounded bg-slate-200 animate-pulse" />
+        <div className="h-3 w-1/2 rounded bg-slate-100 animate-pulse" />
         <div className="pt-2 flex items-center justify-between">
           <div className="h-5 w-20 rounded bg-slate-200 animate-pulse" />
           <div className="h-8 w-8 rounded-lg bg-slate-100 animate-pulse" />
@@ -160,6 +161,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           <h3 className="line-clamp-2 text-content-primary text-[13px] font-semibold leading-[1.35] tracking-[-0.01em] min-h-[35px]">
             {isBn ? product.nameBn : product.name}
           </h3>
+
+          {/* Stock Status & Rating Row */}
+          <div className="mt-1 flex items-center gap-1.5 text-[11px] leading-4 text-content-secondary truncate">
+            <span
+              className={`font-medium ${
+                product.inStock ? 'text-brand-primary' : 'text-promo-accent'
+              }`}
+            >
+              {product.inStock
+                ? isBn
+                  ? 'স্টকে আছে'
+                  : 'In Stock'
+                : isBn
+                ? 'স্টকে নেই'
+                : 'Out of Stock'}
+            </span>
+            <span aria-hidden="true" className="text-content-muted">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-0.5 tabular-nums text-content-primary font-medium">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+              <span>{product.rating.toFixed(1)}</span>
+              {!compact && (
+                <span className="text-content-muted font-normal">
+                  ({product.reviewCount})
+                </span>
+              )}
+            </span>
+          </div>
         </div>
 
         {/* Clean Price & Quick-Add Row */}
