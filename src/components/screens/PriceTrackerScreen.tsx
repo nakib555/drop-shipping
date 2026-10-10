@@ -287,11 +287,11 @@ export const PriceTrackerScreen: React.FC = () => {
       </div>
 
       {/* Bottom Action Buttons */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
           onClick={() => navigateTo('seller_compare')}
-          className="h-12 rounded-lg border border-app-border bg-white text-xs leading-4 font-semibold text-content-primary flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+          className="h-11 rounded-xl border border-app-border bg-white text-xs leading-4 font-semibold text-content-primary flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
         >
           <Scale className="w-4 h-4 text-content-secondary" />
           <span>Compare Routes</span>
@@ -302,7 +302,7 @@ export const PriceTrackerScreen: React.FC = () => {
             addToCart(selectedProduct.id, 1);
             navigateTo('cart');
           }}
-          className="h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
+          className="h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
         >
           <ShoppingCart className="w-4 h-4" />
           <span>Add to Cart</span>

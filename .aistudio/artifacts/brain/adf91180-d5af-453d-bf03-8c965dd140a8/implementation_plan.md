@@ -1,31 +1,38 @@
-# DeshiMart — PWA Mobile Screen Sizing & Standalone Viewport Fix Plan
+# DeshiMart — App-Wide Size, Proportion & Navbar Balance Plan
 
-Fixing the Progressive Web App (PWA) mobile screen sizing, safe-area clipping, black border bleed, and install popup positioning issues.
-
----
-
-## Identified Root Causes
-1. **Constrained `max-w-[430px]` & Dark Outer Frame on Mobile / Standalone PWA**:
-   - `MobileShell.tsx` wraps the app in `bg-slate-900` with `max-w-[430px] sm:h-[92dvh] sm:rounded-3xl`.
-   - On larger phones (e.g., iPhone Pro Max / Plus at 430–448px width, Android phones at 432–480px width, or landscape/foldable devices) and in installed standalone PWA mode (`display-mode: standalone`), this leaves dark/black outer margins around the app instead of filling 100% of the mobile screen edge-to-edge.
-2. **Missing `viewport-fit=cover` & Top Safe-Area Inset**:
-   - `index.html` is missing `viewport-fit=cover` in `<meta name="viewport">`, and `TopAppBar.tsx` has a fixed `h-14` without `pt-[env(safe-area-inset-top,0px)]`, causing the header to collide with the mobile status bar / notch when launched as an installed PWA.
-   - `index.html` `<body>` has `bg-[#0F1D17]` (dark green/black), which causes dark rubber-band overscroll flashes on mobile browsers and PWAs instead of matching `#F8FAFC`.
-3. **PWA Install Pop-Up Overlapping the Top App Bar**:
-   - `PWAInstallPopup.tsx` is positioned at `top-2.5` (`10px`), which sits directly on top of the `56px` (`h-14`) `TopAppBar` and blocks the brand logo, back button, and notification icon.
-4. **Offline / Runtime Image Caching in Service Worker**:
-   - `vite.config.ts` Workbox config only caches Google Fonts at runtime, meaning product images and API responses aren't cached when switching screens in the installed PWA.
+Audited all navigation bars, screens, cards, and interactive controls across the app to ensure balanced proportions, uniform touch targets, and consistent 8pt spacing on all mobile screen widths (`320px` to `440px+`).
 
 ---
 
-## Implementation Plan
-1. **True Full-Screen Mobile & Standalone PWA Layout (`MobileShell.tsx` & `index.css`)**:
-   - Make `MobileShell` fill `100%` width and `100dvh` height edge-to-edge on all mobile/tablet touch viewports and whenever running in `standalone` PWA mode (`w-full h-dvh`), only applying the centered card frame on desktop (`md:max-w-[440px]`) when not in standalone mode.
-   - Lock `html, body, #root` to `width: 100%; height: 100dvh; overflow: hidden; background-color: #F8FAFC; overscroll-behavior: none;` in `index.css` and `index.html` so there is zero horizontal overflow, rubber-band bounce, or dark background bleed.
-2. **Mobile Safe-Area Insets (`index.html`, `TopAppBar.tsx`, `BottomTabBar.tsx`)**:
-   - Update `<meta name="viewport">` in `index.html` to `width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover`.
-   - Update `TopAppBar.tsx` to include top safe-area padding (`pt-[env(safe-area-inset-top,0px)] min-h-14`) and `BottomTabBar.tsx` to respect bottom safe-area insets cleanly.
-3. **Non-Overlapping PWA Install Pop-Up (`PWAInstallPopup.tsx`)**:
-   - Position `PWAInstallPopup` cleanly below the `TopAppBar` (`top-[calc(3.75rem+env(safe-area-inset-top,0px))]`) so it never covers the navigation bar, back button, or notification bell, and make it responsive across narrow (`320px`) to wide mobile screens.
-4. **Enhanced PWA Runtime Caching (`vite.config.ts`)**:
-   - Add Workbox runtime caching (`StaleWhileRevalidate` / `CacheFirst`) for product catalog API requests and remote product images so installed PWAs load images and catalog data smoothly.
+## 1. Top App Bar (`TopAppBar.tsx`) — Balanced Height & Icon Proportions
+- **Consistent Safe-Area Inner Row**:
+  - Separate the outer `<header>` safe-area top padding (`pt-[env(safe-area-inset-top,0px)]`) from a dedicated inner `h-14` (`56px`) flex row so the header content is always vertically centered regardless of device notch size.
+- **Uniform `36px × 36px` (`w-9 h-9`) Action Buttons & Badges**:
+  - Standardize every right-side icon button (Search, Wishlist, Share, Cart, Notifications, Settings) to `w-9 h-9 rounded-xl` with uniform `w-[18px] h-[18px]` icons and identical `h-4 min-w-4 px-1 text-[10px]` count badges (fixing the mismatched `w-10 h-10` vs `w-9 h-9` buttons and `15px` vs `16px` badges).
+  - Balance the left Brand mark (`w-8 h-8 rounded-xl`), title (`text-[15px] font-bold`), and location chip (`h-7 px-2.5 rounded-lg text-xs`) so they align on the same horizontal centerline as the right-side currency/language pill (`h-8 px-2.5 rounded-lg`) and notification bell.
+
+---
+
+## 2. Bottom Navigation Bar (`BottomTabBar.tsx`) — Balanced 6-Tab Ergonomics
+- **Dedicated `58px` Inner Tab Grid + Safe-Area Footer**:
+  - Separate the safe-area bottom inset from the `h-[58px]` 6-column navigation row (`px-1.5`) so tabs never stretch unevenly on phones with home indicator bars.
+- **Harmonized Icon & Label Proportions**:
+  - Use consistent `w-[19px] h-[19px]` icons, `text-[10px] leading-3.5` labels, and a centered `w-5 h-[2.5px]` top active indicator bar so all 6 tabs (`Home`, `Categories`, `Wishlist`, `Orders`, `Cart`, `Profile`) fit comfortably down to `320px` screens without crowding or truncation.
+
+---
+
+## 3. Product Detail Screen (`HybridBentoPdpModules.tsx`) — Clean Header & Balanced Controls
+- **Remove Demo Switcher Noise from Breadcrumb**:
+  - Remove the internal `Electronics | Fashion` demo switcher buttons (`onSwitchDemoProduct`) from the top of `PdpCoreInfoBlock` so the category breadcrumb (`Category · Origin`) has clean breathing room and never wraps awkwardly on mobile.
+- **Streamline Rating & Stock Metadata Row**:
+  - Remove the noisy `(30 units)` warehouse count and `SKU: ...` string from the rating line beneath the product title (keeping `★ 4.8 (124) · In Stock` on the left and `Price History →` on the right, since SKU is already inside the Technical Specifications accordion).
+- **Balanced Variant & Quantity Card**:
+  - Standardize color and size/configuration chips to a uniform `h-9 px-3 rounded-lg text-xs` height so variant rows look balanced and compact rather than oversized.
+
+---
+
+## 4. Home Screen & Tool Screens (`HomeScreen.tsx`, `PriceTrackerScreen.tsx`, `SellerCompareScreen.tsx`)
+- **Home Screen 3-Tool Shortcut Strip (`HomeScreen.tsx`)**:
+  - Align the 3 shortcut cards (`Price History`, `Route Compare`, `Order Tracking` — renaming `Order Radar` to `Order Tracking` for consistency) with centered horizontal icon + label or balanced vertical padding (`p-3 rounded-xl`) so all 3 cards have identical height and visual weight.
+- **Button Height Consistency (`h-11` / `44px`)**:
+  - Standardize primary/secondary action buttons in `PriceTrackerScreen.tsx` (`Compare Routes` / `Add to Cart`) from `h-12 rounded-lg` to `h-11 rounded-xl` (`gap-2.5`) to match `CheckoutFlowScreen`, `SellerCompareScreen`, and `AccountSupportScreen`.

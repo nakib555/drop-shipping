@@ -116,17 +116,6 @@ export const ProductDetailScreen: React.FC = () => {
     [selectedProduct.category]
   );
 
-  // Representative Electronics & Fashion products to demonstrate component reusability (Section 8.6)
-  const demoCategoryProducts = useMemo(() => {
-    const elec =
-      products.find((p) => p.category === 'electronics') || products[0];
-    const fash =
-      products.find((p) => p.category === 'fashion' && p.sizes && p.sizes.length > 0) ||
-      products.find((p) => p.category === 'fashion') ||
-      products[1];
-    return { elec, fash };
-  }, [products]);
-
   const similarProducts = useMemo(
     () =>
       products
@@ -274,11 +263,6 @@ export const ProductDetailScreen: React.FC = () => {
               })
             }
             onOpenPriceHistory={() => navigateTo('price_tracker')}
-            demoElectronicsProduct={demoCategoryProducts.elec}
-            demoFashionProduct={demoCategoryProducts.fash}
-            onSwitchDemoProduct={(productId) =>
-              navigateTo('product_detail', { productId })
-            }
           />
 
           {/* D. PRODUCT VARIANT SELECTION (Unboxed Compact Chips + Unified Mobile Quantity, Landed Price & Purchase Actions) */}

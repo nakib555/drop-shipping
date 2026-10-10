@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowRight,
   Check,
@@ -19,6 +19,7 @@ import { CATEGORIES } from '../../data/catalogData';
 import { CategoryId } from '../../types/deshimart';
 import {
   doesProductArriveThisWeek,
+  EXCHANGE_RATE_SNAPSHOT,
   getCanonicalLandedPricing,
   isVerifiedQualitySupplier,
 } from '../../utils/pricingEngine';
@@ -47,6 +48,7 @@ export const HomeScreen: React.FC = () => {
     setSmartFilters,
     resetSmartFilters,
     language,
+    currency,
     formatPrice,
     orders,
   } = useDeshiMart();
@@ -64,20 +66,84 @@ export const HomeScreen: React.FC = () => {
   const isFetchingPageRef = useRef<boolean>(false);
   const filterEpochRef = useRef<number>(0);
 
-  // Horizontal Featured Deals Slider Ref
+  // 1. Compact Hero Carousel State (respects reduced motion, visibilityState, and user interaction)
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [heroDirection, setHeroDirection] = useState(1);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
+
+  // Horizontal Featured Landed Drops Slider Ref
   const dealsSliderRef = useRef<HTMLDivElement | null>(null);
 
   const latestOrderId = orders[0]?.id || 'DM123456';
-  const heroProduct = products[0];
 
-  const scrollToCatalog = () => {
-    const catalogEl = document.getElementById('home-catalog-section');
-    if (catalogEl) {
-      catalogEl.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-    } else {
-      navigateTo('category_products', { categoryId: 'all' });
-    }
+  const heroSlides = useMemo(
+    () => [
+      {
+        id: 'hero-direct',
+        title: isBn
+          ? 'গ্লোবাল পণ্য, সরাসরি আপনার দরজায়'
+          : 'Global Products, Delivered to You',
+        subtitle: isBn
+          ? 'কাস্টমস ও ডেলিভারি চার্জসহ সম্পূর্ণ মূল্য।'
+          : 'All-inclusive pricing with customs & delivery included.',
+        primaryLabel: isBn ? 'পণ্য দেখুন' : 'Shop Now',
+        primaryAction: () => {
+          const catalogEl = document.getElementById('home-catalog-section');
+          if (catalogEl) {
+            catalogEl.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+          } else {
+            navigateTo('category_products', { categoryId: 'all' });
+          }
+        },
+        product: products[0],
+      },
+      {
+        id: 'hero-price-drop',
+        title: isBn
+          ? '৩০ দিনের দামের ইতিহাস দেখুন'
+          : '30-Day Price History',
+        subtitle: isBn
+          ? 'কেনার আগে দামের পরিবর্তন যাচাই করুন।'
+          : 'Track price drops before you buy.',
+        primaryLabel: isBn ? 'প্রাইস হিস্ট্রি' : 'View Trends',
+        primaryAction: () => navigateTo('price_tracker'),
+        product: products[1] || products[0],
+      },
+      {
+        id: 'hero-fast-air',
+        title: isBn
+          ? 'দ্রুত ও সাশ্রয়ী শিপিং রুট'
+          : 'Flexible Delivery Options',
+        subtitle: isBn
+          ? 'ক্যাশ অন ডেলিভারি, বিকাশ, নগদ ও কার্ড পেমেন্ট।'
+          : 'Pay with Cash on Delivery, bKash, Nagad, or Card.',
+        primaryLabel: isBn ? 'রুট তুলনা' : 'Compare Routes',
+        primaryAction: () => navigateTo('seller_compare'),
+        product: products[3] || products[0],
+      },
+    ],
+    [isBn, navigateTo, prefersReducedMotion, products]
+  );
+
+  useEffect(() => {
+    if (isHeroPaused || prefersReducedMotion) return;
+    const timer = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+      setHeroDirection(1);
+      setHeroIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 5500);
+    return () => window.clearInterval(timer);
+  }, [isHeroPaused, prefersReducedMotion, heroSlides.length]);
+
+  const goToHeroSlide = (nextIdx: number) => {
+    setHeroDirection(nextIdx > heroIndex ? 1 : -1);
+    setHeroIndex(nextIdx);
   };
+
+  const activeSlide = heroSlides[heroIndex] || heroSlides[0];
+  const heroProduct = activeSlide.product;
 
   // Deduplicated catalog products by stable product ID
   const uniqueCatalogProducts = useMemo(() => {
@@ -180,7 +246,7 @@ export const HomeScreen: React.FC = () => {
   );
   const hasMoreProducts = displayedProducts.length > visibleLimit;
 
-  // Featured Deals: Genuine discounts >= 15%
+  // Featured Landed Drops: Only genuine discounts >= 15% where originalLandedBdt > estimatedLandedBdt
   const flashDeals = useMemo(() => {
     return uniqueCatalogProducts
       .map((product) => ({
@@ -306,7 +372,7 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div className="p-4 space-y-5 pb-8 bg-app-bg">
-      {/* 1. Product Search */}
+      {/* 1. Global Product Search with Suggestions, Clear Action & Live Status */}
       <div className="relative z-20">
         <div className="relative flex items-center">
           <Search
@@ -319,7 +385,7 @@ export const HomeScreen: React.FC = () => {
             aria-label={
               isBn
                 ? 'পণ্য, ব্র্যান্ড বা ক্যাটাগরি খুঁজুন'
-                : 'Search products, brands, or categories'
+                : 'Search global products, brands, or categories'
             }
             value={searchQuery}
             onFocus={() => setIsSearchFocused(true)}
@@ -332,7 +398,7 @@ export const HomeScreen: React.FC = () => {
             placeholder={
               isBn
                 ? 'পণ্য, ব্র্যান্ড বা ক্যাটাগরি খুঁজুন...'
-                : 'Search products, brands, or categories...'
+                : 'Search global products, brands, or categories...'
             }
             className="w-full h-11 pl-10 pr-16 rounded-xl bg-white border border-app-border text-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:border-brand-primary transition-colors"
           />
@@ -384,68 +450,131 @@ export const HomeScreen: React.FC = () => {
         )}
       </div>
 
-      {/* 2. Clean Static Hero Banner */}
+      {/* 2. Clean Promotional Hero Banner */}
       {!searchQuery.trim() && (
         <section
-          aria-label={isBn ? 'প্রধান ব্যানার' : 'Featured Banner'}
-          className="rounded-2xl bg-brand-primary text-white p-4 flex items-center justify-between gap-3.5"
+          aria-label={isBn ? 'ফিচার্ড হাইলাইটস' : 'Featured Highlights'}
+          onMouseEnter={() => setIsHeroPaused(true)}
+          onMouseLeave={() => setIsHeroPaused(false)}
+          onTouchStart={() => setIsHeroPaused(true)}
+          onTouchEnd={() => setIsHeroPaused(false)}
+          onFocusCapture={() => setIsHeroPaused(true)}
+          onBlurCapture={() => setIsHeroPaused(false)}
+          className="relative overflow-hidden rounded-2xl bg-brand-primary text-white p-4 select-none"
         >
-          <div className="flex-1 min-w-0 space-y-2.5">
-            <h2 className="text-base sm:text-lg leading-snug font-bold tracking-tight text-white">
-              {isBn
-                ? 'গ্লোবাল শপিং, ডেলিভারিসহ সম্পূর্ণ মূল্য'
-                : 'Global Shopping, All-Inclusive Pricing'}
-            </h2>
-
-            <div>
-              <button
-                type="button"
-                onClick={scrollToCatalog}
-                className="h-9 px-4 rounded-xl bg-white text-brand-primary hover:bg-brand-subtle font-semibold text-xs inline-flex items-center gap-1.5 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <span>{isBn ? 'কেনাকাটা শুরু করুন' : 'Shop Now'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {heroProduct && (
-            <button
-              type="button"
-              onClick={() =>
-                navigateTo('product_detail', { productId: heroProduct.id })
+          <AnimatePresence mode="wait" custom={heroDirection} initial={false}>
+            <motion.div
+              key={activeSlide.id}
+              custom={heroDirection}
+              initial={
+                prefersReducedMotion
+                  ? { opacity: 1, x: 0 }
+                  : { opacity: 0, x: heroDirection > 0 ? 24 : -24 }
               }
-              aria-label={isBn ? heroProduct.nameBn : heroProduct.name}
-              className="w-20 h-20 shrink-0 rounded-xl bg-white p-1.5 overflow-hidden shadow-xs hover:scale-[1.02] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              animate={{ opacity: 1, x: 0 }}
+              exit={
+                prefersReducedMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, x: heroDirection > 0 ? -24 : 24 }
+              }
+              transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
+              drag={prefersReducedMotion ? false : 'x'}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.16}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -36) {
+                  setHeroDirection(1);
+                  setHeroIndex((prev) => (prev + 1) % heroSlides.length);
+                } else if (info.offset.x > 36) {
+                  setHeroDirection(-1);
+                  setHeroIndex(
+                    (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
+                  );
+                }
+              }}
+              className="flex items-center justify-between gap-3.5 cursor-grab active:cursor-grabbing"
             >
-              <img
-                src={heroProduct.image}
-                alt={isBn ? heroProduct.nameBn : heroProduct.name}
-                width={80}
-                height={80}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-contain"
-              />
-            </button>
-          )}
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <h2 className="text-base sm:text-lg leading-snug font-bold tracking-tight text-white line-clamp-2">
+                  {activeSlide.title}
+                </h2>
+
+                <p className="text-xs leading-relaxed text-emerald-50/90 line-clamp-1">
+                  {activeSlide.subtitle}
+                </p>
+
+                <div className="pt-1.5">
+                  <button
+                    type="button"
+                    onClick={activeSlide.primaryAction}
+                    className="h-9 px-4 rounded-xl bg-white text-brand-primary hover:bg-brand-subtle font-semibold text-xs inline-flex items-center gap-1.5 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    <span>{activeSlide.primaryLabel}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {heroProduct && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigateTo('product_detail', { productId: heroProduct.id })
+                  }
+                  aria-label={isBn ? heroProduct.nameBn : heroProduct.name}
+                  className="w-20 h-20 sm:w-22 sm:h-22 shrink-0 rounded-xl bg-white p-1.5 overflow-hidden shadow-xs hover:scale-[1.02] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <img
+                    src={heroProduct.image}
+                    alt={isBn ? heroProduct.nameBn : heroProduct.name}
+                    width={88}
+                    height={88}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain"
+                  />
+                </button>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Quiet Pagination Dots */}
+          <div className="flex items-center justify-center gap-1.5 pt-3">
+            {heroSlides.map((slide, idx) => {
+              const active = idx === heroIndex;
+              return (
+                <button
+                  key={slide.id}
+                  type="button"
+                  aria-label={
+                    isBn ? `স্লাইড ${idx + 1}` : `Go to slide ${idx + 1}`
+                  }
+                  aria-current={active ? 'true' : undefined}
+                  onClick={() => goToHeroSlide(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-200 ${
+                    active ? 'w-5 bg-white' : 'w-1.5 bg-white/35 hover:bg-white/60'
+                  }`}
+                />
+              );
+            })}
+          </div>
         </section>
       )}
 
-      {/* 3. Three-Tool Shortcut Strip */}
+      {/* 3. Three-Tool Shortcut Strip (Price History, Route Compare, Order Tracking) */}
       {!searchQuery.trim() && (
         <section
           aria-label={isBn ? 'শপিং টুলস' : 'Shopping Tools'}
-          className="grid grid-cols-3 gap-2 sm:gap-2.5"
+          className="grid grid-cols-3 gap-2.5"
         >
           <button
             type="button"
             onClick={() => navigateTo('price_tracker')}
-            className="p-2.5 sm:p-3 rounded-2xl bg-white border border-app-border hover:border-app-borderStrong flex flex-col items-start gap-1.5 transition-colors text-left min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            className="p-3 rounded-xl bg-white border border-app-border hover:border-app-borderStrong flex items-center gap-2 transition-colors text-left min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
           >
-            <div className="w-8 h-8 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
               <TrendingDown className="w-4 h-4" />
             </div>
-            <span className="text-[11px] sm:text-xs font-semibold text-content-primary truncate w-full">
+            <span className="text-xs font-semibold text-content-primary leading-tight line-clamp-2">
               {isBn ? 'প্রাইস হিস্ট্রি' : 'Price History'}
             </span>
           </button>
@@ -453,12 +582,12 @@ export const HomeScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('seller_compare')}
-            className="p-2.5 sm:p-3 rounded-2xl bg-white border border-app-border hover:border-app-borderStrong flex flex-col items-start gap-1.5 transition-colors text-left min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            className="p-3 rounded-xl bg-white border border-app-border hover:border-app-borderStrong flex items-center gap-2 transition-colors text-left min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
           >
-            <div className="w-8 h-8 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
               <Scale className="w-4 h-4" />
             </div>
-            <span className="text-[11px] sm:text-xs font-semibold text-content-primary truncate w-full">
+            <span className="text-xs font-semibold text-content-primary leading-tight line-clamp-2">
               {isBn ? 'রুট তুলনা' : 'Route Compare'}
             </span>
           </button>
@@ -466,28 +595,35 @@ export const HomeScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateTo('order_tracking', { orderId: latestOrderId })}
-            className="p-2.5 sm:p-3 rounded-2xl bg-white border border-app-border hover:border-app-borderStrong flex flex-col items-start gap-1.5 transition-colors text-left min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            className="p-3 rounded-xl bg-white border border-app-border hover:border-app-borderStrong flex items-center gap-2 transition-colors text-left min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
           >
-            <div className="w-8 h-8 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-subtle text-brand-primary flex items-center justify-center shrink-0">
               <Truck className="w-4 h-4" />
             </div>
-            <span className="text-[11px] sm:text-xs font-semibold text-content-primary truncate w-full">
-              {isBn ? 'অর্ডার ট্র্যাক' : 'Track Order'}
+            <span className="text-xs font-semibold text-content-primary leading-tight line-clamp-2">
+              {isBn ? 'অর্ডার ট্র্যাক' : 'Order Tracking'}
             </span>
           </button>
         </section>
       )}
 
-      {/* 4. Featured Deals Horizontal Rail */}
+      {/* 4. Featured Landed Drops Horizontal Rail (Placed above the infinite catalog grid so deals are never buried) */}
       {!searchQuery.trim() && flashDeals.length > 0 && (
         <section
-          aria-label={isBn ? 'সেরা ডিল' : 'Featured Deals'}
+          aria-label={isBn ? 'সেরা ল্যান্ডেড ডিল' : 'Featured Landed Drops'}
           className="space-y-2.5"
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-content-primary">
-              {isBn ? 'সেরা ডিল' : 'Featured Deals'}
-            </h2>
+            <div>
+              <h2 className="text-sm font-bold text-content-primary">
+                {isBn ? 'সেরা ল্যান্ডেড ডিল' : 'Featured Landed Drops'}
+              </h2>
+              <p className="text-[11px] text-content-secondary">
+                {isBn
+                  ? 'যাচাইকৃত ১৫%+ ল্যান্ডেড মূল্য ছাড়'
+                  : 'Verified 15%+ savings on estimated landed price'}
+              </p>
+            </div>
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -663,9 +799,18 @@ export const HomeScreen: React.FC = () => {
         className="space-y-3"
       >
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-content-primary">
-            {isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Catalog'}
-          </h2>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-content-primary">
+              {isBn ? 'গ্লোবাল ক্যাটালগ' : 'Global Catalog'}
+            </h2>
+            <p className="text-[11px] text-content-secondary truncate">
+              {isBn
+                ? 'আনুমানিক কাস্টমস ও ডেলিভারি চার্জসহ ল্যান্ডেড মূল্য'
+                : currency === 'USD'
+                ? `Est. landed prices ($1 = ৳${EXCHANGE_RATE_SNAPSHOT.bdtPerUsd} · Settles in BDT)`
+                : 'Estimated total landed prices including freight & customs'}
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => navigateTo('categories')}
@@ -737,12 +882,12 @@ export const HomeScreen: React.FC = () => {
               },
               {
                 key: 'lowestLandedCost',
-                label: isBn ? 'সবচেয়ে কম দাম' : 'Lowest price',
+                label: isBn ? 'সবচেয়ে কম ল্যান্ডেড দাম' : 'Lowest landed price',
                 active: smartFilters.lowestLandedCost,
               },
               {
                 key: 'verifiedOnly',
-                label: isBn ? 'ভেরিফায়েড সেলার' : 'Verified seller',
+                label: isBn ? 'ভেরিফায়েড সাপ্লায়ার' : 'Verified supplier',
                 active: smartFilters.verifiedOnly,
               },
             ] as const

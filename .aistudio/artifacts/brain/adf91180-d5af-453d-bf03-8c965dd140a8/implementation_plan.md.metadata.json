@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan to fix PWA mobile viewport sizing, safe-area insets (notch/home indicator), max-w-[430px] black sidebars on wide mobile devices, html/body background bleed, and popup overlap with the TopAppBar.",
-  "updatedAt":  "2026-10-10T13:11:57.677701561Z",
+  "summary":  "Plan to balance proportions, heights, spacing, and typography across TopAppBar, BottomTabBar, HomeScreen, ProductDetailScreen, and utility screens for a cohesive 8pt mobile layout.",
+  "updatedAt":  "2026-10-10T13:21:36.770556393Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

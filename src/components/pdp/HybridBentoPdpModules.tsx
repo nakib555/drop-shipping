@@ -172,9 +172,6 @@ export interface PdpCoreInfoBlockProps {
   onCategoryClick: () => void;
   onScrollToReviews: () => void;
   onOpenPriceHistory: () => void;
-  demoElectronicsProduct?: Product;
-  demoFashionProduct?: Product;
-  onSwitchDemoProduct: (productId: string) => void;
 }
 
 export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
@@ -186,77 +183,38 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
   onCategoryClick,
   onScrollToReviews,
   onOpenPriceHistory,
-  demoElectronicsProduct,
-  demoFashionProduct,
-  onSwitchDemoProduct,
 }) => {
   return (
-    <section aria-label="Core Product Information" className="space-y-2.5">
-      {/* 1. Category Breadcrumb + Subtle 2-Tab Category Switcher */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-xs text-content-secondary min-w-0 truncate">
-          <button
-            type="button"
-            onClick={onCategoryClick}
-            className="font-medium text-brand-primary hover:underline truncate focus-visible:outline-none"
-          >
-            {categoryLabel}
-          </button>
-          <span aria-hidden="true" className="text-content-muted">
-            ·
-          </span>
-          <span className="truncate text-content-secondary">
-            {product.originLabel.split('·')[0].trim()}
-          </span>
-        </div>
-
-        {/* Clean 2-Option Category Switcher (Electronics / Fashion) */}
-        {demoElectronicsProduct && demoFashionProduct && (
-          <div
-            role="group"
-            aria-label="Preview category layout"
-            className="flex items-center gap-1 text-[11px] shrink-0"
-          >
-            <button
-              type="button"
-              onClick={() => onSwitchDemoProduct(demoElectronicsProduct.id)}
-              className={`px-2 py-0.5 rounded-md transition-colors ${
-                product.category === 'electronics'
-                  ? 'bg-brand-subtle text-brand-primary font-semibold'
-                  : 'text-content-muted hover:text-content-secondary'
-              }`}
-            >
-              Electronics
-            </button>
-            <button
-              type="button"
-              onClick={() => onSwitchDemoProduct(demoFashionProduct.id)}
-              className={`px-2 py-0.5 rounded-md transition-colors ${
-                product.category === 'fashion'
-                  ? 'bg-brand-subtle text-brand-primary font-semibold'
-                  : 'text-content-muted hover:text-content-secondary'
-              }`}
-            >
-              Fashion
-            </button>
-          </div>
-        )}
+    <section aria-label="Core Product Information" className="space-y-2">
+      {/* 1. Clean Category & Origin Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-xs text-content-secondary min-w-0 truncate">
+        <button
+          type="button"
+          onClick={onCategoryClick}
+          className="font-medium text-brand-primary hover:underline truncate focus-visible:outline-none"
+        >
+          {categoryLabel}
+        </button>
+        <span aria-hidden="true" className="text-content-muted">
+          ·
+        </span>
+        <span className="truncate text-content-secondary">
+          {product.originLabel.split('·')[0].trim()}
+        </span>
       </div>
 
-      {/* 2. Product Name (Supports two-line titles cleanly without uncollapsed subtitle noise) */}
-      <div>
-        <h1 className="text-[19px] leading-[1.3] font-semibold tracking-tight text-content-primary">
-          {language === 'BN' ? product.nameBn : product.name}
-        </h1>
-      </div>
+      {/* 2. Product Name */}
+      <h1 className="text-lg sm:text-[19px] leading-snug font-bold tracking-tight text-content-primary">
+        {language === 'BN' ? product.nameBn : product.name}
+      </h1>
 
-      {/* 3 & 6. Star Rating, Review Count, Stock Status & Price History Link */}
+      {/* 3. Star Rating, Review Count, Stock Status & Price History Link */}
       <div className="flex items-center justify-between gap-2 text-xs pt-0.5">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 min-w-0 truncate">
           <button
             type="button"
             onClick={onScrollToReviews}
-            className="inline-flex items-center gap-1 text-content-primary hover:underline focus-visible:outline-none"
+            className="inline-flex items-center gap-1 text-content-primary hover:underline focus-visible:outline-none shrink-0"
           >
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span className="tabular-nums font-semibold">
@@ -270,40 +228,33 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
             ·
           </span>
           <span
-            className={`font-medium ${
-              product.inStock ? 'text-brand-primary' : 'text-content-muted'
+            className={`font-medium truncate ${
+              product.inStock ? 'text-brand-primary' : 'text-promo-accent'
             }`}
           >
-            {product.availabilityStatus || (product.inStock ? 'In Stock' : 'Out of Stock')}
-            {typeof product.stockCount === 'number' && product.stockCount > 0
-              ? ` (${product.stockCount} units)`
-              : ''}
+            {product.inStock
+              ? language === 'BN'
+                ? 'স্টকে আছে'
+                : 'In Stock'
+              : language === 'BN'
+              ? 'স্টকে নেই'
+              : 'Out of Stock'}
           </span>
-          {product.sku && (
-            <>
-              <span aria-hidden="true" className="text-content-muted">
-                ·
-              </span>
-              <span className="text-[11px] text-content-muted tabular-nums">
-                SKU: {product.sku}
-              </span>
-            </>
-          )}
         </div>
 
         <button
           type="button"
           onClick={onOpenPriceHistory}
-          className="text-xs font-medium text-brand-primary hover:underline shrink-0"
+          className="text-xs font-semibold text-brand-primary hover:underline shrink-0"
         >
           Price History →
         </button>
       </div>
 
-      {/* 4 & 5. Prominent Current Selling Price, Original Price & Calm Discount Pill */}
+      {/* 4. Prominent Selling Price & Discount Badge */}
       <div className="pt-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-[24px] leading-7 font-bold tracking-tight tabular-nums text-content-primary">
+          <span className="text-2xl leading-7 font-bold tracking-tight tabular-nums text-content-primary">
             {formatPrice(totalLandedBdt)}
           </span>
           {product.discountPercent > 0 && (
@@ -318,7 +269,7 @@ export const PdpCoreInfoBlock: React.FC<PdpCoreInfoBlockProps> = ({
           )}
         </div>
         <span className="text-[11px] text-content-secondary shrink-0">
-          Customs & VAT included
+          Duty & VAT incl.
         </span>
       </div>
     </section>
@@ -377,7 +328,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
   return (
     <section
       aria-label="Product Variant Selection"
-      className="pt-5 border-t border-app-border space-y-4"
+      className="pt-4 border-t border-app-border space-y-3.5"
     >
       {/* 1. Color / Material Swatches */}
       <div>
@@ -402,7 +353,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
                 type="button"
                 aria-pressed={active}
                 onClick={() => onSelectColor(c.name)}
-                className={`min-h-[42px] px-3 rounded-lg border flex items-center gap-2 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                className={`h-9 px-3 rounded-lg border flex items-center gap-2 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                   active
                     ? 'border-brand-primary bg-brand-subtle text-brand-primary font-semibold'
                     : 'border-app-border bg-white text-content-primary hover:border-app-borderStrong'
@@ -453,7 +404,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
                   onClick={() => {
                     if (!isUnavailable) onSelectSize(sz);
                   }}
-                  className={`min-w-[44px] h-10 px-3 rounded-lg tabular-nums text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  className={`min-w-[44px] h-9 px-3 rounded-lg tabular-nums text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                     isUnavailable
                       ? 'bg-slate-50 text-content-muted border-app-border line-through cursor-not-allowed opacity-60'
                       : active
@@ -496,7 +447,7 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
                   onClick={() => {
                     if (!isUnavailable) onSelectEdition(ed);
                   }}
-                  className={`min-h-[40px] px-3 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  className={`h-9 px-3 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                     isUnavailable
                       ? 'bg-slate-50 text-content-muted border-app-border line-through cursor-not-allowed opacity-60'
                       : active
