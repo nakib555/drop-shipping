@@ -465,8 +465,17 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [mergeProductsIntoCatalog]);
 
-  // Initial multi-source free API fetch on mount
+  // Initial multi-source free API fetch on mount + purge any legacy mode keys
   useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem('deshimart_experience_mode');
+        window.localStorage.removeItem('deshimart_experience_mode_v1');
+        window.localStorage.removeItem('deshimart_cultural_vibe');
+      }
+    } catch {
+      // Ignore storage access errors in restricted webviews
+    }
     loadApiCatalog(false);
   }, [loadApiCatalog]);
 
