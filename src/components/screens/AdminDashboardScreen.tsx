@@ -31,7 +31,6 @@ export const AdminDashboardScreen: React.FC = () => {
     products,
     orders,
     promoVouchers,
-    adminAuditLog,
     createPromoVoucher,
     togglePromoVoucher,
     adminAddProduct,
@@ -346,101 +345,56 @@ export const AdminDashboardScreen: React.FC = () => {
       {/* ===================== TAB 1: OVERVIEW ===================== */}
       {activeTab === 'overview' && (
         <div className="space-y-4">
-          {/* Clean 2x2 Summary Grid (Single-Elevation, Zero Decorative Clutter) */}
+          {/* Clean 2x2 Summary Grid (1 Label, 1 Primary Figure, 1 Concise Sub-label) */}
           <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
             <div className="grid grid-cols-2 divide-x divide-y divide-app-border">
               <div className="p-4">
-                <p className="text-xs text-content-secondary">
-                  {isBn ? 'মোট অর্ডার মূল্য' : 'Gross Order Volume'}
+                <p className="text-xs text-content-secondary truncate">
+                  {isBn ? 'মোট অর্ডার মূল্য' : 'Gross Volume'}
                 </p>
-                <p className="font-mono-num text-lg font-bold text-content-primary mt-1">
+                <p className="font-mono-num text-lg font-bold text-content-primary mt-1 truncate">
                   {formatPrice(metrics.totalRevenueBdt)}
                 </p>
-                <p className="text-[11px] text-content-secondary mt-0.5 tabular-nums">
-                  Settled: {formatPrice(metrics.settledRevenueBdt)} · COD Due:{' '}
-                  {formatPrice(metrics.pendingCodBdt)}
+                <p className="text-[11px] text-content-secondary mt-0.5 tabular-nums truncate">
+                  {isBn ? 'নিষ্পত্তি:' : 'Settled:'} {formatPrice(metrics.settledRevenueBdt)}
                 </p>
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-content-secondary">
-                  {isBn ? 'অর্ডার ফুলফিলমেন্ট' : 'Order Fulfillment'}
+                <p className="text-xs text-content-secondary truncate">
+                  {isBn ? 'অর্ডার ফুলফিলমেন্ট' : 'Fulfillment'}
                 </p>
-                <p className="font-mono-num text-lg font-bold text-content-primary mt-1">
+                <p className="font-mono-num text-lg font-bold text-content-primary mt-1 truncate">
                   {metrics.processingCount} {isBn ? 'পেন্ডিং' : 'Pending'}
                 </p>
-                <p className="text-xs text-content-secondary mt-0.5">
-                  {metrics.shippedCount} shipped · {metrics.deliveredCount} delivered
+                <p className="text-[11px] text-content-secondary mt-0.5 tabular-nums truncate">
+                  {metrics.shippedCount} {isBn ? 'পথে আছে' : 'in transit'}
                 </p>
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-content-secondary">
-                  {isBn ? 'ক্যাটালগ স্টক' : 'Catalog Inventory'}
+                <p className="text-xs text-content-secondary truncate">
+                  {isBn ? 'ক্যাটালগ স্টক' : 'Inventory'}
                 </p>
-                <p className="font-mono-num text-lg font-bold text-content-primary mt-1">
+                <p className="font-mono-num text-lg font-bold text-content-primary mt-1 truncate">
                   {metrics.inStockCount} {isBn ? 'স্টকে আছে' : 'In Stock'}
                 </p>
-                <p className="text-xs text-content-secondary mt-0.5">
-                  {products.length} total products
+                <p className="text-[11px] text-content-secondary mt-0.5 tabular-nums truncate">
+                  {products.length} {isBn ? 'মোট পণ্য' : 'total SKUs'}
                 </p>
               </div>
 
               <div className="p-4">
-                <p className="text-xs text-content-secondary">
-                  {isBn ? 'সক্রিয় ভাউচার' : 'Active Vouchers'}
+                <p className="text-xs text-content-secondary truncate">
+                  {isBn ? 'প্রোমো ভাউচার' : 'Promotions'}
                 </p>
-                <p className="font-mono-num text-lg font-bold text-brand-primary mt-1">
+                <p className="font-mono-num text-lg font-bold text-brand-primary mt-1 truncate">
                   {metrics.activeVouchersCount} {isBn ? 'সক্রিয়' : 'Active'}
                 </p>
-                <p className="text-xs text-content-secondary mt-0.5">
-                  {promoVouchers.length} configured
+                <p className="text-[11px] text-content-secondary mt-0.5 tabular-nums truncate">
+                  {promoVouchers.length} {isBn ? 'মোট কোড' : 'total codes'}
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Recent Orders Preview List */}
-          <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
-            <div className="px-4 py-3.5 border-b border-app-border flex items-center justify-between">
-              <h3 className="text-sm font-bold text-content-primary">
-                {isBn ? 'সাম্প্রতিক অর্ডার' : 'Recent Orders'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setActiveTab('orders')}
-                className="text-xs font-semibold text-brand-primary hover:underline"
-              >
-                {isBn ? `সব দেখুন (${orders.length})` : `View All (${orders.length})`}
-              </button>
-            </div>
-            <div className="divide-y divide-app-border">
-              {orders.slice(0, 3).map((ord) => (
-                <div
-                  key={ord.id}
-                  className="px-4 py-3 flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <span className="font-mono-num font-bold text-content-primary">
-                        #{ord.id}
-                      </span>
-                      <span aria-hidden="true" className="text-content-muted">
-                        ·
-                      </span>
-                      <span className="text-content-secondary truncate">
-                        {ord.shippingAddress.fullName}
-                      </span>
-                    </div>
-                    <p className="text-xs text-content-secondary mt-0.5">
-                      {ord.status} · {ord.items.length} item(s)
-                    </p>
-                  </div>
-                  <span className="font-mono-num text-xs font-bold text-content-primary shrink-0">
-                    {formatPrice(ord.totalBdt)}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -470,33 +424,55 @@ export const AdminDashboardScreen: React.FC = () => {
             </button>
           </div>
 
-          {/* Immutable Operations Audit Log */}
+          {/* Recent Orders Preview List */}
           <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
-            <div className="px-4 py-3 border-b border-app-border flex items-center justify-between">
-              <h3 className="text-xs font-bold text-content-primary">
-                {isBn ? 'অ্যাডমিন অপারেশন অডিট লগ' : 'Admin Operations Audit Trail'}
+            <div className="px-4 py-3.5 border-b border-app-border flex items-center justify-between">
+              <h3 className="text-sm font-bold text-content-primary">
+                {isBn ? 'সাম্প্রতিক অর্ডার' : 'Recent Orders'}
               </h3>
-              <span className="text-[10px] font-mono-num text-content-muted">
-                {adminAuditLog.length} events
-              </span>
+              <button
+                type="button"
+                onClick={() => setActiveTab('orders')}
+                className="text-xs font-semibold text-brand-primary hover:underline"
+              >
+                {isBn ? `সব দেখুন (${orders.length})` : `View All (${orders.length})`}
+              </button>
             </div>
-            <div className="divide-y divide-app-border max-h-48 overflow-y-auto no-scrollbar">
-              {adminAuditLog.slice(0, 8).map((entry) => (
-                <div key={entry.id} className="px-4 py-2.5 text-xs space-y-0.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono-num text-[10px] font-semibold text-brand-primary">
-                      {entry.action}
-                    </span>
-                    <span className="text-[10px] font-mono-num text-content-muted">
-                      {entry.timestamp}
-                    </span>
+            <div className="divide-y divide-app-border">
+              {orders.slice(0, 4).map((ord) => (
+                <div
+                  key={ord.id}
+                  onClick={() => navigateTo('order_tracking', { orderId: ord.id })}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigateTo('order_tracking', { orderId: ord.id });
+                    }
+                  }}
+                  className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-app-subtle/40 transition-colors cursor-pointer"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="font-mono-num font-bold text-content-primary">
+                        #{ord.id}
+                      </span>
+                      <span aria-hidden="true" className="text-content-muted">
+                        ·
+                      </span>
+                      <span className="text-content-secondary truncate">
+                        {ord.shippingAddress.fullName}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-content-secondary mt-0.5">
+                      {ord.status} · {ord.items.length}{' '}
+                      {ord.items.length === 1 ? 'item' : 'items'}
+                    </p>
                   </div>
-                  <p className="text-xs text-content-primary leading-snug">
-                    {entry.summary}
-                  </p>
-                  <p className="text-[10px] text-content-muted">
-                    Actor: {entry.actorName} ({entry.actorRole})
-                  </p>
+                  <span className="font-mono-num text-xs font-bold text-content-primary shrink-0">
+                    {formatPrice(ord.totalBdt)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -527,120 +503,131 @@ export const AdminDashboardScreen: React.FC = () => {
             )}
           </div>
 
-          <div className="space-y-3">
-            {filteredOrders.map((ord) => {
-              const isDelivered = ord.status === 'Delivered';
-              const isShipped = ord.status === 'Shipped';
-              return (
-                <div
-                  key={ord.id}
-                  className="bg-white rounded-2xl border border-app-border p-4 space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <span className="font-mono-num text-sm font-bold text-content-primary">
-                          #{ord.id}
-                        </span>
-                        <span aria-hidden="true" className="text-content-muted">
-                          ·
-                        </span>
-                        <span
-                          className={`font-semibold flex items-center gap-1 ${
-                            isDelivered
-                              ? 'text-status-success'
-                              : isShipped
-                              ? 'text-status-transit'
-                              : 'text-status-warning'
-                          }`}
-                        >
-                          {isDelivered ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          ) : isShipped ? (
-                            <Truck className="w-3.5 h-3.5 shrink-0" />
-                          ) : (
-                            <Clock className="w-3.5 h-3.5 shrink-0" />
-                          )}
-                          <span>{ord.status}</span>
-                        </span>
-                      </div>
-                      <p className="text-xs text-content-secondary mt-1 truncate">
-                        {ord.shippingAddress.fullName} · {ord.shippingAddress.city}
-                      </p>
-                    </div>
+          {filteredOrders.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-app-border p-8 text-center space-y-1">
+              <p className="text-xs font-semibold text-content-primary">
+                No {orderStatusFilter.toLowerCase()} orders found
+              </p>
+              <p className="text-[11px] text-content-secondary">
+                Switch the status filter above to view other orders.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {filteredOrders.map((ord) => {
+                const isDelivered = ord.status === 'Delivered';
+                const isShipped = ord.status === 'Shipped';
+                const primaryItem = ord.items[0];
+                const extraItemsCount = Math.max(0, ord.items.length - 1);
 
-                    <div className="text-right shrink-0">
-                      <p className="font-mono-num text-sm font-bold text-content-primary">
-                        {formatPrice(ord.totalBdt)}
-                      </p>
-                      <p className="text-xs text-content-secondary mt-0.5">
-                        {ord.items.length} item(s)
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Line Items */}
-                  <div className="space-y-2 pt-2.5 border-t border-app-border">
-                    {ord.items.map((item, idx) => (
-                      <div
-                        key={`${ord.id}-${idx}`}
-                        className="flex items-center justify-between text-xs"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            referrerPolicy="no-referrer"
-                            className="w-8 h-8 rounded-lg object-cover border border-app-border shrink-0"
-                          />
-                          <span className="text-content-primary font-medium truncate">
-                            {item.quantity}x {item.name}
+                return (
+                  <div
+                    key={ord.id}
+                    className="bg-white rounded-2xl border border-app-border p-3.5 space-y-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="font-mono-num font-bold text-content-primary">
+                            #{ord.id}
+                          </span>
+                          <span aria-hidden="true" className="text-content-muted">
+                            ·
+                          </span>
+                          <span
+                            className={`font-semibold inline-flex items-center gap-1 ${
+                              isDelivered
+                                ? 'text-status-success'
+                                : isShipped
+                                ? 'text-status-transit'
+                                : 'text-status-warning'
+                            }`}
+                          >
+                            {isDelivered ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                            ) : isShipped ? (
+                              <Truck className="w-3.5 h-3.5 shrink-0" />
+                            ) : (
+                              <Clock className="w-3.5 h-3.5 shrink-0" />
+                            )}
+                            <span>{ord.status}</span>
                           </span>
                         </div>
-                        <span className="font-mono-num text-content-secondary shrink-0 ml-2">
-                          {formatPrice(item.landedUnitBdt * item.quantity)}
-                        </span>
+                        <p className="text-[11px] text-content-secondary mt-0.5 truncate">
+                          {ord.shippingAddress.fullName} · {ord.shippingAddress.city}
+                        </p>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Fulfillment Actions */}
-                  <div className="flex items-center gap-2 pt-2.5 border-t border-app-border">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigateTo('order_tracking', { orderId: ord.id })
-                      }
-                      className="min-h-[38px] px-3 rounded-xl border border-app-border text-xs font-semibold text-content-primary hover:bg-app-subtle flex items-center gap-1.5 whitespace-nowrap"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-content-secondary" />
-                      <span>Track</span>
-                    </button>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono-num text-sm font-bold text-content-primary">
+                          {formatPrice(ord.totalBdt)}
+                        </p>
+                        <p className="text-[11px] text-content-muted">
+                          {ord.paymentMethod.toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
 
-                    {!isDelivered ? (
-                      <button
-                        type="button"
-                        onClick={() => adminAdvanceOrderStatus(ord.id)}
-                        className="flex-1 min-h-[38px] px-3 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
-                      >
-                        <PackageCheck className="w-3.5 h-3.5 shrink-0" />
-                        <span>
-                          {ord.status === 'Processing'
-                            ? 'Mark Shipped'
-                            : 'Mark Delivered'}
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="flex-1 min-h-[38px] px-3 rounded-xl bg-brand-subtle text-brand-primary text-xs font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap">
-                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                        <span>Completed</span>
+                    {/* Compact Single-Line Item Summary */}
+                    {primaryItem && (
+                      <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-app-subtle/60 border border-app-border/70 text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <img
+                            src={primaryItem.image}
+                            alt={primaryItem.name}
+                            referrerPolicy="no-referrer"
+                            className="w-7 h-7 rounded-md object-contain bg-white p-0.5 border border-app-border shrink-0"
+                          />
+                          <span className="text-content-primary font-medium truncate">
+                            {primaryItem.quantity}× {primaryItem.name}
+                          </span>
+                        </div>
+                        {extraItemsCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded bg-white border border-app-border text-[10px] font-semibold text-content-secondary shrink-0">
+                            +{extraItemsCount} more
+                          </span>
+                        )}
                       </div>
                     )}
+
+                    {/* Streamlined Fulfillment Actions */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigateTo('order_tracking', { orderId: ord.id })
+                        }
+                        className="h-9 px-3 rounded-xl border border-app-border text-xs font-semibold text-content-primary hover:bg-app-subtle inline-flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-content-secondary" />
+                        <span>Details</span>
+                      </button>
+
+                      {!isDelivered ? (
+                        <button
+                          type="button"
+                          onClick={() => adminAdvanceOrderStatus(ord.id)}
+                          className="flex-1 h-9 px-3 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
+                        >
+                          <PackageCheck className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {ord.status === 'Processing'
+                              ? 'Mark Shipped'
+                              : 'Mark Delivered'}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="text-[11px] font-semibold text-status-success inline-flex items-center gap-1 px-2">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Fulfilled</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -708,21 +695,33 @@ export const AdminDashboardScreen: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-app-border divide-y divide-app-border overflow-hidden">
-            {filteredCatalog.slice(0, 25).map((prod) => (
-              <div key={prod.id} className="p-3.5 space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={prod.image}
-                    alt={prod.name}
-                    referrerPolicy="no-referrer"
-                    onClick={() =>
-                      navigateTo('product_detail', { productId: prod.id })
-                    }
-                    className="w-12 h-12 rounded-xl object-cover border border-app-border shrink-0 cursor-pointer"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
+          {filteredCatalog.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-app-border p-8 text-center space-y-1">
+              <p className="text-xs font-semibold text-content-primary">
+                No matching products
+              </p>
+              <p className="text-[11px] text-content-secondary">
+                Try clearing your search or selecting another category.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-app-border divide-y divide-app-border overflow-hidden">
+              {filteredCatalog.slice(0, 25).map((prod) => (
+                <div
+                  key={prod.id}
+                  className="p-3.5 flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <img
+                      src={prod.image}
+                      alt={prod.name}
+                      referrerPolicy="no-referrer"
+                      onClick={() =>
+                        navigateTo('product_detail', { productId: prod.id })
+                      }
+                      className="w-11 h-11 rounded-xl object-contain bg-slate-50 p-1 border border-app-border shrink-0 cursor-pointer"
+                    />
+                    <div className="min-w-0 flex-1">
                       <h4
                         onClick={() =>
                           navigateTo('product_detail', { productId: prod.id })
@@ -731,61 +730,52 @@ export const AdminDashboardScreen: React.FC = () => {
                       >
                         {prod.name}
                       </h4>
-                      <span className="font-mono-num text-xs font-bold text-content-primary shrink-0">
-                        {formatPrice(prod.totalLandedBdt)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 mt-0.5 text-xs text-content-secondary">
-                      <span className="truncate">
-                        {prod.supplierName} · {prod.originLabel}
-                      </span>
-                      <span
-                        className={`font-medium shrink-0 ${
-                          prod.inStock
-                            ? 'text-status-success'
-                            : 'text-promo-accent'
-                        }`}
-                      >
-                        {prod.inStock ? 'In Stock' : 'Out of Stock'}
-                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-content-secondary">
+                        <span className="font-mono-num font-bold text-content-primary">
+                          {formatPrice(prod.totalLandedBdt)}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span className="truncate">{prod.supplierName}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => openEditProductModal(prod)}
-                      className="min-h-[32px] px-2.5 rounded-lg bg-app-subtle hover:bg-slate-200/70 text-xs font-semibold text-content-primary flex items-center gap-1 whitespace-nowrap"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                      <span>Edit Price</span>
-                    </button>
+                  {/* Compact Inline Action Controls */}
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() =>
                         adminUpdateProduct(prod.id, { inStock: !prod.inStock })
                       }
-                      className="min-h-[32px] px-2.5 rounded-lg border border-app-border text-xs font-medium text-content-secondary hover:text-content-primary whitespace-nowrap"
+                      className={`h-8 px-2.5 rounded-lg text-[11px] font-semibold border transition-colors whitespace-nowrap ${
+                        prod.inStock
+                          ? 'bg-brand-subtle/60 border-brand-border text-brand-primary'
+                          : 'bg-app-subtle border-app-border text-content-muted'
+                      }`}
                     >
-                      {prod.inStock ? 'Pause Stock' : 'Restock'}
+                      {prod.inStock ? 'In Stock' : 'Paused'}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Edit ${prod.name}`}
+                      onClick={() => openEditProductModal(prod)}
+                      className="w-8 h-8 rounded-lg bg-app-subtle hover:bg-slate-200/70 text-content-primary flex items-center justify-center transition-colors"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${prod.name}`}
+                      onClick={() => setDeletingProduct(prod)}
+                      className="w-8 h-8 rounded-lg text-content-muted hover:text-promo-accent hover:bg-promo-subtle flex items-center justify-center transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-
-                  <button
-                    type="button"
-                    aria-label={`Delete ${prod.name}`}
-                    onClick={() => setDeletingProduct(prod)}
-                    className="w-8 h-8 rounded-lg text-content-muted hover:text-promo-accent hover:bg-promo-subtle flex items-center justify-center transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1167,8 +1157,7 @@ export const AdminDashboardScreen: React.FC = () => {
                       </div>
                       <p className="text-[11px] text-content-secondary tabular-nums">
                         Duty: {formatPrice(previewQuote.customsDutyBdt)} · VAT:{' '}
-                        {formatPrice(previewQuote.vatBdt)} · Rule:{' '}
-                        {previewQuote.ruleVersion}
+                        {formatPrice(previewQuote.vatBdt)}
                       </p>
                     </div>
                   </div>
@@ -1224,8 +1213,8 @@ export const AdminDashboardScreen: React.FC = () => {
                       Are you sure you want to remove{' '}
                       <strong className="text-content-primary font-semibold">
                         {deletingProduct.name}
-                      </strong>
-                      ? This action will be recorded in the admin audit trail.
+                      </strong>{' '}
+                      from the active catalog?
                     </p>
                   </div>
                   <div className="flex gap-2">

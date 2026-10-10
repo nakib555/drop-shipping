@@ -56,6 +56,7 @@ const ScreenRouter: React.FC = () => {
     case 'admin_dashboard':
       return <AdminDashboardScreen />;
     case 'account':
+    case 'nid_security':
     case 'addresses':
     case 'payment_methods':
     case 'supplier_store':

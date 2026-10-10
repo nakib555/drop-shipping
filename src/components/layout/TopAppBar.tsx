@@ -116,6 +116,8 @@ export const TopAppBar: React.FC = () => {
         return isBn ? 'অর্ডার ট্র্যাকিং' : 'Order Tracking';
       case 'account':
         return isBn ? 'আমার অ্যাকাউন্ট' : 'Account';
+      case 'nid_security':
+        return isBn ? 'এনআইডি ও নিরাপত্তা যাচাই' : 'NID & Security Center';
       case 'addresses':
         return isBn ? 'সংরক্ষিত ঠিকানা' : 'Addresses';
       case 'payment_methods':

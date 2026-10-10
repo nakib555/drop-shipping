@@ -881,3 +881,64 @@ svg.dm-flow-il {
   }
 }
 
+/* ============================================================
+   DeshiMart Dark / High-Contrast Theme Overrides (.dark-theme)
+   ============================================================ */
+.dark-theme {
+  --color-app-bg: #0B1120;
+  --color-app-surface: #111827;
+  --color-app-subtle: #1E293B;
+  --color-app-border: #334155;
+  --color-app-borderStrong: #475569;
+
+  --color-content-primary: #F8FAFC;
+  --color-content-secondary: #CBD5E1;
+  --color-content-muted: #94A3B8;
+
+  --color-brand-primary: #10B981;
+  --color-brand-hover: #059669;
+  --color-brand-subtle: rgba(16, 185, 129, 0.14);
+  --color-brand-border: rgba(16, 185, 129, 0.35);
+
+  --dm-canvas: #0B1120;
+  --dm-surface: #111827;
+  --dm-surface-subtle: #1E293B;
+  --dm-ink: #F8FAFC;
+  --dm-ink-secondary: #CBD5E1;
+  --dm-ink-muted: #94A3B8;
+  --dm-border: #334155;
+  --dm-border-hover: #475569;
+
+  color-scheme: dark;
+  background-color: var(--color-app-bg);
+  color: var(--color-content-primary);
+}
+
+.dark-theme .bg-white,
+.dark-theme .bg-white\/95 {
+  background-color: var(--color-app-surface) !important;
+}
+
+.dark-theme .bg-\[\#F9FAFB\],
+.dark-theme .bg-slate-50,
+.dark-theme .bg-slate-50\/90 {
+  background-color: var(--color-app-subtle) !important;
+}
+
+.dark-theme .text-\[\#111827\] {
+  color: var(--color-content-primary) !important;
+}
+
+.dark-theme .text-\[\#4B5563\],
+.dark-theme .text-\[\#374151\] {
+  color: var(--color-content-secondary) !important;
+}
+
+.dark-theme .border-slate-200,
+.dark-theme .border-slate-200\/80,
+.dark-theme .border-slate-200\/90,
+.dark-theme .border-slate-100 {
+  border-color: var(--color-app-border) !important;
+}
+
+

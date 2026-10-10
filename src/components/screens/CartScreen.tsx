@@ -325,9 +325,16 @@ export const CartScreen: React.FC = () => {
                 .replace(/\bDhaka Ready Hub\b/i, 'Dhaka Ready')
                 .replace(/\bPriority Air Express\b/i, 'Priority Express');
 
+              const variantDescriptor = {
+                color: item.selectedColor,
+                size: item.selectedSize || '',
+                routeId: item.selectedRouteId || 'default',
+              };
+              const compositeKey = `${item.productId}::${item.selectedColor}::${item.selectedSize || ''}::${item.selectedRouteId || 'default'}`;
+
               return (
                 <motion.div
-                  key={`${item.productId}-${item.selectedColor}-${item.selectedSize || ''}`}
+                  key={compositeKey}
                   layout
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -357,8 +364,8 @@ export const CartScreen: React.FC = () => {
                       </h3>
                       <button
                         type="button"
-                        aria-label={`Remove ${prod.name}`}
-                        onClick={() => removeFromCart(prod.id)}
+                        aria-label={`Remove ${prod.name} (${item.selectedColor}${item.selectedSize ? `, ${item.selectedSize}` : ''})`}
+                        onClick={() => removeFromCart(prod.id, variantDescriptor)}
                         className="w-7 h-7 rounded-lg text-content-muted hover:text-promo-accent flex items-center justify-center -mr-1 -mt-0.5 shrink-0 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -387,8 +394,8 @@ export const CartScreen: React.FC = () => {
                       <div className="flex items-center gap-1.5 bg-app-bg border border-app-border rounded-xl p-1">
                         <button
                           type="button"
-                          aria-label={`Decrease quantity of ${prod.name}`}
-                          onClick={() => updateCartQuantity(prod.id, -1)}
+                          aria-label={`Decrease quantity of ${prod.name} (${item.selectedColor})`}
+                          onClick={() => updateCartQuantity(prod.id, -1, variantDescriptor)}
                           className="w-7 h-7 rounded-lg bg-white text-content-primary hover:bg-slate-100 active:scale-95 flex items-center justify-center transition-all shadow-2xs"
                         >
                           <Minus className="w-3.5 h-3.5" />
@@ -398,8 +405,8 @@ export const CartScreen: React.FC = () => {
                         </span>
                         <button
                           type="button"
-                          aria-label={`Increase quantity of ${prod.name}`}
-                          onClick={() => updateCartQuantity(prod.id, 1)}
+                          aria-label={`Increase quantity of ${prod.name} (${item.selectedColor})`}
+                          onClick={() => updateCartQuantity(prod.id, 1, variantDescriptor)}
                           className="w-7 h-7 rounded-lg bg-white text-content-primary hover:bg-slate-100 active:scale-95 flex items-center justify-center transition-all shadow-2xs"
                         >
                           <Plus className="w-3.5 h-3.5" />

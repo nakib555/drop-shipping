@@ -24,6 +24,7 @@ import {
   CategoryId,
   CurrencyCode,
   LanguageCode,
+  NidVerificationRecord,
   Order,
   PaymentMethodId,
   Product,
@@ -33,6 +34,7 @@ import {
   ShippingMethodId,
   UserRole,
 } from '../types/deshimart';
+import { validateBangladeshNidInput } from '../utils/addressAndPaymentValidator';
 
 export interface SmartFiltersState {
   under2000Bdt: boolean;
@@ -73,6 +75,25 @@ interface DeshiMartContextValue {
   updateUserProfile: (data: { fullName: string; email: string; phone: string }) => void;
   completeOnboardingSetup: () => void;
   logoutUser: () => void;
+
+  // NID Verification & Account Security
+  nidSecurity: NidVerificationRecord;
+  submitNidVerification: (payload: {
+    nidNumber: string;
+    holderName: string;
+    dateOfBirth: string;
+    frontDocCaptured?: boolean;
+    backDocCaptured?: boolean;
+  }) => { valid: boolean; error?: string };
+  revokeNidVerification: () => void;
+  updateSecurityPreferences: (
+    prefs: Partial<
+      Pick<
+        NidVerificationRecord,
+        'twoFactorEnabled' | 'codSecurityLock' | 'biometricPasskeyEnabled'
+      >
+    >
+  ) => void;
 
   // Admin Operations & Merchandising
   promoVouchers: PromoVoucher[];
@@ -156,8 +177,15 @@ interface DeshiMartContextValue {
   // Cart & Wishlist
   cart: CartItem[];
   addToCart: (productId: string, quantity?: number, color?: string, size?: string, routeId?: string) => void;
-  updateCartQuantity: (productId: string, delta: number) => void;
-  removeFromCart: (productId: string) => void;
+  updateCartQuantity: (
+    productId: string,
+    delta: number,
+    variant?: { color?: string; size?: string; routeId?: string }
+  ) => void;
+  removeFromCart: (
+    productId: string,
+    variant?: { color?: string; size?: string; routeId?: string }
+  ) => void;
   clearCart: () => void;
   cartCount: number;
   consolidateParcel: boolean;
@@ -323,6 +351,16 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     })
   );
 
+  // PII-Safe NID & Security state (never stores unmasked raw NID digits)
+  const [nidSecurity, setNidSecurity] = useState<NidVerificationRecord>(() =>
+    readVersionedStorage<NidVerificationRecord>('deshimart_nid_security_v1', {
+      status: 'unverified',
+      twoFactorEnabled: true,
+      codSecurityLock: true,
+      biometricPasskeyEnabled: false,
+    })
+  );
+
   const [promoVouchers, setPromoVouchers] = useState<PromoVoucher[]>(() =>
     readVersionedStorage('deshimart_vouchers_v1', INITIAL_PROMO_VOUCHERS)
   );
@@ -339,9 +377,23 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     },
   ]);
 
-  const [currency, setCurrency] = useState<CurrencyCode>('BDT');
-  const [language, setLanguage] = useState<LanguageCode>('EN');
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const savedPrefs = useMemo(
+    () =>
+      readVersionedStorage<{
+        currency: CurrencyCode;
+        language: LanguageCode;
+        darkMode: boolean;
+      }>('deshimart_prefs_v1', {
+        currency: 'BDT',
+        language: 'EN',
+        darkMode: false,
+      }),
+    []
+  );
+
+  const [currency, setCurrency] = useState<CurrencyCode>(savedPrefs.currency || 'BDT');
+  const [language, setLanguage] = useState<LanguageCode>(savedPrefs.language || 'EN');
+  const [darkMode, setDarkMode] = useState<boolean>(Boolean(savedPrefs.darkMode));
 
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
@@ -554,8 +606,21 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [user]);
 
   useEffect(() => {
+    // Persist only masked NID & security preferences
+    writeVersionedStorage('deshimart_nid_security_v1', nidSecurity);
+  }, [nidSecurity]);
+
+  useEffect(() => {
     writeVersionedStorage('deshimart_vouchers_v1', promoVouchers);
   }, [promoVouchers]);
+
+  useEffect(() => {
+    writeVersionedStorage('deshimart_prefs_v1', {
+      currency,
+      language,
+      darkMode,
+    });
+  }, [currency, language, darkMode]);
 
   useEffect(() => {
     try {
@@ -811,11 +876,18 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const next = !prev[productId];
       showToast(next ? 'Price alert enabled' : 'Price alert paused', 'info');
       if (next && prod) {
+        const activeRouteId = selectedRouteByProduct[prod.id] || prod.routes[0]?.id;
+        const activeRoute =
+          prod.routes.find((r) => r.id === activeRouteId) || prod.routes[0];
+        const routeLanded = activeRoute
+          ? activeRoute.totalLandedBdt
+          : prod.totalLandedBdt;
+        const routeLabel = activeRoute ? ` (${activeRoute.name})` : '';
         const alertNotif: AppNotification = {
           id: `notif-alert-${Date.now()}`,
           type: 'price_drop',
           title: `Price Alert: ${prod.name}`,
-          body: `Tracking price drops from ${formatPrice(prod.totalLandedBdt)}.`,
+          body: `Tracking price drops from ${formatPrice(routeLanded)}${routeLabel}.`,
           timestamp: 'Just now',
           read: false,
           targetScreen: 'price_tracker',
@@ -875,20 +947,56 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast(`${product.name} added to cart`);
   };
 
-  const updateCartQuantity = (productId: string, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.productId === productId
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+  const matchesCartVariant = (
+    item: CartItem,
+    productId: string,
+    variant?: { color?: string; size?: string; routeId?: string }
+  ): boolean => {
+    if (item.productId !== productId) return false;
+    if (!variant) return true;
+    const colorMatches =
+      variant.color === undefined || item.selectedColor === variant.color;
+    const sizeMatches =
+      variant.size === undefined || (item.selectedSize || '') === (variant.size || '');
+    const routeMatches =
+      variant.routeId === undefined ||
+      (item.selectedRouteId || 'default') === (variant.routeId || 'default');
+    return colorMatches && sizeMatches && routeMatches;
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.productId !== productId));
+  const updateCartQuantity = (
+    productId: string,
+    delta: number,
+    variant?: { color?: string; size?: string; routeId?: string }
+  ) => {
+    setCart((prev) => {
+      let matchedOnce = false;
+      return prev
+        .map((item) => {
+          if (matchesCartVariant(item, productId, variant) && (variant || !matchedOnce)) {
+            matchedOnce = true;
+            return { ...item, quantity: Math.max(0, item.quantity + delta) };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0);
+    });
+  };
+
+  const removeFromCart = (
+    productId: string,
+    variant?: { color?: string; size?: string; routeId?: string }
+  ) => {
+    setCart((prev) => {
+      let removedOnce = false;
+      return prev.filter((item) => {
+        if (matchesCartVariant(item, productId, variant) && (variant || !removedOnce)) {
+          removedOnce = true;
+          return false;
+        }
+        return true;
+      });
+    });
     showToast('Item removed from cart', 'info');
   };
 
@@ -1000,6 +1108,97 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     showToast('Profile updated successfully!');
   };
 
+  const submitNidVerification = (payload: {
+    nidNumber: string;
+    holderName: string;
+    dateOfBirth: string;
+    frontDocCaptured?: boolean;
+    backDocCaptured?: boolean;
+  }): { valid: boolean; error?: string } => {
+    const check = validateBangladeshNidInput({
+      nidNumber: payload.nidNumber,
+      holderName: payload.holderName,
+      dateOfBirth: payload.dateOfBirth,
+    });
+
+    if (!check.valid || !check.format) {
+      const firstErr =
+        check.errors.nidNumber ||
+        check.errors.holderName ||
+        check.errors.dateOfBirth ||
+        'Invalid Bangladesh NID details.';
+      showToast(firstErr, 'info');
+      return { valid: false, error: firstErr };
+    }
+
+    const verifiedRecord: NidVerificationRecord = {
+      ...nidSecurity,
+      status: 'verified',
+      nidFormat: check.format,
+      maskedNid: check.maskedNid,
+      holderName: payload.holderName.trim(),
+      dateOfBirth: payload.dateOfBirth.trim(),
+      verificationToken: check.verificationToken,
+      verifiedAt: 'Oct 10, 2026',
+      frontDocCaptured: payload.frontDocCaptured ?? true,
+      backDocCaptured: payload.backDocCaptured ?? true,
+    };
+
+    setNidSecurity(verifiedRecord);
+
+    const securityNotif: AppNotification = {
+      id: `notif-nid-${Date.now()}`,
+      type: 'order',
+      title: 'Bangladesh NID Verified · Customs Fast-Track Active',
+      body: `National ID (${check.maskedNid}) verified under token ${check.verificationToken} for NBR customs clearance.`,
+      timestamp: 'Just now',
+      read: false,
+      targetScreen: 'nid_security',
+    };
+    setNotifications((prev) => [securityNotif, ...prev]);
+
+    setAdminAuditLog((prev) => [
+      {
+        id: `audit-nid-${Date.now()}`,
+        actorName: payload.holderName.trim(),
+        actorRole: user.role,
+        action: 'VERIFY_IMPORTER_NID',
+        targetId: check.verificationToken,
+        summary: `Verified ${check.format} (${check.maskedNid}) for NBR customs & COD security compliance`,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      },
+      ...prev.slice(0, 49),
+    ]);
+
+    showToast(`NID Verified (${check.maskedNid}) · Customs Fast-Track enabled!`);
+    return { valid: true };
+  };
+
+  const revokeNidVerification = () => {
+    setNidSecurity((prev) => ({
+      status: 'unverified',
+      twoFactorEnabled: prev.twoFactorEnabled,
+      codSecurityLock: prev.codSecurityLock,
+      biometricPasskeyEnabled: prev.biometricPasskeyEnabled,
+    }));
+    showToast('Saved NID record removed from this device', 'info');
+  };
+
+  const updateSecurityPreferences = (
+    prefs: Partial<
+      Pick<
+        NidVerificationRecord,
+        'twoFactorEnabled' | 'codSecurityLock' | 'biometricPasskeyEnabled'
+      >
+    >
+  ) => {
+    setNidSecurity((prev) => ({ ...prev, ...prefs }));
+    showToast('Security preferences updated');
+  };
+
   const placeOrder = (idempotencyKey?: string): Order => {
     const chosenAddress =
       addresses.find((a) => a.id === selectedAddressId) || addresses[0];
@@ -1032,6 +1231,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       amountBdt: finalQuote.totalBdt,
       bkashPhone: checkoutDraft.bkashPhone,
       nagadPhone: checkoutDraft.nagadPhone,
+      rocketPhone: checkoutDraft.rocketPhone,
+      upayPhone: checkoutDraft.upayPhone,
       cardLast4: checkoutDraft.cardNumber.replace(/\D/g, '').slice(-4),
     });
 
@@ -1081,6 +1282,14 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           pricingStatus: 'confirmed',
           paymentTokenId: paymentToken.tokenId,
           maskedPaymentAccount: paymentToken.maskedAccount,
+          importerNidToken:
+            nidSecurity.status === 'verified'
+              ? nidSecurity.verificationToken
+              : undefined,
+          importerMaskedNid:
+            nidSecurity.status === 'verified'
+              ? nidSecurity.maskedNid
+              : undefined,
           paymentMethod,
           shippingMethod,
           shippingAddress: chosenAddress,
@@ -1722,6 +1931,10 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateUserProfile,
         completeOnboardingSetup,
         logoutUser,
+        nidSecurity,
+        submitNidVerification,
+        revokeNidVerification,
+        updateSecurityPreferences,
         promoVouchers,
         adminAuditLog,
         createPromoVoucher,

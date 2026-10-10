@@ -10,6 +10,7 @@ import {
   Minus,
   Package,
   Plus,
+  ShieldCheck,
   Smartphone,
   Trash2,
   Truck,
@@ -22,6 +23,7 @@ import {
   ShippingAddress,
   ShippingMethodId,
 } from '../../types/deshimart';
+import { validateBangladeshNidInput } from '../../utils/addressAndPaymentValidator';
 import {
   CheckoutPriceBreakdown,
   CheckoutProgressHeader,
@@ -78,6 +80,9 @@ export const CheckoutFlowScreen: React.FC = () => {
     formatPrice,
     placeOrder,
     selectedOrder,
+    nidSecurity,
+    submitNidVerification,
+    user,
   } = useDeshiMart();
 
   // Address Form State (Add or Edit)
@@ -102,6 +107,12 @@ export const CheckoutFlowScreen: React.FC = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const submissionLockRef = React.useRef(false);
+
+  // Inline Quick NID Verification State for Checkout Customs Clearance
+  const [inlineNidOpen, setInlineNidOpen] = useState(false);
+  const [inlineNidNumber, setInlineNidNumber] = useState('');
+  const [inlineNidDob, setInlineNidDob] = useState('1996-05-14');
+  const [inlineNidError, setInlineNidError] = useState<string | null>(null);
 
   const activeAddress =
     addresses.find((a) => a.id === selectedAddressId) || addresses[0];
@@ -661,6 +672,18 @@ export const CheckoutFlowScreen: React.FC = () => {
         icon: Wallet,
       },
       {
+        id: 'rocket',
+        title: 'Rocket (DBBL)',
+        subtitle: 'Pay with your Dutch-Bangla Rocket wallet',
+        icon: Smartphone,
+      },
+      {
+        id: 'upay',
+        title: 'Upay (UCB)',
+        subtitle: 'Pay with your UCB Upay wallet',
+        icon: Wallet,
+      },
+      {
         id: 'card',
         title: 'Credit / Debit Card',
         subtitle: 'Visa, Mastercard, AMEX',
@@ -682,6 +705,20 @@ export const CheckoutFlowScreen: React.FC = () => {
         if (!isValidBangladeshMobile(checkoutDraft.nagadPhone)) {
           setPaymentError(
             'Please enter a valid 11-digit Nagad number (e.g., 01819345678).'
+          );
+          return;
+        }
+      } else if (paymentMethod === 'rocket') {
+        if (!isValidBangladeshMobile(checkoutDraft.rocketPhone || '')) {
+          setPaymentError(
+            'Please enter a valid 11-digit Rocket number (e.g., 01911345678).'
+          );
+          return;
+        }
+      } else if (paymentMethod === 'upay') {
+        if (!isValidBangladeshMobile(checkoutDraft.upayPhone || '')) {
+          setPaymentError(
+            'Please enter a valid 11-digit Upay number (e.g., 01615345678).'
           );
           return;
         }
@@ -845,6 +882,56 @@ export const CheckoutFlowScreen: React.FC = () => {
               </div>
             )}
 
+            {paymentMethod === 'rocket' && (
+              <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
+                <label
+                  htmlFor="rocket-phone-input"
+                  className="block text-xs font-semibold text-content-primary"
+                >
+                  Rocket (DBBL) Account Number
+                </label>
+                <input
+                  id="rocket-phone-input"
+                  type="tel"
+                  value={checkoutDraft.rocketPhone || ''}
+                  onChange={(e) => {
+                    setCheckoutDraft((prev) => ({
+                      ...prev,
+                      rocketPhone: e.target.value,
+                    }));
+                    setPaymentError(null);
+                  }}
+                  placeholder="019XXXXXXXX"
+                  className="w-full h-10 px-3 rounded-lg bg-app-bg border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+            )}
+
+            {paymentMethod === 'upay' && (
+              <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
+                <label
+                  htmlFor="upay-phone-input"
+                  className="block text-xs font-semibold text-content-primary"
+                >
+                  Upay (UCB) Account Number
+                </label>
+                <input
+                  id="upay-phone-input"
+                  type="tel"
+                  value={checkoutDraft.upayPhone || ''}
+                  onChange={(e) => {
+                    setCheckoutDraft((prev) => ({
+                      ...prev,
+                      upayPhone: e.target.value,
+                    }));
+                    setPaymentError(null);
+                  }}
+                  placeholder="016XXXXXXXX"
+                  className="w-full h-10 px-3 rounded-lg bg-app-bg border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+            )}
+
             {paymentMethod === 'card' && (
               <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-3">
                 <div>
@@ -945,6 +1032,8 @@ export const CheckoutFlowScreen: React.FC = () => {
       cod: 'Cash on Delivery',
       bkash: `bKash (${checkoutDraft.bkashPhone})`,
       nagad: `Nagad (${checkoutDraft.nagadPhone})`,
+      rocket: `Rocket (${checkoutDraft.rocketPhone || '01911345678'})`,
+      upay: `Upay (${checkoutDraft.upayPhone || '01615345678'})`,
       card: `Card (•••• ${checkoutDraft.cardNumber.replace(/\D/g, '').slice(-4) || '8910'})`,
       paypal: 'PayPal',
     };
@@ -958,8 +1047,52 @@ export const CheckoutFlowScreen: React.FC = () => {
       hub_pickup: { name: 'Dhaka Pickup Point', eta: '5–9 days' },
     };
 
+    const isHighValueCodGuardActive =
+      paymentMethod === 'cod' &&
+      nidSecurity.codSecurityLock &&
+      cartTotals.totalBdt >= 15000 &&
+      nidSecurity.status !== 'verified';
+
+    const handleInlineNidVerify = (e: React.FormEvent) => {
+      e.preventDefault();
+      const holderName = activeAddress?.fullName || user.fullName || 'Tanvir Ahmed';
+      const check = validateBangladeshNidInput({
+        nidNumber: inlineNidNumber,
+        holderName,
+        dateOfBirth: inlineNidDob,
+      });
+      if (!check.valid) {
+        setInlineNidError(
+          check.errors.nidNumber ||
+            check.errors.dateOfBirth ||
+            'Enter a valid 10, 13, or 17-digit Bangladesh NID.'
+        );
+        return;
+      }
+      setInlineNidError(null);
+      const res = submitNidVerification({
+        nidNumber: inlineNidNumber,
+        holderName,
+        dateOfBirth: inlineNidDob,
+        frontDocCaptured: true,
+        backDocCaptured: true,
+      });
+      if (res.valid) {
+        setInlineNidNumber('');
+        setInlineNidOpen(false);
+        setOrderError(null);
+      }
+    };
+
     const handlePlaceOrderSubmit = () => {
       if (submissionLockRef.current || isPlacingOrder || cart.length === 0) {
+        return;
+      }
+      if (isHighValueCodGuardActive) {
+        setInlineNidOpen(true);
+        setOrderError(
+          'High-value Cash on Delivery (≥ ৳15,000) requires Bangladesh NID verification below.'
+        );
         return;
       }
       submissionLockRef.current = true;
@@ -1089,6 +1222,130 @@ export const CheckoutFlowScreen: React.FC = () => {
                   </div>
                 </button>
               </div>
+
+              {/* NBR Customs & Importer NID Security Clearance Card */}
+              <div
+                className={`p-3.5 rounded-xl border transition-all ${
+                  nidSecurity.status === 'verified'
+                    ? 'bg-brand-subtle/35 border-brand-primary'
+                    : isHighValueCodGuardActive
+                    ? 'bg-amber-50/90 border-amber-300'
+                    : 'bg-white border-app-border'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    <ShieldCheck
+                      className={`w-4 h-4 shrink-0 mt-0.5 ${
+                        nidSecurity.status === 'verified'
+                          ? 'text-brand-primary'
+                          : 'text-amber-600'
+                      }`}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-semibold text-content-primary">
+                          NBR Customs & NID Security
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            nidSecurity.status === 'verified'
+                              ? 'bg-brand-primary text-white'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {nidSecurity.status === 'verified'
+                            ? '✓ Fast-Track'
+                            : isHighValueCodGuardActive
+                            ? 'Required for COD'
+                            : 'Optional'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-content-secondary mt-0.5 leading-snug">
+                        {nidSecurity.status === 'verified'
+                          ? `Verified NID (${nidSecurity.maskedNid}) · Token ${nidSecurity.verificationToken}`
+                          : isHighValueCodGuardActive
+                          ? 'Orders ≥ ৳15,000 with Cash on Delivery require NID verification for customs & fraud security.'
+                          : 'Verify your BD National ID for priority Dhaka Airport customs manifest clearance.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      nidSecurity.status === 'verified'
+                        ? navigateTo('nid_security')
+                        : setInlineNidOpen((prev) => !prev)
+                    }
+                    className="text-xs font-semibold text-brand-primary hover:underline shrink-0"
+                  >
+                    {nidSecurity.status === 'verified'
+                      ? 'Manage'
+                      : inlineNidOpen
+                      ? 'Close'
+                      : 'Verify Now'}
+                  </button>
+                </div>
+
+                {nidSecurity.status !== 'verified' && inlineNidOpen && (
+                  <form
+                    onSubmit={handleInlineNidVerify}
+                    noValidate
+                    className="mt-3 pt-3 border-t border-app-border space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-content-primary">
+                        Quick BD NID Verification (10 / 13 / 17 Digits)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInlineNidNumber('1996482910');
+                          setInlineNidDob('1996-05-14');
+                          setInlineNidError(null);
+                        }}
+                        className="text-[11px] font-semibold text-brand-primary hover:underline"
+                      >
+                        Use Sample Smart NID
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={inlineNidNumber}
+                        onChange={(e) => {
+                          setInlineNidNumber(e.target.value);
+                          if (inlineNidError) setInlineNidError(null);
+                        }}
+                        placeholder="NID Number (e.g. 1996482910)"
+                        className="w-full h-9 px-3 rounded-lg bg-white border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                      />
+                      <input
+                        type="date"
+                        value={inlineNidDob}
+                        onChange={(e) => {
+                          setInlineNidDob(e.target.value);
+                          if (inlineNidError) setInlineNidError(null);
+                        }}
+                        className="w-full h-9 px-3 rounded-lg bg-white border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                      />
+                    </div>
+                    {inlineNidError && (
+                      <p role="alert" className="text-[11px] text-red-600">
+                        {inlineNidError}
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      className="w-full h-9 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
+                    >
+                      Verify NID & Unlock Customs Fast-Track
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
 
             {/* 2. Editable Order Items List */}
@@ -1106,9 +1363,16 @@ export const CheckoutFlowScreen: React.FC = () => {
                     prod.routes[0];
                   const unitBdt = rt ? rt.totalLandedBdt : prod.totalLandedBdt;
 
+                  const variantDescriptor = {
+                    color: item.selectedColor,
+                    size: item.selectedSize || '',
+                    routeId: item.selectedRouteId || 'default',
+                  };
+                  const compositeKey = `${item.productId}::${item.selectedColor}::${item.selectedSize || ''}::${item.selectedRouteId || 'default'}`;
+
                   return (
                     <div
-                      key={`${item.productId}-${item.selectedColor}`}
+                      key={compositeKey}
                       className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-2.5 text-xs"
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -1125,6 +1389,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                           <p className="text-[11px] text-content-secondary truncate">
                             {item.selectedColor}
                             {item.selectedSize ? ` · ${item.selectedSize}` : ''}
+                            {rt?.name ? ` · ${rt.name}` : ''}
                           </p>
                         </div>
                       </div>
@@ -1134,8 +1399,8 @@ export const CheckoutFlowScreen: React.FC = () => {
                         <div className="flex items-center gap-1 bg-app-bg border border-app-border rounded-lg p-0.5">
                           <button
                             type="button"
-                            aria-label={`Decrease ${prod.name} quantity`}
-                            onClick={() => updateCartQuantity(prod.id, -1)}
+                            aria-label={`Decrease ${prod.name} (${item.selectedColor}) quantity`}
+                            onClick={() => updateCartQuantity(prod.id, -1, variantDescriptor)}
                             className="w-6 h-6 rounded bg-white text-content-primary flex items-center justify-center shadow-2xs"
                           >
                             <Minus className="w-3 h-3" />
@@ -1145,8 +1410,8 @@ export const CheckoutFlowScreen: React.FC = () => {
                           </span>
                           <button
                             type="button"
-                            aria-label={`Increase ${prod.name} quantity`}
-                            onClick={() => updateCartQuantity(prod.id, 1)}
+                            aria-label={`Increase ${prod.name} (${item.selectedColor}) quantity`}
+                            onClick={() => updateCartQuantity(prod.id, 1, variantDescriptor)}
                             className="w-6 h-6 rounded bg-white text-content-primary flex items-center justify-center shadow-2xs"
                           >
                             <Plus className="w-3 h-3" />
@@ -1205,6 +1470,8 @@ export const CheckoutFlowScreen: React.FC = () => {
     cod: 'Cash on Delivery',
     bkash: 'bKash',
     nagad: 'Nagad',
+    rocket: 'Rocket (DBBL)',
+    upay: 'Upay (UCB)',
     card: 'Card',
     paypal: 'PayPal',
   };
@@ -1297,6 +1564,15 @@ export const CheckoutFlowScreen: React.FC = () => {
                 {confirmedOrder.shippingAddress.city}{' '}
                 {confirmedOrder.shippingAddress.postalCode}
               </p>
+              {confirmedOrder.importerMaskedNid && (
+                <p className="text-[11px] text-brand-primary font-semibold mt-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    NBR Customs NID Verified ({confirmedOrder.importerMaskedNid}) ·{' '}
+                    {confirmedOrder.importerNidToken}
+                  </span>
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

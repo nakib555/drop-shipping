@@ -11,9 +11,11 @@ import {
   CreditCard,
   Download,
   Edit3,
+  Fingerprint,
   Globe,
   Heart,
   HelpCircle,
+  Lock,
   LogOut,
   MapPin,
   MessageCircle,
@@ -22,6 +24,7 @@ import {
   Plus,
   Send,
   Settings,
+  ShieldCheck,
   ShoppingCart,
   Smartphone,
   Sparkles,
@@ -36,7 +39,15 @@ import {
 import { useDeshiMart } from '../../context/DeshiMartContext';
 import { SUPPORT_FAQS } from '../../data/catalogData';
 import { triggerPWAInstallPopup, usePWAInstall } from '../../hooks/usePWAInstall';
-import { AppNotification, PaymentMethodId } from '../../types/deshimart';
+import { AppNotification, PaymentMethodId, ShippingAddress } from '../../types/deshimart';
+import {
+  ALL_BANGLADESH_DISTRICTS,
+  getBangladeshNidFormatLabel,
+  isValidBangladeshPhone,
+  isValidBangladeshPostalCode,
+  normalizeBangladeshPhone,
+  validateBangladeshNidInput,
+} from '../../utils/addressAndPaymentValidator';
 import { ProductCard } from '../shared/ProductCard';
 
 export const AccountSupportScreen: React.FC = () => {
@@ -73,9 +84,16 @@ export const AccountSupportScreen: React.FC = () => {
     selectedAddressId,
     setSelectedAddressId,
     addAddress,
+    updateAddress,
     deleteAddress,
     paymentMethod,
     setPaymentMethod,
+    checkoutDraft,
+    setCheckoutDraft,
+    nidSecurity,
+    submitNidVerification,
+    revokeNidVerification,
+    updateSecurityPreferences,
     showToast,
   } = useDeshiMart();
 
@@ -96,18 +114,40 @@ export const AccountSupportScreen: React.FC = () => {
   const [editName, setEditName] = useState(user.fullName);
   const [editEmail, setEditEmail] = useState(user.email);
   const [editPhone, setEditPhone] = useState(user.phone);
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
-  // Add Address Form State
+  // Add / Edit Address Form State
   const [showAddAddress, setShowAddAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [addrLabel, setAddrLabel] = useState('Home');
   const [addrName, setAddrName] = useState(user.fullName);
   const [addrPhone, setAddrPhone] = useState(user.phone);
   const [addrStreet, setAddrStreet] = useState('');
   const [addrCity, setAddrCity] = useState('Dhaka');
   const [addrPostal, setAddrPostal] = useState('1212');
+  const [addrErrors, setAddrErrors] = useState<Record<string, string>>({});
 
   // Supplier Follow State
   const [isFollowingSupplier, setIsFollowingSupplier] = useState(false);
+
+  // NID Verification & Security Center Form State
+  const [nidInput, setNidInput] = useState('');
+  const [nidHolderName, setNidHolderName] = useState(
+    nidSecurity.holderName || user.fullName || 'Tanvir Ahmed'
+  );
+  const [nidDob, setNidDob] = useState(nidSecurity.dateOfBirth || '1996-05-14');
+  const [frontDocChecked, setFrontDocChecked] = useState(
+    nidSecurity.frontDocCaptured ?? true
+  );
+  const [backDocChecked, setBackDocChecked] = useState(
+    nidSecurity.backDocCaptured ?? true
+  );
+  const [nidFormErrors, setNidFormErrors] = useState<{
+    nidNumber?: string;
+    holderName?: string;
+    dateOfBirth?: string;
+  }>({});
+  const [showUpdateNidForm, setShowUpdateNidForm] = useState(false);
 
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,26 +168,90 @@ export const AccountSupportScreen: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (editName.trim().length < 2) {
+      errs.name = 'Full name must be at least 2 characters.';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())) {
+      errs.email = 'Enter a valid email address.';
+    }
+    if (!isValidBangladeshPhone(editPhone)) {
+      errs.phone = 'Enter a valid 11-digit BD mobile number (e.g., 01712345678).';
+    }
+    if (Object.keys(errs).length > 0) {
+      setProfileErrors(errs);
+      return;
+    }
+    setProfileErrors({});
     updateUserProfile({
-      fullName: editName.trim() || 'John Doe',
-      email: editEmail.trim() || 'john@example.com',
-      phone: editPhone.trim() || '+880 1712 345678',
+      fullName: editName.trim(),
+      email: editEmail.trim(),
+      phone: normalizeBangladeshPhone(editPhone),
     });
     setEditProfileOpen(false);
   };
 
+  const openNewAddressForm = () => {
+    setEditingAddressId(null);
+    setAddrLabel('Home');
+    setAddrName(user.fullName);
+    setAddrPhone(user.phone);
+    setAddrStreet('');
+    setAddrCity('Dhaka');
+    setAddrPostal('1212');
+    setAddrErrors({});
+    setShowAddAddress(true);
+  };
+
+  const openEditAddressForm = (addr: ShippingAddress) => {
+    setEditingAddressId(addr.id);
+    setAddrLabel(addr.label || 'Home');
+    setAddrName(addr.fullName);
+    setAddrPhone(addr.phone);
+    setAddrStreet(addr.address);
+    setAddrCity(addr.city || 'Dhaka');
+    setAddrPostal(addr.postalCode || '1212');
+    setAddrErrors({});
+    setShowAddAddress(true);
+  };
+
   const handleCreateAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addrStreet.trim()) return;
-    addAddress({
-      label: addrLabel,
-      fullName: addrName,
-      phone: addrPhone,
-      address: addrStreet,
+    const errs: Record<string, string> = {};
+    if (addrName.trim().length < 2) {
+      errs.fullName = 'Recipient full name is required.';
+    }
+    if (!isValidBangladeshPhone(addrPhone)) {
+      errs.phone = 'Enter a valid 11-digit BD mobile number (013–019).';
+    }
+    if (addrStreet.trim().length < 5) {
+      errs.street = 'Enter house, road, and area details (at least 5 characters).';
+    }
+    if (!isValidBangladeshPostalCode(addrPostal, false)) {
+      errs.postal = 'Enter a valid 4-digit BD postal code (e.g., 1212).';
+    }
+    if (Object.keys(errs).length > 0) {
+      setAddrErrors(errs);
+      return;
+    }
+
+    const payload = {
+      label: addrLabel.trim() || 'Home',
+      fullName: addrName.trim(),
+      phone: normalizeBangladeshPhone(addrPhone),
+      address: addrStreet.trim(),
       city: addrCity,
-      postalCode: addrPostal,
-    });
+      postalCode: addrPostal.trim(),
+    };
+
+    if (editingAddressId) {
+      updateAddress(editingAddressId, payload);
+    } else {
+      addAddress(payload);
+    }
     setAddrStreet('');
+    setEditingAddressId(null);
+    setAddrErrors({});
     setShowAddAddress(false);
   };
 
@@ -266,74 +370,151 @@ export const AccountSupportScreen: React.FC = () => {
           </span>
           <button
             type="button"
-            onClick={() => setShowAddAddress(!showAddAddress)}
+            onClick={() => {
+              if (showAddAddress) {
+                setShowAddAddress(false);
+                setEditingAddressId(null);
+                setAddrErrors({});
+              } else {
+                openNewAddressForm();
+              }
+            }}
             className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{language === 'BN' ? 'নতুন ঠিকানা' : 'Add New'}</span>
+            <span>
+              {showAddAddress
+                ? language === 'BN'
+                  ? 'বাতিল করুন'
+                  : 'Cancel'
+                : language === 'BN'
+                ? 'নতুন ঠিকানা'
+                : 'Add New'}
+            </span>
           </button>
         </div>
 
         {showAddAddress && (
           <form
             onSubmit={handleCreateAddress}
-            className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
+            noValidate
+            className="bg-white rounded-xl border border-app-border p-4 space-y-3"
           >
-            <h3 className="text-sm font-semibold text-content-primary">
-              {language === 'BN' ? 'নতুন ঠিকানা' : 'New Address'}
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                  Label
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={addrLabel}
-                  onChange={(e) => setAddrLabel(e.target.value)}
-                  placeholder="Home / Office"
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
-                />
+            <div className="flex items-center justify-between border-b border-app-border pb-2">
+              <h3 className="text-sm font-semibold text-content-primary">
+                {editingAddressId
+                  ? language === 'BN'
+                    ? 'ঠিকানা সম্পাদনা করুন'
+                    : 'Edit Address'
+                  : language === 'BN'
+                  ? 'নতুন ঠিকানা'
+                  : 'New Address'}
+              </h3>
+              <div className="flex items-center gap-1.5">
+                {(['Home', 'Office', 'Other'] as const).map((lbl) => (
+                  <button
+                    key={lbl}
+                    type="button"
+                    onClick={() => setAddrLabel(lbl)}
+                    className={`h-7 px-2.5 rounded-lg text-[11px] font-medium border transition-colors ${
+                      addrLabel === lbl
+                        ? 'bg-brand-subtle border-brand-primary text-brand-primary font-semibold'
+                        : 'bg-app-subtle border-app-border text-content-secondary'
+                    }`}
+                  >
+                    {lbl}
+                  </button>
+                ))}
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[11px] font-medium text-content-secondary mb-1">
                   Full Name
                 </label>
                 <input
                   type="text"
-                  required
                   value={addrName}
-                  onChange={(e) => setAddrName(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                  onChange={(e) => {
+                    setAddrName(e.target.value);
+                    if (addrErrors.fullName) {
+                      setAddrErrors((p) => ({ ...p, fullName: '' }));
+                    }
+                  }}
+                  placeholder="e.g. Tanvir Ahmed"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                 />
+                {addrErrors.fullName && (
+                  <p role="alert" className="text-[11px] text-red-600 mt-1">
+                    {addrErrors.fullName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-content-secondary mb-1">
+                  Mobile Number (Bangladesh)
+                </label>
+                <input
+                  type="tel"
+                  value={addrPhone}
+                  onChange={(e) => {
+                    setAddrPhone(e.target.value);
+                    if (addrErrors.phone) {
+                      setAddrErrors((p) => ({ ...p, phone: '' }));
+                    }
+                  }}
+                  placeholder="01712345678"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                />
+                {addrErrors.phone && (
+                  <p role="alert" className="text-[11px] text-red-600 mt-1">
+                    {addrErrors.phone}
+                  </p>
+                )}
               </div>
             </div>
+
             <div>
               <label className="block text-[11px] font-medium text-content-secondary mb-1">
                 Street Address
               </label>
               <input
                 type="text"
-                required
                 value={addrStreet}
-                onChange={(e) => setAddrStreet(e.target.value)}
+                onChange={(e) => {
+                  setAddrStreet(e.target.value);
+                  if (addrErrors.street) {
+                    setAddrErrors((p) => ({ ...p, street: '' }));
+                  }
+                }}
                 placeholder="House 14, Road 5, Dhanmondi"
-                className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
+                className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary focus:outline-none focus:border-brand-primary"
               />
+              {addrErrors.street && (
+                <p role="alert" className="text-[11px] text-red-600 mt-1">
+                  {addrErrors.street}
+                </p>
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-2">
+
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                  City
+                  District / City
                 </label>
-                <input
-                  type="text"
-                  required
+                <select
                   value={addrCity}
                   onChange={(e) => setAddrCity(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
-                />
+                  className="w-full h-10 px-2.5 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                >
+                  {ALL_BANGLADESH_DISTRICTS.map((district) => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-content-secondary mb-1">
@@ -341,18 +522,36 @@ export const AccountSupportScreen: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  required
+                  maxLength={4}
                   value={addrPostal}
-                  onChange={(e) => setAddrPostal(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
+                  onChange={(e) => {
+                    setAddrPostal(e.target.value);
+                    if (addrErrors.postal) {
+                      setAddrErrors((p) => ({ ...p, postal: '' }));
+                    }
+                  }}
+                  placeholder="1212"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                 />
+                {addrErrors.postal && (
+                  <p role="alert" className="text-[11px] text-red-600 mt-1">
+                    {addrErrors.postal}
+                  </p>
+                )}
               </div>
             </div>
+
             <button
               type="submit"
               className="w-full h-10 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
             >
-              {language === 'BN' ? 'ঠিকানা সেভ করুন' : 'Save Address'}
+              {editingAddressId
+                ? language === 'BN'
+                  ? 'পরিবর্তন সেভ করুন'
+                  : 'Save Changes'
+                : language === 'BN'
+                ? 'ঠিকানা সেভ করুন'
+                : 'Save Address'}
             </button>
           </form>
         )}
@@ -370,30 +569,42 @@ export const AccountSupportScreen: React.FC = () => {
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <MapPin
-                      className={`w-4 h-4 ${
+                      className={`w-4 h-4 shrink-0 ${
                         isDefault ? 'text-brand-primary' : 'text-content-secondary'
                       }`}
                     />
-                    <span className="text-sm font-medium text-content-primary">
+                    <span className="text-sm font-medium text-content-primary truncate">
                       {addr.fullName}
                     </span>
-                    <span className="text-xs text-content-secondary">
+                    <span className="text-xs text-content-secondary shrink-0">
                       · {addr.label}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    aria-label="Delete address"
-                    onClick={() => deleteAddress(addr.id)}
-                    className="text-content-muted hover:text-promo-accent p-1"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      aria-label={`Edit ${addr.label} address`}
+                      onClick={() => openEditAddressForm(addr)}
+                      className="text-content-secondary hover:text-brand-primary p-1 rounded-md"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${addr.label} address`}
+                      onClick={() => deleteAddress(addr.id)}
+                      className="text-content-muted hover:text-promo-accent p-1 rounded-md"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
-                <p className="text-xs text-content-secondary">{addr.address}</p>
+                <p className="text-xs text-content-secondary">
+                  {addr.address}, {addr.city} {addr.postalCode}
+                </p>
                 <div className="flex items-center justify-between pt-1">
                   <span className="tabular-nums text-xs text-content-secondary">
                     {addr.phone}
@@ -446,21 +657,35 @@ export const AccountSupportScreen: React.FC = () => {
       {
         id: 'bkash',
         name: 'bKash',
-        detail: '+880 1712-345678',
+        detail: normalizeBangladeshPhone(checkoutDraft.bkashPhone || '01712345678'),
         status: 'Saved',
         icon: Smartphone,
       },
       {
         id: 'nagad',
         name: 'Nagad',
-        detail: '+880 1819-345678',
+        detail: normalizeBangladeshPhone(checkoutDraft.nagadPhone || '01819345678'),
+        status: 'Saved',
+        icon: Wallet,
+      },
+      {
+        id: 'rocket',
+        name: 'Rocket (DBBL)',
+        detail: normalizeBangladeshPhone(checkoutDraft.rocketPhone || '01911345678'),
+        status: 'Saved',
+        icon: Smartphone,
+      },
+      {
+        id: 'upay',
+        name: 'Upay (UCB)',
+        detail: normalizeBangladeshPhone(checkoutDraft.upayPhone || '01615345678'),
         status: 'Saved',
         icon: Wallet,
       },
       {
         id: 'card',
-        name: 'Visa •••• 8910',
-        detail: 'Expires 12/28',
+        name: `Visa •••• ${checkoutDraft.cardNumber.replace(/\D/g, '').slice(-4) || '8910'}`,
+        detail: `Expires ${checkoutDraft.cardExpiry || '12/28'}`,
         status: 'Saved',
         icon: CreditCard,
       },
@@ -522,6 +747,49 @@ export const AccountSupportScreen: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Editable Wallet Number for Active MFS Method */}
+        {(paymentMethod === 'bkash' ||
+          paymentMethod === 'nagad' ||
+          paymentMethod === 'rocket' ||
+          paymentMethod === 'upay') && (
+          <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
+            <label
+              htmlFor="account-mfs-phone-input"
+              className="block text-xs font-semibold text-content-primary"
+            >
+              Default {paymentMethod.toUpperCase()} Wallet Number
+            </label>
+            <input
+              id="account-mfs-phone-input"
+              type="tel"
+              value={
+                paymentMethod === 'bkash'
+                  ? checkoutDraft.bkashPhone
+                  : paymentMethod === 'nagad'
+                  ? checkoutDraft.nagadPhone
+                  : paymentMethod === 'rocket'
+                  ? checkoutDraft.rocketPhone || ''
+                  : checkoutDraft.upayPhone || ''
+              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setCheckoutDraft((prev) => ({
+                  ...prev,
+                  ...(paymentMethod === 'bkash'
+                    ? { bkashPhone: val }
+                    : paymentMethod === 'nagad'
+                    ? { nagadPhone: val }
+                    : paymentMethod === 'rocket'
+                    ? { rocketPhone: val }
+                    : { upayPhone: val }),
+                }));
+              }}
+              placeholder="01XXXXXXXXX"
+              className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -997,11 +1265,19 @@ export const AccountSupportScreen: React.FC = () => {
             Display
           </h2>
           <label className="flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer py-0.5">
-            <span>High-Contrast Mode</span>
+            <span>Dark / High-Contrast Mode</span>
             <input
               type="checkbox"
               checked={darkMode}
-              onChange={(e) => setDarkMode(e.target.checked)}
+              onChange={(e) => {
+                setDarkMode(e.target.checked);
+                showToast(
+                  e.target.checked
+                    ? 'Dark theme enabled'
+                    : 'Light theme enabled',
+                  'info'
+                );
+              }}
               className="w-4 h-4 accent-emerald-700"
             />
           </label>
@@ -1197,6 +1473,478 @@ export const AccountSupportScreen: React.FC = () => {
     );
   }
 
+  // 8.5 DEDICATED BANGLADESH NID VERIFICATION & SECURITY CENTER
+  if (currentScreen === 'nid_security') {
+    const isBn = language === 'BN';
+    const isVerified = nidSecurity.status === 'verified';
+
+    const handleVerifyNidSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      const validation = validateBangladeshNidInput({
+        nidNumber: nidInput,
+        holderName: nidHolderName,
+        dateOfBirth: nidDob,
+      });
+
+      if (!validation.valid) {
+        setNidFormErrors(validation.errors);
+        return;
+      }
+
+      setNidFormErrors({});
+      const res = submitNidVerification({
+        nidNumber: nidInput,
+        holderName: nidHolderName,
+        dateOfBirth: nidDob,
+        frontDocCaptured: frontDocChecked,
+        backDocCaptured: backDocChecked,
+      });
+
+      if (res.valid) {
+        setNidInput('');
+        setShowUpdateNidForm(false);
+      }
+    };
+
+    const fillSampleSmartNid = () => {
+      setNidHolderName(user.fullName || 'Tanvir Ahmed');
+      setNidDob('1996-05-14');
+      setNidInput('1996482910');
+      setFrontDocChecked(true);
+      setBackDocChecked(true);
+      setNidFormErrors({});
+      showToast(
+        isBn
+          ? 'নমুনা ১০-ডিজিট স্মার্ট এনআইডি পূরণ করা হয়েছে'
+          : 'Sample 10-digit Smart NID filled for testing',
+        'info'
+      );
+    };
+
+    return (
+      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+        {/* 1. Digital Bangladesh Smart NID & NBR Customs Status Card */}
+        <div
+          className={`rounded-2xl border p-4 space-y-3.5 transition-all ${
+            isVerified
+              ? 'bg-brand-subtle/35 border-brand-primary'
+              : 'bg-white border-app-border'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                  isVerified
+                    ? 'bg-brand-primary text-white'
+                    : 'bg-app-subtle text-content-secondary border border-app-border'
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h2 className="text-sm font-bold text-content-primary">
+                    {isBn
+                      ? 'বাংলাদেশ জাতীয় পরিচয়পত্র (NID)'
+                      : 'Bangladesh National ID (NID)'}
+                  </h2>
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${
+                      isVerified
+                        ? 'bg-brand-primary text-white'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}
+                  >
+                    {isVerified
+                      ? isBn
+                        ? '✓ যাচাইকৃত'
+                        : '✓ Verified'
+                      : isBn
+                      ? 'অযাচাইকৃত'
+                      : 'Unverified'}
+                  </span>
+                </div>
+                <p className="text-xs text-content-secondary mt-0.5 leading-snug">
+                  {isVerified
+                    ? isBn
+                      ? 'এনবিআর কাস্টমস ফাস্ট-ট্র্যাক এবং উচ্চ-মূল্যের COD সক্রিয় রয়েছে।'
+                      : 'NBR Customs Fast-Track & High-Value COD protection active.'
+                    : isBn
+                    ? 'আন্তর্জাতিক কাস্টমস ক্লিয়ারেন্স ও অ্যাকাউন্ট নিরাপত্তার জন্য এনআইডি যাচাই করুন।'
+                    : 'Verify your NID for Dhaka airport customs clearance & account security.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {isVerified && (
+            <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between border-b border-app-border pb-2">
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-content-muted block">
+                    {isBn ? 'এনআইডি কার্ডধারীর নাম' : 'NID Holder Name'}
+                  </span>
+                  <span className="text-xs font-bold text-content-primary">
+                    {nidSecurity.holderName || user.fullName}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-brand-subtle text-brand-primary text-[10px] font-semibold">
+                  {getBangladeshNidFormatLabel(nidSecurity.nidFormat, isBn)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div>
+                  <span className="text-[10px] text-content-muted block">
+                    {isBn ? 'গোপনীয় এনআইডি নম্বর' : 'Masked NID Number'}
+                  </span>
+                  <span className="font-mono-num font-bold text-content-primary">
+                    {nidSecurity.maskedNid}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-content-muted block">
+                    {isBn ? 'জন্ম তারিখ' : 'Date of Birth'}
+                  </span>
+                  <span className="font-mono-num font-semibold text-content-primary">
+                    {nidSecurity.dateOfBirth}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-content-muted block">
+                    {isBn ? 'কাস্টমস ক্লিয়ারেন্স টোকেন' : 'NBR Customs Token'}
+                  </span>
+                  <span className="font-mono-num text-[11px] font-semibold text-brand-primary">
+                    {nidSecurity.verificationToken}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-content-muted block">
+                    {isBn ? 'যাচাইয়ের তারিখ' : 'Verified On'}
+                  </span>
+                  <span className="font-mono-num text-[11px] font-medium text-content-secondary">
+                    {nidSecurity.verifiedAt || 'Today'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-app-border flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateNidForm((prev) => !prev)}
+                  className="text-xs font-semibold text-brand-primary hover:underline"
+                >
+                  {showUpdateNidForm
+                    ? isBn
+                      ? 'বাতিল করুন'
+                      : 'Cancel Update'
+                    : isBn
+                    ? 'এনআইডি তথ্য পরিবর্তন করুন'
+                    : 'Update NID Record'}
+                </button>
+                <button
+                  type="button"
+                  onClick={revokeNidVerification}
+                  className="text-xs font-medium text-content-muted hover:text-promo-accent transition-colors"
+                >
+                  {isBn ? 'মুছে ফেলুন' : 'Remove NID'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 2. NID Verification Form (Shown when Unverified or Updating) */}
+        {(!isVerified || showUpdateNidForm) && (
+          <form
+            onSubmit={handleVerifyNidSubmit}
+            noValidate
+            className="bg-white rounded-2xl border border-app-border p-4 space-y-3.5"
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-app-border pb-2.5">
+              <div>
+                <h3 className="text-xs font-bold text-content-primary">
+                  {isBn
+                    ? 'এনআইডি যাচাইকরণ ফর্ম'
+                    : 'Verify Bangladesh National ID'}
+                </h3>
+                <p className="text-[11px] text-content-secondary mt-0.5">
+                  {isBn
+                    ? '১০-ডিজিট স্মার্ট কার্ড, ১৩-ডিজিট বা ১৭-ডিজিট এনআইডি সমর্থিত'
+                    : 'Supports 10-digit Smart Card, 13-digit, or 17-digit EC NID'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fillSampleSmartNid}
+                className="h-7 px-2.5 rounded-lg bg-brand-subtle border border-brand-border text-brand-primary text-[11px] font-semibold hover:bg-emerald-100/70 transition-colors shrink-0"
+              >
+                {isBn ? 'ডেমো এনআইডি' : 'Fill Sample NID'}
+              </button>
+            </div>
+
+            <div>
+              <label
+                htmlFor="nid-holder-name"
+                className="block text-xs font-medium text-content-secondary mb-1"
+              >
+                {isBn
+                  ? 'পূর্ণ নাম (এনআইডি অনুযায়ী)'
+                  : 'Full Name (Exactly as on NID)'}
+              </label>
+              <input
+                id="nid-holder-name"
+                type="text"
+                value={nidHolderName}
+                onChange={(e) => {
+                  setNidHolderName(e.target.value);
+                  if (nidFormErrors.holderName) {
+                    setNidFormErrors((p) => ({ ...p, holderName: undefined }));
+                  }
+                }}
+                placeholder="e.g. Tanvir Ahmed"
+                className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+              />
+              {nidFormErrors.holderName && (
+                <p role="alert" className="text-[11px] text-red-600 mt-1">
+                  {nidFormErrors.holderName}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label
+                  htmlFor="nid-number-input"
+                  className="block text-xs font-medium text-content-secondary mb-1"
+                >
+                  {isBn
+                    ? 'এনআইডি নম্বর (১০ / ১৩ / ১৭ ডিজিট)'
+                    : 'NID Number (10 / 13 / 17 Digits)'}
+                </label>
+                <input
+                  id="nid-number-input"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={19}
+                  value={nidInput}
+                  onChange={(e) => {
+                    setNidInput(e.target.value);
+                    if (nidFormErrors.nidNumber) {
+                      setNidFormErrors((p) => ({ ...p, nidNumber: undefined }));
+                    }
+                  }}
+                  placeholder="1996482910"
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                />
+                {nidFormErrors.nidNumber && (
+                  <p role="alert" className="text-[11px] text-red-600 mt-1">
+                    {nidFormErrors.nidNumber}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="nid-dob-input"
+                  className="block text-xs font-medium text-content-secondary mb-1"
+                >
+                  {isBn ? 'জন্ম তারিখ (১৮+ বছর)' : 'Date of Birth (18+ Years)'}
+                </label>
+                <input
+                  id="nid-dob-input"
+                  type="date"
+                  value={nidDob}
+                  onChange={(e) => {
+                    setNidDob(e.target.value);
+                    if (nidFormErrors.dateOfBirth) {
+                      setNidFormErrors((p) => ({ ...p, dateOfBirth: undefined }));
+                    }
+                  }}
+                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                />
+                {nidFormErrors.dateOfBirth && (
+                  <p role="alert" className="text-[11px] text-red-600 mt-1">
+                    {nidFormErrors.dateOfBirth}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Smart NID Card Front & Back Verification Check */}
+            <div className="space-y-1.5">
+              <span className="block text-xs font-medium text-content-secondary">
+                {isBn
+                  ? 'স্মার্ট কার্ড ডকুমেন্ট যাচাই'
+                  : 'Smart Card Document Check'}
+              </span>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setFrontDocChecked((v) => !v)}
+                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors ${
+                    frontDocChecked
+                      ? 'bg-brand-subtle/40 border-brand-primary text-content-primary'
+                      : 'bg-app-subtle border-app-border text-content-secondary'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold truncate">
+                      {isBn ? 'সামনের অংশ' : 'NID Front Side'}
+                    </p>
+                    <p className="text-[10px] text-content-muted truncate">
+                      {frontDocChecked ? 'Chip & Photo Ready' : 'Tap to confirm'}
+                    </p>
+                  </div>
+                  <CheckCircle2
+                    className={`w-4 h-4 shrink-0 ${
+                      frontDocChecked ? 'text-brand-primary' : 'text-content-muted'
+                    }`}
+                  />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setBackDocChecked((v) => !v)}
+                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors ${
+                    backDocChecked
+                      ? 'bg-brand-subtle/40 border-brand-primary text-content-primary'
+                      : 'bg-app-subtle border-app-border text-content-secondary'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold truncate">
+                      {isBn ? 'পেছনের অংশ' : 'NID Back Side'}
+                    </p>
+                    <p className="text-[10px] text-content-muted truncate">
+                      {backDocChecked ? 'MRZ Barcode Ready' : 'Tap to confirm'}
+                    </p>
+                  </div>
+                  <CheckCircle2
+                    className={`w-4 h-4 shrink-0 ${
+                      backDocChecked ? 'text-brand-primary' : 'text-content-muted'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-app-subtle border border-app-border flex items-start gap-2.5">
+              <Lock className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+              <p className="text-[11px] text-content-secondary leading-relaxed">
+                {isBn
+                  ? 'নিরাপত্তা নীতি: আপনার পূর্ণ এনআইডি নম্বর কখনোই ব্রাউজারে সংরক্ষণ করা হয় না। শুধুমাত্র শেষ ৪ ডিজিট (•••• ১২৩৪) ও কাস্টমস টোকেন সংরক্ষিত থাকে।'
+                  : 'Zero-PII Storage Guarantee: Your full NID number is never stored in plain text. Only the masked last 4 digits and an encrypted NBR customs token are retained.'}
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>
+                {isBn
+                  ? 'এনআইডি যাচাই ও সেভ করুন'
+                  : 'Verify & Activate Customs Fast-Track'}
+              </span>
+            </button>
+          </form>
+        )}
+
+        {/* 3. Account & Checkout Security Controls */}
+        <div className="bg-white rounded-2xl border border-app-border p-4 space-y-3">
+          <div className="flex items-center gap-2 border-b border-app-border pb-2.5">
+            <Fingerprint className="w-4 h-4 text-brand-primary" />
+            <h3 className="text-xs font-bold text-content-primary">
+              {isBn
+                ? 'অ্যাকাউন্ট ও পেমেন্ট নিরাপত্তা নিয়ন্ত্রণ'
+                : 'Account & Checkout Security Controls'}
+            </h3>
+          </div>
+
+          <div className="divide-y divide-app-border">
+            <label className="py-2.5 first:pt-0 flex items-center justify-between gap-3 cursor-pointer">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-content-primary">
+                  {isBn
+                    ? '২-ধাপ ওটিপি যাচাইকরণ (2FA)'
+                    : '2-Step SMS / Email OTP Verification'}
+                </p>
+                <p className="text-[11px] text-content-secondary mt-0.5">
+                  {isBn
+                    ? 'নতুন ডিভাইস লগইন এবং পেমেন্ট পরিবর্তনের সময় ওটিপি আবশ্যক'
+                    : 'Require OTP when signing in from a new device or changing wallets'}
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={nidSecurity.twoFactorEnabled}
+                onChange={(e) =>
+                  updateSecurityPreferences({
+                    twoFactorEnabled: e.target.checked,
+                  })
+                }
+                className="w-4 h-4 accent-emerald-700 shrink-0"
+              />
+            </label>
+
+            <label className="py-2.5 flex items-center justify-between gap-3 cursor-pointer">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-content-primary">
+                  {isBn
+                    ? 'উচ্চ-মূল্যের COD সুরক্ষা লক (≥ ৳১৫,০০০)'
+                    : 'High-Value COD NID Protection (≥ ৳15,000)'}
+                </p>
+                <p className="text-[11px] text-content-secondary mt-0.5">
+                  {isBn
+                    ? 'অনুমোদিত এনআইডি ছাড়া ১৫,০০০ টাকার বেশি ক্যাশ অন ডেলিভারি অর্ডার ব্লক করুন'
+                    : 'Prevent unauthorized high-value Cash on Delivery orders without verified NID'}
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={nidSecurity.codSecurityLock}
+                onChange={(e) =>
+                  updateSecurityPreferences({
+                    codSecurityLock: e.target.checked,
+                  })
+                }
+                className="w-4 h-4 accent-emerald-700 shrink-0"
+              />
+            </label>
+
+            <label className="py-2.5 last:pb-0 flex items-center justify-between gap-3 cursor-pointer">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-content-primary">
+                  {isBn
+                    ? 'বায়োমেট্রিক পাসকি লক'
+                    : 'Biometric / Device Passkey Approval'}
+                </p>
+                <p className="text-[11px] text-content-secondary mt-0.5">
+                  {isBn
+                    ? 'দ্রুত চেকআউটের জন্য ডিভাইস আনলক পিন বা ফিঙ্গারপ্রিন্ট ব্যবহার করুন'
+                    : 'Use device screen lock or fingerprint for 1-tap order confirmation'}
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={nidSecurity.biometricPasskeyEnabled}
+                onChange={(e) =>
+                  updateSecurityPreferences({
+                    biometricPasskeyEnabled: e.target.checked,
+                  })
+                }
+                className="w-4 h-4 accent-emerald-700 shrink-0"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 9. DEFAULT: ACCOUNT / PROFILE DASHBOARD (Customer Suite + Admin Role Switcher)
   const activeOrdersCount = orders.filter((o) => o.status !== 'Delivered').length;
   const activeVouchersCount = promoVouchers.filter((v) => v.active).length;
@@ -1218,6 +1966,18 @@ export const AccountSupportScreen: React.FC = () => {
         {
           label:
             language === 'BN'
+              ? 'এনআইডি ও নিরাপত্তা যাচাই'
+              : 'NID & Security Center',
+          subtitle:
+            nidSecurity.status === 'verified'
+              ? `Verified (${nidSecurity.maskedNid}) · NBR Fast-Track`
+              : 'Verify BD NID for customs & COD security',
+          icon: ShieldCheck,
+          screen: 'nid_security' as const,
+        },
+        {
+          label:
+            language === 'BN'
               ? 'ডেলিভারি ঠিকানা'
               : 'Delivery Addresses',
           subtitle: `${addresses.length} saved`,
@@ -1229,7 +1989,7 @@ export const AccountSupportScreen: React.FC = () => {
             language === 'BN'
               ? 'পেমেন্ট মাধ্যম'
               : 'Payment Methods',
-          subtitle: 'bKash, Nagad, Card, COD',
+          subtitle: 'bKash, Nagad, Rocket, Upay, Card, COD',
           icon: CreditCard,
           screen: 'payment_methods' as const,
         },
@@ -1364,9 +2124,31 @@ export const AccountSupportScreen: React.FC = () => {
                 .toUpperCase()}
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-bold text-content-primary truncate">
-                {user.fullName}
-              </h2>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-sm font-bold text-content-primary truncate">
+                  {user.fullName}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('nid_security')}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                    nidSecurity.status === 'verified'
+                      ? 'bg-brand-subtle text-brand-primary border border-brand-border'
+                      : 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  <ShieldCheck className="w-3 h-3 shrink-0" />
+                  <span>
+                    {nidSecurity.status === 'verified'
+                      ? language === 'BN'
+                        ? 'এনআইডি যাচাইকৃত'
+                        : 'NID Verified'
+                      : language === 'BN'
+                      ? 'এনআইডি যাচাই করুন'
+                      : 'Verify NID'}
+                  </span>
+                </button>
+              </div>
               <p className="text-xs text-content-secondary truncate mt-0.5">
                 {user.email}
               </p>
@@ -1544,11 +2326,20 @@ export const AccountSupportScreen: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        required
                         value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
+                        onChange={(e) => {
+                          setEditName(e.target.value);
+                          if (profileErrors.name) {
+                            setProfileErrors((p) => ({ ...p, name: '' }));
+                          }
+                        }}
                         className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                       />
+                      {profileErrors.name && (
+                        <p role="alert" className="text-[11px] text-red-600 mt-1">
+                          {profileErrors.name}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-content-secondary mb-1">
@@ -1556,11 +2347,20 @@ export const AccountSupportScreen: React.FC = () => {
                       </label>
                       <input
                         type="email"
-                        required
                         value={editEmail}
-                        onChange={(e) => setEditEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEditEmail(e.target.value);
+                          if (profileErrors.email) {
+                            setProfileErrors((p) => ({ ...p, email: '' }));
+                          }
+                        }}
                         className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                       />
+                      {profileErrors.email && (
+                        <p role="alert" className="text-[11px] text-red-600 mt-1">
+                          {profileErrors.email}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-content-secondary mb-1">
@@ -1568,11 +2368,20 @@ export const AccountSupportScreen: React.FC = () => {
                       </label>
                       <input
                         type="tel"
-                        required
                         value={editPhone}
-                        onChange={(e) => setEditPhone(e.target.value)}
+                        onChange={(e) => {
+                          setEditPhone(e.target.value);
+                          if (profileErrors.phone) {
+                            setProfileErrors((p) => ({ ...p, phone: '' }));
+                          }
+                        }}
                         className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary"
                       />
+                      {profileErrors.phone && (
+                        <p role="alert" className="text-[11px] text-red-600 mt-1">
+                          {profileErrors.phone}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="px-4 py-3 border-t border-app-border bg-white flex gap-2 shrink-0">

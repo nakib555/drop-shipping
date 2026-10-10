@@ -1,4 +1,8 @@
-import { PaymentMethodId, ShippingAddress } from '../types/deshimart';
+import {
+  BangladeshNidFormat,
+  PaymentMethodId,
+  ShippingAddress,
+} from '../types/deshimart';
 
 /**
  * ============================================================================
@@ -11,6 +15,8 @@ import { PaymentMethodId, ShippingAddress } from '../types/deshimart';
  * 4. Curated hub/locality search presets with truthful fallback metadata.
  * 5. Centralized, honest payment-method capability definitions and PCI-safe
  *    preference sanitization (never stores raw card PAN or CVV).
+ * 6. Bangladesh Election Commission (EC) NID validation (10, 13, 17 digits),
+ *    DOB age/birth-year cross-check, and PII-safe NID masking.
  */
 
 export interface BangladeshDivisionGroup {
@@ -503,3 +509,143 @@ export function isMatchingSavedAddress(
       b.phone.replace(/\D/g, '').slice(-11)
   );
 }
+
+/**
+ * ============================================================================
+ * BANGLADESH NATIONAL ID (NID) & IMPORTER SECURITY VALIDATION
+ * ============================================================================
+ * Supports official Bangladesh Election Commission (EC) NID formats:
+ * - 10-Digit Smart NID Card (e.g., 1996482910)
+ * - 13-Digit Legacy NID (e.g., 2694829104821)
+ * - 17-Digit Extended NID prefixed with 4-digit birth year (e.g., 19962694829104821)
+ */
+export function cleanNidDigits(raw: string): string {
+  return (raw || '').replace(/\D/g, '');
+}
+
+export function detectBangladeshNidFormat(
+  raw: string
+): BangladeshNidFormat | null {
+  const digits = cleanNidDigits(raw);
+  if (/^\d{10}$/.test(digits)) return '10_digit_smart';
+  if (/^\d{13}$/.test(digits)) return '13_digit_legacy';
+  if (/^(19|20)\d{15}$/.test(digits)) return '17_digit_full';
+  return null;
+}
+
+export function getBangladeshNidFormatLabel(
+  format?: BangladeshNidFormat | null,
+  isBn = false
+): string {
+  if (format === '10_digit_smart') {
+    return isBn ? '১০-ডিজিট স্মার্ট এনআইডি' : '10-Digit Smart NID';
+  }
+  if (format === '13_digit_legacy') {
+    return isBn ? '১৩-ডিজিট এনআইডি' : '13-Digit National ID';
+  }
+  if (format === '17_digit_full') {
+    return isBn ? '১৭-ডিজিট জন্মসালযুক্ত এনআইডি' : '17-Digit Extended NID';
+  }
+  return isBn ? 'বাংলাদেশ এনআইডি' : 'Bangladesh NID';
+}
+
+/**
+ * Masks a Bangladesh NID number so raw PII is never persisted in localStorage
+ * or exposed on screen after submission.
+ */
+export function maskBangladeshNid(raw: string): string {
+  const digits = cleanNidDigits(raw);
+  if (digits.length >= 4) {
+    const last4 = digits.slice(-4);
+    return `•••• •••• ${last4}`;
+  }
+  return '•••• •••• ••••';
+}
+
+export interface BangladeshNidValidationResult {
+  valid: boolean;
+  format: BangladeshNidFormat | null;
+  maskedNid: string;
+  verificationToken: string;
+  errors: {
+    nidNumber?: string;
+    holderName?: string;
+    dateOfBirth?: string;
+  };
+}
+
+export function validateBangladeshNidInput(input: {
+  nidNumber: string;
+  holderName: string;
+  dateOfBirth: string;
+}): BangladeshNidValidationResult {
+  const errors: {
+    nidNumber?: string;
+    holderName?: string;
+    dateOfBirth?: string;
+  } = {};
+
+  const digits = cleanNidDigits(input.nidNumber);
+  const format = detectBangladeshNidFormat(digits);
+
+  // Reject repetitive dummy sequences like 0000000000 or 1111111111
+  const isAllSameDigit = digits.length > 0 && /^(\d)\1+$/.test(digits);
+
+  if (!digits) {
+    errors.nidNumber =
+      'Enter your 10-digit Smart NID, 13-digit NID, or 17-digit NID number.';
+  } else if (!format || isAllSameDigit) {
+    errors.nidNumber =
+      'Invalid NID format. Must be exactly 10 digits (Smart Card), 13 digits, or 17 digits starting with birth year.';
+  }
+
+  const trimmedName = (input.holderName || '').trim();
+  if (trimmedName.length < 3) {
+    errors.holderName =
+      'Enter the full name exactly as printed on your Bangladesh National ID card.';
+  }
+
+  const dobRaw = (input.dateOfBirth || '').trim();
+  let birthYear: number | null = null;
+  if (!dobRaw) {
+    errors.dateOfBirth = 'Select your Date of Birth as shown on your NID.';
+  } else {
+    const parsed = new Date(dobRaw);
+    const year = parsed.getFullYear();
+    const nowYear = new Date().getFullYear();
+    if (Number.isNaN(parsed.getTime()) || year < 1920 || year > nowYear) {
+      errors.dateOfBirth = 'Enter a valid Date of Birth.';
+    } else if (nowYear - year < 18) {
+      errors.dateOfBirth =
+        'NID holder must be at least 18 years old for customs clearance.';
+    } else {
+      birthYear = year;
+    }
+  }
+
+  // If 17-digit NID is provided and birthYear is valid, ensure first 4 digits match birth year
+  if (
+    !errors.nidNumber &&
+    format === '17_digit_full' &&
+    birthYear !== null &&
+    !digits.startsWith(String(birthYear))
+  ) {
+    errors.nidNumber = `17-digit NID must start with your 4-digit birth year (${birthYear}).`;
+  }
+
+  const valid = Object.keys(errors).length === 0 && format !== null;
+  const last4 = digits.slice(-4) || '0000';
+  const checksum = digits
+    .split('')
+    .reduce((acc, ch, idx) => acc + Number(ch) * (idx + 3), 0);
+  const verificationToken = `NID-BD-${String((checksum % 8999) + 1000)}-${last4}`;
+
+  return {
+    valid,
+    format,
+    maskedNid: maskBangladeshNid(digits),
+    verificationToken,
+    errors,
+  };
+}
+

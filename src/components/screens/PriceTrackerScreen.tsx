@@ -13,6 +13,8 @@ export const PriceTrackerScreen: React.FC = () => {
   const {
     products,
     selectedProduct,
+    selectedRouteByProduct,
+    selectRouteForProduct,
     navigateTo,
     formatPrice,
     priceAlerts,
@@ -23,8 +25,31 @@ export const PriceTrackerScreen: React.FC = () => {
   const [range, setRange] = useState<'7D' | '30D' | '90D' | '1Y'>('30D');
   const [activePointIndex, setActivePointIndex] = useState<number | null>(null);
 
-  const historyPoints =
+  const activeRouteId =
+    selectedRouteByProduct[selectedProduct.id] || selectedProduct.routes[0]?.id;
+  const activeRoute =
+    selectedProduct.routes.find((r) => r.id === activeRouteId) ||
+    selectedProduct.routes[0];
+
+  const activeLandedBdt = activeRoute
+    ? activeRoute.totalLandedBdt
+    : selectedProduct.totalLandedBdt;
+  const routePriceDelta = activeLandedBdt - selectedProduct.totalLandedBdt;
+  const activeOriginalBdt = Math.max(
+    activeLandedBdt,
+    selectedProduct.originalLandedBdt + routePriceDelta
+  );
+  const activeLowest30dBdt = Math.max(
+    0,
+    selectedProduct.lowest30dBdt + routePriceDelta
+  );
+
+  const rawHistoryPoints =
     selectedProduct.priceHistory[range] || selectedProduct.priceHistory['30D'];
+  const historyPoints = rawHistoryPoints.map((pt) => ({
+    ...pt,
+    priceBdt: Math.max(0, pt.priceBdt + routePriceDelta),
+  }));
   const prices = historyPoints.map((p) => p.priceBdt);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
@@ -78,36 +103,61 @@ export const PriceTrackerScreen: React.FC = () => {
       </div>
 
       {/* Product Summary Card */}
-      <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <img
-            src={selectedProduct.image}
-            alt={selectedProduct.name}
-            referrerPolicy="no-referrer"
-            className="w-16 h-16 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
-          />
-          <div className="min-w-0">
-            <h2 className="text-sm leading-5 font-medium text-content-primary truncate">
-              {selectedProduct.name}
-            </h2>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="tabular-nums text-lg leading-6 font-bold text-content-primary">
-                {formatPrice(selectedProduct.totalLandedBdt)}
-              </span>
-              <span className="tabular-nums text-xs leading-4 text-content-muted line-through">
-                {formatPrice(selectedProduct.originalLandedBdt)}
+      <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={selectedProduct.image}
+              alt={selectedProduct.name}
+              referrerPolicy="no-referrer"
+              className="w-16 h-16 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
+            />
+            <div className="min-w-0">
+              <h2 className="text-sm leading-5 font-medium text-content-primary truncate">
+                {selectedProduct.name}
+              </h2>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="tabular-nums text-lg leading-6 font-bold text-content-primary">
+                  {formatPrice(activeLandedBdt)}
+                </span>
+                <span className="tabular-nums text-xs leading-4 text-content-muted line-through">
+                  {formatPrice(activeOriginalBdt)}
+                </span>
+              </div>
+              <span className="text-[11px] leading-4 text-brand-primary font-medium block truncate">
+                {activeRoute ? `${activeRoute.name} · ${activeRoute.deliveryDays}` : `${selectedProduct.discountPercent}% below 90-day average`}
               </span>
             </div>
-            <span className="text-[11px] leading-4 text-brand-primary font-medium">
-              {selectedProduct.discountPercent}% below 90-day average
-            </span>
+          </div>
+
+          <div className="px-3 py-2 rounded-xl bg-brand-subtle border border-brand-border text-brand-primary text-[11px] leading-4 font-semibold shrink-0 text-center">
+            <TrendingDown className="w-4 h-4 mx-auto mb-0.5" />
+            <span>Low Price</span>
           </div>
         </div>
 
-        <div className="px-3 py-2 rounded-xl bg-brand-subtle border border-brand-border text-brand-primary text-[11px] leading-4 font-semibold shrink-0 text-center">
-          <TrendingDown className="w-4 h-4 mx-auto mb-0.5" />
-          <span>Low Price</span>
-        </div>
+        {/* Route Switcher Pills */}
+        {selectedProduct.routes.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-app-border">
+            {selectedProduct.routes.map((rt) => {
+              const selected = rt.id === activeRoute?.id;
+              return (
+                <button
+                  key={rt.id}
+                  type="button"
+                  onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
+                  className={`h-7 px-2.5 rounded-lg text-[11px] font-medium whitespace-nowrap border transition-colors ${
+                    selected
+                      ? 'bg-brand-subtle border-brand-primary text-brand-primary font-semibold'
+                      : 'bg-app-subtle border-app-border text-content-secondary hover:text-content-primary'
+                  }`}
+                >
+                  {rt.name} ({formatPrice(rt.totalLandedBdt)})
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Interactive SVG Price History Card */}
@@ -187,7 +237,7 @@ export const PriceTrackerScreen: React.FC = () => {
 
             {/* Animated Price Line */}
             <motion.polyline
-              key={`${selectedProduct.id}-${range}`}
+              key={`${selectedProduct.id}-${activeRoute?.id || 'default'}-${range}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.25 }}
@@ -240,7 +290,7 @@ export const PriceTrackerScreen: React.FC = () => {
               Lowest Price in 30 Days
             </span>
             <span className="tabular-nums text-sm leading-5 font-bold text-content-primary mt-1 block">
-              {formatPrice(selectedProduct.lowest30dBdt)}
+              {formatPrice(activeLowest30dBdt)}
             </span>
           </div>
           <div className="p-3 rounded-lg bg-app-subtle border border-app-border">
@@ -264,7 +314,7 @@ export const PriceTrackerScreen: React.FC = () => {
           <div>
             <h3 className="text-sm leading-5 font-medium text-content-primary">Price Drop Alert</h3>
             <p className="text-xs leading-4 text-content-secondary mt-1">
-              Notify me when landed cost drops further
+              Notify me when landed cost drops below {formatPrice(activeLandedBdt)}
             </p>
           </div>
         </div>
@@ -299,7 +349,13 @@ export const PriceTrackerScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            addToCart(selectedProduct.id, 1);
+            addToCart(
+              selectedProduct.id,
+              1,
+              selectedProduct.colors[0]?.name,
+              selectedProduct.sizes?.[0],
+              activeRoute?.id
+            );
             navigateTo('cart');
           }}
           className="h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"

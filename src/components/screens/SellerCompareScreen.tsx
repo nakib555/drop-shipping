@@ -70,12 +70,27 @@ export const SellerCompareScreen: React.FC = () => {
       );
     }
 
+    const routeIdA = selectedRouteByProduct[prodA.id] || prodA.routes[0]?.id;
+    const routeA =
+      prodA.routes.find((r) => r.id === routeIdA) || prodA.routes[0];
+    const landedA = routeA ? routeA.totalLandedBdt : prodA.totalLandedBdt;
+
+    const routeIdB = selectedRouteByProduct[prodB.id] || prodB.routes[0]?.id;
+    const routeB =
+      prodB.routes.find((r) => r.id === routeIdB) || prodB.routes[0];
+    const landedB = routeB ? routeB.totalLandedBdt : prodB.totalLandedBdt;
+
     const specRows = [
       {
         label: 'Landed Price',
-        valA: formatPrice(prodA.totalLandedBdt),
-        valB: formatPrice(prodB.totalLandedBdt),
+        valA: formatPrice(landedA),
+        valB: formatPrice(landedB),
         highlight: true,
+      },
+      {
+        label: 'Shipping Route',
+        valA: routeA ? formatCleanRouteName(routeA.name) : 'Direct Express',
+        valB: routeB ? formatCleanRouteName(routeB.name) : 'Direct Express',
       },
       {
         label: 'Customer Rating',
@@ -104,8 +119,8 @@ export const SellerCompareScreen: React.FC = () => {
       },
       {
         label: 'Delivery Window',
-        valA: formatCleanDeliveryWindow(prodA.routes[0]?.deliveryDays),
-        valB: formatCleanDeliveryWindow(prodB.routes[0]?.deliveryDays),
+        valA: formatCleanDeliveryWindow(routeA?.deliveryDays),
+        valB: formatCleanDeliveryWindow(routeB?.deliveryDays),
       },
     ];
 
@@ -113,7 +128,10 @@ export const SellerCompareScreen: React.FC = () => {
       <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Product Selectors */}
         <div className="grid grid-cols-2 gap-3">
-          {[prodA, prodB].map((prod, idx) => (
+          {[
+            { prod: prodA, landed: landedA },
+            { prod: prodB, landed: landedB },
+          ].map(({ prod, landed }, idx) => (
             <div
               key={idx}
               className="bg-white rounded-xl border border-app-border p-3 flex flex-col items-center text-center"
@@ -146,7 +164,7 @@ export const SellerCompareScreen: React.FC = () => {
                 {prod.name}
               </h3>
               <span className="tabular-nums text-sm leading-5 font-bold text-content-primary mt-1">
-                {formatPrice(prod.totalLandedBdt)}
+                {formatPrice(landed)}
               </span>
             </div>
           ))}
@@ -195,7 +213,15 @@ export const SellerCompareScreen: React.FC = () => {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => addToCart(prodA.id, 1)}
+            onClick={() =>
+              addToCart(
+                prodA.id,
+                1,
+                prodA.colors[0]?.name,
+                prodA.sizes?.[0],
+                routeA?.id
+              )
+            }
             className="h-11 rounded-xl bg-white border border-app-borderStrong text-content-primary hover:bg-slate-50 text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
@@ -203,7 +229,15 @@ export const SellerCompareScreen: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => addToCart(prodB.id, 1)}
+            onClick={() =>
+              addToCart(
+                prodB.id,
+                1,
+                prodB.colors[0]?.name,
+                prodB.sizes?.[0],
+                routeB?.id
+              )
+            }
             className="h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />

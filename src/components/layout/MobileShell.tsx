@@ -51,7 +51,7 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
           isInstalled
             ? 'lg:max-w-none lg:h-dvh lg:rounded-none lg:border-0 lg:shadow-none'
             : 'lg:max-w-[440px] lg:h-[92dvh] lg:max-h-[880px] lg:rounded-3xl lg:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.45)] lg:border lg:border-slate-700/80'
-        } ${darkMode ? 'contrast-105' : ''}`}
+        } ${darkMode ? 'dark-theme' : ''}`}
       >
         {/* Fixed Top App Bar */}
         <TopAppBar />

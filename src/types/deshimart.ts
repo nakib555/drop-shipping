@@ -18,6 +18,7 @@ export type ScreenId =
   | 'orders'
   | 'order_tracking'
   | 'account'
+  | 'nid_security'
   | 'addresses'
   | 'payment_methods'
   | 'supplier_store'
@@ -31,6 +32,27 @@ export type ScreenId =
 
 // Clean production types — zero ExperienceMode types
 export type UserRole = 'customer' | 'admin';
+
+export type NidVerificationStatus = 'unverified' | 'verified';
+export type BangladeshNidFormat =
+  | '10_digit_smart'
+  | '13_digit_legacy'
+  | '17_digit_full';
+
+export interface NidVerificationRecord {
+  status: NidVerificationStatus;
+  nidFormat?: BangladeshNidFormat;
+  maskedNid?: string;
+  holderName?: string;
+  dateOfBirth?: string;
+  verificationToken?: string;
+  verifiedAt?: string;
+  frontDocCaptured?: boolean;
+  backDocCaptured?: boolean;
+  twoFactorEnabled: boolean;
+  codSecurityLock: boolean;
+  biometricPasskeyEnabled: boolean;
+}
 
 export interface PromoVoucher {
   code: string;
@@ -230,6 +252,8 @@ export interface Order {
   pricingStatus?: 'estimated' | 'confirmed';
   paymentTokenId?: string;
   maskedPaymentAccount?: string;
+  importerNidToken?: string;
+  importerMaskedNid?: string;
   paymentMethod: PaymentMethodId;
   shippingMethod: ShippingMethodId;
   shippingAddress: ShippingAddress;
