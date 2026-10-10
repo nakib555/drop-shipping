@@ -1,28 +1,20 @@
-# DeshiMart — Cloudflare & Stale File Overlap Stabilization Plan
+# DeshiMart — Fix Cloudflare Pages `UnknownLockfileVersion` Build Error
 
-Resolving overlapping legacy files, stale service worker / Cloudflare edge caches, and unversioned browser storage that cause instability across builds.
-
----
-
-## 1. Remove Overlapping Build & Legacy Artifacts
-- **Clean `dev-dist/` & Build Scripts**:
-  - Remove generated `dev-dist/` (`dev-dist/sw.js`, `dev-dist/workbox-*.js`) from the workspace and add `dev-dist/` and `.wrangler/` to `.gitignore` and `package.json`'s `clean` script (`rm -rf dist dev-dist .wrangler server.js`).
-  - Disable `devOptions.enabled` in `vite.config.ts` when `DISABLE_HMR === 'true'` so dev-mode service worker files in `dev-dist/` never intercept or cache-lock live Vite module edits during preview, while keeping full production PWA service worker generation on `vite build`.
-- **Remove Unused Legacy Stubs & Tests**:
-  - Remove `NakshiStitchDivider` and `RickshawCornerMotif` stub usages from `src/components/screens/CategoriesScreen.tsx` and delete the legacy `src/components/shared/ExperienceModeSwitcher.tsx` stub file and unused `src/services/domainVerificationSuite.ts`.
+Resolving the Cloudflare Pages deployment failure (`UnknownLockfileVersion: failed to parse lockfile: 'bun.lock'` on `bun@1.2.15`).
 
 ---
 
-## 2. Cloudflare Pages / Workers Cache & Routing Configuration
-- **Update `public/_headers` for Cloudflare Edge & Browser Cache Safety**:
-  - Ensure `index.html`, `/sw.js`, `/registerSW.js`, `/manifest.webmanifest`, and `/workbox-*.js` use strict `Cache-Control: public, max-age=0, must-revalidate` so Cloudflare and browsers never serve a stale service worker or outdated HTML shell pointing to old chunk hashes.
-  - Keep `/assets/*` as `Cache-Control: public, max-age=31536000, immutable` for content-hashed Vite bundles.
-- **Update `public/_routes.json` & `wrangler.json`**:
-  - Exclude static PWA & icon assets (`/assets/*`, `/sw.js`, `/workbox-*.js`, `/manifest.webmanifest`, `/icon.svg`, `/*.png`) from SPA fallback interception in `public/_routes.json` so Cloudflare serves PWA and static files directly with proper MIME types.
-  - Set a valid, current `compatibility_date` (`"2025-02-01"`) in `wrangler.json`.
+## Root Cause
+- The local workspace has **Bun 1.4.2**, which writes `bun.lock` with `"lockfileVersion": 2`.
+- Cloudflare Pages' build image runs **Bun 1.2.15**, which only understands `"lockfileVersion": 0` or `1` and immediately fails when `bun.lock` is present (`bun install --frozen-lockfile` → `Unknown lockfile version`).
+- Cloudflare Pages also detects `nodejs@24.18.0` and uses `npm ci` when a standard `package-lock.json` is present instead of `bun.lock`.
 
 ---
 
-## 3. Versioned Storage & Automatic Stale-Cache Purge
-- **Automatic Cache & Storage Migration (`src/hooks/usePWAInstall.ts` & `src/context/DeshiMartContext.tsx`)**:
-  - Introduce an explicit `APP_BUILD_VERSION = '2026.10.2'` key check on startup: if the browser holds older cached storage or legacy service workers from previous iterations, automatically purge outdated CacheStorage entries and cleanly migrate `localStorage` keys so old data shapes never overlap with current components.
+## Implementation Steps
+1. **Delete `bun.lock` and Ignore Future Bun Lockfiles**:
+   - Delete `/bun.lock` from the project root so Cloudflare Pages does not trigger `bun@1.2.15` lockfile parsing.
+   - Add `bun.lock` and `bun.lockb` to `.gitignore` so local Bun commands never re-introduce an incompatible lockfile into Git commits.
+2. **Generate Standard `package-lock.json` & Set `packageManager` in `package.json`**:
+   - Add `"packageManager": "npm@10.9.8"` and `"engines": { "node": ">=20.0.0" }` to `package.json`.
+   - Generate a clean `package-lock.json` using `npm install --package-lock-only` so Cloudflare Pages uses Node.js + `npm` cleanly and deterministically without Bun lockfile version errors.
