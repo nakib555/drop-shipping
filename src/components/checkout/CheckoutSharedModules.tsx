@@ -79,7 +79,7 @@ export const CheckoutProgressHeader: React.FC<CheckoutStepBarProps> = ({
 
 /**
  * 2. COMPLETE LANDED PRICE BREAKDOWN TABLE
- * Product-first, aligned tabular breakdown with confirmed vs pre-cleared customs items.
+ * Clean, aligned tabular breakdown for Cart and Checkout screens.
  */
 export interface CheckoutPriceBreakdownProps {
   itemCount: number;
@@ -108,13 +108,10 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
   promoCode,
   promoDiscountBdt,
   shippingBdt,
-  shippingLabel = 'Doorstep Delivery Speed',
+  shippingLabel = 'Delivery',
   totalBdt,
   formatPrice,
   compact = false,
-  quoteId,
-  ruleVersion,
-  quoteStatus = 'estimated',
 }) => {
   return (
     <div
@@ -123,27 +120,16 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <div>
-          <h3 className="text-xs font-semibold text-content-primary">
-            Landed Cost Summary
-          </h3>
-          {quoteId && (
-            <span className="text-[10px] font-mono-num text-content-muted block mt-0.5">
-              {quoteId} · {ruleVersion || 'NBR Tariff'}
-            </span>
-          )}
-        </div>
+        <h3 className="text-xs font-semibold text-content-primary">
+          Order Summary
+        </h3>
         <span className="text-[11px] font-medium text-brand-primary inline-flex items-center gap-1 shrink-0">
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>
-            {quoteStatus === 'confirmed'
-              ? 'Confirmed Total'
-              : 'Estimated Landed'}
-          </span>
+          <span>Duty & VAT included</span>
         </span>
       </div>
 
-      <div className="space-y-2 text-xs leading-4 pt-1 border-t border-app-border/80">
+      <div className="space-y-2 text-xs leading-4 pt-2 border-t border-app-border/80">
         <div className="flex justify-between text-content-secondary">
           <span>
             Items Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})
@@ -154,14 +140,14 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
         </div>
 
         <div className="flex justify-between text-content-secondary">
-          <span>International Linehaul Freight</span>
+          <span>International Shipping</span>
           <span className="tabular-nums font-medium text-content-primary">
             {formatPrice(freightBdt)}
           </span>
         </div>
 
         <div className="flex justify-between text-content-secondary">
-          <span>Pre-Cleared Customs Duty & BD VAT</span>
+          <span>Customs & Import VAT</span>
           <span className="tabular-nums font-medium text-content-primary">
             {formatPrice(dutyAndVatBdt)}
           </span>
@@ -169,7 +155,7 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
 
         {consolidationSavingsBdt > 0 && (
           <div className="flex justify-between text-brand-primary font-medium">
-            <span>Combined Parcel Freight Savings (25%)</span>
+            <span>Combined Parcel Savings</span>
             <span className="tabular-nums font-semibold">
               -{formatPrice(consolidationSavingsBdt)}
             </span>
@@ -201,14 +187,9 @@ export const CheckoutPriceBreakdown: React.FC<CheckoutPriceBreakdownProps> = ({
         </div>
 
         <div className="pt-2.5 border-t border-app-border flex justify-between items-baseline">
-          <div>
-            <span className="text-sm font-semibold text-content-primary block">
-              Total Payable
-            </span>
-            <span className="text-[11px] text-content-muted">
-              Final landed total · No extra fees on delivery
-            </span>
-          </div>
+          <span className="text-sm font-semibold text-content-primary">
+            Total Payable
+          </span>
           <span className="tabular-nums text-lg font-bold text-content-primary tracking-tight">
             {formatPrice(totalBdt)}
           </span>
@@ -238,7 +219,7 @@ export interface CheckoutStickyFooterProps {
 export const CheckoutStickyFooter: React.FC<CheckoutStickyFooterProps> = ({
   totalLabel = 'Total Payable',
   totalFormatted,
-  subLabel = 'Duty & VAT included',
+  subLabel,
   primaryLabel,
   loadingLabel = 'Processing...',
   disabled = false,
@@ -281,9 +262,11 @@ export const CheckoutStickyFooter: React.FC<CheckoutStickyFooterProps> = ({
               {totalFormatted}
             </span>
           </div>
-          <span className="block text-[10px] text-brand-primary font-medium truncate">
-            {subLabel}
-          </span>
+          {subLabel && (
+            <span className="block text-[10px] text-content-secondary truncate">
+              {subLabel}
+            </span>
+          )}
         </div>
 
         <button

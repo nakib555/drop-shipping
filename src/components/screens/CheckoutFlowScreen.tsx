@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
-  AlertCircle,
   Banknote,
-  Building2,
   Check,
   CheckCircle2,
-  Clock,
   CreditCard,
   Edit3,
-  Lock,
   MapPin,
   Minus,
   Package,
   Plus,
-  ShieldCheck,
   Smartphone,
   Trash2,
   Truck,
@@ -77,8 +72,6 @@ export const CheckoutFlowScreen: React.FC = () => {
     cart,
     cartCount,
     updateCartQuantity,
-    removeFromCart,
-    consolidateParcel,
     promoCode,
     products,
     cartTotals,
@@ -105,10 +98,9 @@ export const CheckoutFlowScreen: React.FC = () => {
   // Payment Validation State
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Order Submission State (Duplicate Guard + Retry + Simulate Network Error)
+  // Order Submission State (Duplicate Guard + Retry)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [simulateGatewayFailure, setSimulateGatewayFailure] = useState(false);
   const submissionLockRef = React.useRef(false);
 
   const activeAddress =
@@ -197,22 +189,17 @@ export const CheckoutFlowScreen: React.FC = () => {
             onNavigateStep={(scr) => navigateTo(scr)}
           />
 
-          <div className="p-4 space-y-4 pb-6">
+          <div className="p-4 space-y-3.5 pb-6">
             {/* Saved Addresses Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-content-primary">
-                  Select Delivery Address
-                </h2>
-                <p className="text-xs text-content-secondary">
-                  Doorstep delivery across all 64 districts in Bangladesh
-                </p>
-              </div>
+              <h2 className="text-sm font-semibold text-content-primary">
+                Delivery Address
+              </h2>
               {addressFormMode === null && (
                 <button
                   type="button"
                   onClick={openAddAddressForm}
-                  className="h-9 px-3 rounded-lg bg-brand-subtle border border-brand-border text-brand-primary text-xs font-semibold inline-flex items-center gap-1 hover:bg-emerald-100/70 transition-colors shrink-0"
+                  className="h-8 px-3 rounded-lg bg-brand-subtle border border-brand-border text-brand-primary text-xs font-semibold inline-flex items-center gap-1 hover:bg-emerald-100/70 transition-colors shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add New</span>
@@ -311,8 +298,8 @@ export const CheckoutFlowScreen: React.FC = () => {
                 <div className="flex items-center justify-between border-b border-app-border pb-2.5">
                   <h3 className="text-xs font-semibold text-content-primary">
                     {addressFormMode === 'edit'
-                      ? 'Edit Delivery Address'
-                      : 'New Bangladesh Delivery Address'}
+                      ? 'Edit Address'
+                      : 'New Address'}
                   </h3>
                   <button
                     type="button"
@@ -346,7 +333,7 @@ export const CheckoutFlowScreen: React.FC = () => {
 
                 <div>
                   <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                    Recipient Full Name
+                    Full Name
                   </label>
                   <input
                     type="text"
@@ -369,7 +356,7 @@ export const CheckoutFlowScreen: React.FC = () => {
 
                 <div>
                   <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                    Bangladesh Mobile Number
+                    Mobile Number
                   </label>
                   <input
                     type="tel"
@@ -380,7 +367,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                         setAddressFormErrors((p) => ({ ...p, phone: '' }));
                       }
                     }}
-                    placeholder="01712345678 or +880 1712 345678"
+                    placeholder="01712345678"
                     className="w-full h-10 px-3 rounded-lg bg-app-bg border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                   />
                   {addressFormErrors.phone && (
@@ -392,7 +379,7 @@ export const CheckoutFlowScreen: React.FC = () => {
 
                 <div>
                   <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                    House, Road, Block & Thana / Area
+                    Street Address
                   </label>
                   <input
                     type="text"
@@ -416,7 +403,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                      District / City
+                      City
                     </label>
                     <select
                       value={formCity}
@@ -433,7 +420,7 @@ export const CheckoutFlowScreen: React.FC = () => {
 
                   <div>
                     <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                      Postal Code (4-digit)
+                      Postal Code
                     </label>
                     <input
                       type="text"
@@ -461,19 +448,19 @@ export const CheckoutFlowScreen: React.FC = () => {
                   className="w-full min-h-[42px] rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
                 >
                   {addressFormMode === 'edit'
-                    ? 'Update Delivery Address'
-                    : 'Save & Select Address'}
+                    ? 'Save Changes'
+                    : 'Save Address'}
                 </button>
               </form>
             )}
 
-            {/* Optional Courier Note (Preserved across steps) */}
+            {/* Optional Delivery Note */}
             <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-1.5">
               <label
                 htmlFor="checkout-delivery-note"
                 className="block text-xs font-semibold text-content-primary"
               >
-                Courier Delivery Instructions (Optional)
+                Delivery Note (Optional)
               </label>
               <input
                 id="checkout-delivery-note"
@@ -485,7 +472,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                     deliveryNote: e.target.value,
                   }))
                 }
-                placeholder="e.g. Call upon arrival at main gate or leave with security"
+                placeholder="e.g. Call on arrival or leave at reception"
                 className="w-full h-9 px-3 rounded-lg bg-app-bg border border-app-border text-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:border-brand-primary"
               />
             </div>
@@ -513,38 +500,31 @@ export const CheckoutFlowScreen: React.FC = () => {
       title: string;
       eta: string;
       courier: string;
-      description: string;
       feeLabel: string;
       badge?: string;
     }[] = [
       {
         id: 'standard',
-        title: 'Standard Pre-Cleared Doorstep',
-        eta: '7 – 14 days',
-        courier: 'eCourier / RedX Bangladesh',
-        description:
-          'Consolidated air linehaul + NBR customs clearance included',
+        title: 'Standard Doorstep',
+        eta: '7–12 days',
+        courier: 'eCourier / RedX',
         feeLabel: 'Free',
         badge: 'Recommended',
       },
       {
         id: 'express',
-        title: 'Priority Express Air Charter',
-        eta: '3 – 7 days',
-        courier: 'DHL / Pathao Priority Air',
-        description:
-          'Direct flight dispatch with priority Dhaka airport customs release',
+        title: 'Priority Express',
+        eta: '3–7 days',
+        courier: 'DHL / Pathao Priority',
         feeLabel: `+${formatPrice(800)}`,
         badge: 'Fastest',
       },
       {
         id: 'hub_pickup',
-        title: 'DeshiMart Dhaka Hub Collection',
-        eta: '5 – 9 days',
-        courier: 'Banani & Dhanmondi Pickup Points',
-        description:
-          'Self-collect from our Dhaka hub and save on last-mile courier dispatch',
-        feeLabel: `-${formatPrice(150)} Credit`,
+        title: 'Dhaka Pickup Point',
+        eta: '5–9 days',
+        courier: 'Banani & Dhanmondi',
+        feeLabel: `-${formatPrice(150)}`,
       },
     ];
 
@@ -556,14 +536,14 @@ export const CheckoutFlowScreen: React.FC = () => {
             onNavigateStep={(scr) => navigateTo(scr)}
           />
 
-          <div className="p-4 space-y-4 pb-6">
+          <div className="p-4 space-y-3.5 pb-6">
             {/* Compact Selected Address Context Bar */}
             <div className="p-3 rounded-xl bg-white border border-app-border flex items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="w-4 h-4 text-brand-primary shrink-0" />
                 <div className="min-w-0">
                   <span className="font-semibold text-content-primary block truncate">
-                    Delivering to {activeAddress?.fullName} ({activeAddress?.city})
+                    {activeAddress?.fullName} · {activeAddress?.city}
                   </span>
                   <span className="text-[11px] text-content-secondary block truncate">
                     {activeAddress?.address}
@@ -575,7 +555,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                 onClick={() => navigateTo('checkout_shipping')}
                 className="text-xs font-semibold text-brand-primary hover:underline shrink-0"
               >
-                Edit
+                Change
               </button>
             </div>
 
@@ -590,13 +570,13 @@ export const CheckoutFlowScreen: React.FC = () => {
                     role="radio"
                     aria-checked={isSelected}
                     onClick={() => setShippingMethod(method.id)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition-all bg-white space-y-2 ${
+                    className={`w-full p-3.5 rounded-xl border text-left transition-all bg-white ${
                       isSelected
                         ? 'border-brand-primary bg-brand-subtle/35 ring-1 ring-brand-primary/15'
                         : 'border-app-border hover:border-app-borderStrong'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
                           className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
@@ -607,7 +587,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                         >
                           {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-xs font-semibold text-content-primary">
                               {method.title}
@@ -618,8 +598,8 @@ export const CheckoutFlowScreen: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] text-content-secondary block mt-0.5">
-                            Est. Arrival: <strong className="text-content-primary font-semibold">{method.eta}</strong> · {method.courier}
+                          <span className="text-[11px] text-content-secondary block mt-0.5 tabular-nums">
+                            {method.eta} · {method.courier}
                           </span>
                         </div>
                       </div>
@@ -634,56 +614,16 @@ export const CheckoutFlowScreen: React.FC = () => {
                         {method.feeLabel}
                       </span>
                     </div>
-
-                    <p className="pl-6 text-[11px] text-content-secondary leading-relaxed">
-                      {method.description}
-                    </p>
                   </button>
                 );
               })}
-            </div>
-
-            {/* Selective Bento Information Module (Customs & Courier Transparency) */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-xl bg-white border border-app-border space-y-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-content-secondary">
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                  <span>Customs Clearance</span>
-                </div>
-                <p className="text-xs font-semibold text-content-primary">
-                  Pre-Paid ({formatPrice(cartTotals.dutyAndVatBdt)})
-                </p>
-                <p className="text-[10px] text-content-muted">
-                  10% Duty + 15% BD VAT included
-                </p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-white border border-app-border space-y-1">
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-content-secondary">
-                  <Clock className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                  <span>Dispatch Guarantee</span>
-                </div>
-                <p className="text-xs font-semibold text-content-primary">
-                  {consolidateParcel ? '1 Combined Box' : 'Direct Individual'}
-                </p>
-                <p className="text-[10px] text-content-muted">
-                  Live SMS & app milestone tracking
-                </p>
-              </div>
             </div>
           </div>
         </div>
 
         <CheckoutStickyFooter
-          totalLabel="Updated Total Payable"
+          totalLabel="Total Payable"
           totalFormatted={formatPrice(cartTotals.totalBdt)}
-          subLabel={
-            shippingMethod === 'express'
-              ? 'Express Air (3–7 days) selected'
-              : shippingMethod === 'hub_pickup'
-              ? 'Dhaka Hub Pickup (-৳ 150) selected'
-              : 'Standard Doorstep (Free) selected'
-          }
           primaryLabel="Continue to Payment"
           onPrimaryClick={() => navigateTo('checkout_payment')}
         />
@@ -700,35 +640,30 @@ export const CheckoutFlowScreen: React.FC = () => {
       id: PaymentMethodId;
       title: string;
       subtitle: string;
-      badge: string;
       icon: React.FC<{ className?: string }>;
     }[] = [
       {
         id: 'cod',
-        title: 'Cash on Delivery (COD)',
-        subtitle: 'Pay in BDT cash upon doorstep inspection in Bangladesh',
-        badge: 'No Upfront Fee',
+        title: 'Cash on Delivery',
+        subtitle: 'Pay in cash when your order arrives',
         icon: Banknote,
       },
       {
         id: 'bkash',
-        title: 'bKash Mobile Wallet',
-        subtitle: 'Instant tokenized checkout via bKash Personal',
-        badge: 'Instant MFS',
+        title: 'bKash',
+        subtitle: 'Pay with your bKash account',
         icon: Smartphone,
       },
       {
         id: 'nagad',
-        title: 'Nagad Mobile Banking',
-        subtitle: 'Fast Bangladesh MFS payment with instant confirmation',
-        badge: 'Low Fee MFS',
+        title: 'Nagad',
+        subtitle: 'Pay with your Nagad account',
         icon: Wallet,
       },
       {
         id: 'card',
         title: 'Credit / Debit Card',
-        subtitle: 'Visa, MasterCard, AMEX (3D Secure BD & International)',
-        badge: 'SSLCommerz',
+        subtitle: 'Visa, Mastercard, AMEX',
         icon: CreditCard,
       },
     ];
@@ -739,14 +674,14 @@ export const CheckoutFlowScreen: React.FC = () => {
       if (paymentMethod === 'bkash') {
         if (!isValidBangladeshMobile(checkoutDraft.bkashPhone)) {
           setPaymentError(
-            'Please enter a valid 11-digit bKash account number (e.g., 01712345678).'
+            'Please enter a valid 11-digit bKash number (e.g., 01712345678).'
           );
           return;
         }
       } else if (paymentMethod === 'nagad') {
         if (!isValidBangladeshMobile(checkoutDraft.nagadPhone)) {
           setPaymentError(
-            'Please enter a valid 11-digit Nagad account number (e.g., 01819345678).'
+            'Please enter a valid 11-digit Nagad number (e.g., 01819345678).'
           );
           return;
         }
@@ -785,15 +720,10 @@ export const CheckoutFlowScreen: React.FC = () => {
             onNavigateStep={(scr) => navigateTo(scr)}
           />
 
-          <div className="p-4 space-y-4 pb-6">
-            <div>
-              <h2 className="text-sm font-semibold text-content-primary">
-                Select Payment Method
-              </h2>
-              <p className="text-xs text-content-secondary">
-                All duties and taxes are locked in BDT—no hidden FX conversion fees
-              </p>
-            </div>
+          <div className="p-4 space-y-3.5 pb-6">
+            <h2 className="text-sm font-semibold text-content-primary">
+              Payment Method
+            </h2>
 
             {/* Payment Option Radio List */}
             <div className="space-y-2.5" role="radiogroup" aria-label="Payment Methods">
@@ -835,53 +765,44 @@ export const CheckoutFlowScreen: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ml-2 ${
+
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-2 ${
                         isSelected
-                          ? 'bg-brand-subtle text-brand-primary'
-                          : 'bg-app-bg text-content-secondary'
+                          ? 'border-brand-primary bg-brand-primary text-white'
+                          : 'border-slate-300 bg-white'
                       }`}
                     >
-                      {opt.badge}
-                    </span>
+                      {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Contextual Payment Details Input (Preserved in checkoutDraft) */}
+            {/* Contextual Payment Details Input */}
             {paymentMethod === 'cod' && (
-              <div className="p-3.5 rounded-xl bg-white border border-app-border space-y-1.5 text-xs">
-                <span className="font-semibold text-content-primary block">
-                  Cash on Delivery (BDT) Instructions
-                </span>
-                <p className="text-content-secondary leading-relaxed">
-                  Pay{' '}
-                  <strong className="tabular-nums text-content-primary font-semibold">
-                    {formatPrice(cartTotals.totalBdt)}
-                  </strong>{' '}
-                  in cash directly to the delivery agent upon receiving your parcel at{' '}
-                  <strong className="text-content-primary font-medium">
-                    {activeAddress?.city || 'Dhaka'}
-                  </strong>
-                  .
-                </p>
+              <div className="p-3.5 rounded-xl bg-white border border-app-border text-xs text-content-secondary leading-relaxed">
+                Pay{' '}
+                <strong className="tabular-nums text-content-primary font-semibold">
+                  {formatPrice(cartTotals.totalBdt)}
+                </strong>{' '}
+                in cash upon delivery in{' '}
+                <strong className="text-content-primary font-medium">
+                  {activeAddress?.city || 'Dhaka'}
+                </strong>
+                .
               </div>
             )}
 
             {paymentMethod === 'bkash' && (
-              <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="bkash-phone-input"
-                    className="text-xs font-semibold text-content-primary"
-                  >
-                    bKash Personal Wallet Number
-                  </label>
-                  <span className="text-[11px] font-medium text-brand-primary">
-                    Verified Escrow
-                  </span>
-                </div>
+              <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
+                <label
+                  htmlFor="bkash-phone-input"
+                  className="block text-xs font-semibold text-content-primary"
+                >
+                  bKash Account Number
+                </label>
                 <input
                   id="bkash-phone-input"
                   type="tel"
@@ -896,28 +817,17 @@ export const CheckoutFlowScreen: React.FC = () => {
                   placeholder="017XXXXXXXX"
                   className="w-full h-10 px-3 rounded-lg bg-app-bg border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                 />
-                <p className="text-[11px] text-content-secondary">
-                  Amount to authorize on next step:{' '}
-                  <strong className="tabular-nums text-content-primary font-semibold">
-                    {formatPrice(cartTotals.totalBdt)}
-                  </strong>
-                </p>
               </div>
             )}
 
             {paymentMethod === 'nagad' && (
-              <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="nagad-phone-input"
-                    className="text-xs font-semibold text-content-primary"
-                  >
-                    Nagad Account Number
-                  </label>
-                  <span className="text-[11px] font-medium text-brand-primary">
-                    Instant MFS
-                  </span>
-                </div>
+              <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
+                <label
+                  htmlFor="nagad-phone-input"
+                  className="block text-xs font-semibold text-content-primary"
+                >
+                  Nagad Account Number
+                </label>
                 <input
                   id="nagad-phone-input"
                   type="tel"
@@ -932,21 +842,11 @@ export const CheckoutFlowScreen: React.FC = () => {
                   placeholder="018XXXXXXXX"
                   className="w-full h-10 px-3 rounded-lg bg-app-bg border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                 />
-                <p className="text-[11px] text-content-secondary">
-                  Amount to authorize on next step:{' '}
-                  <strong className="tabular-nums text-content-primary font-semibold">
-                    {formatPrice(cartTotals.totalBdt)}
-                  </strong>
-                </p>
               </div>
             )}
 
             {paymentMethod === 'card' && (
               <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-3">
-                <div className="flex items-center justify-between text-[11px] text-brand-primary font-medium bg-brand-subtle/60 border border-brand-border/60 rounded-lg px-2.5 py-1.5">
-                  <span>PCI-DSS Hosted Tokenization</span>
-                  <span>Raw PAN & CVV never stored</span>
-                </div>
                 <div>
                   <label className="block text-[11px] font-medium text-content-secondary mb-1">
                     Cardholder Name
@@ -1027,9 +927,8 @@ export const CheckoutFlowScreen: React.FC = () => {
         </div>
 
         <CheckoutStickyFooter
-          totalLabel="Total to Authorize"
+          totalLabel="Total Payable"
           totalFormatted={formatPrice(cartTotals.totalBdt)}
-          subLabel="256-bit SSL encrypted checkout"
           primaryLabel="Review Order"
           errorMessage={paymentError}
           onPrimaryClick={handleContinueToReview}
@@ -1040,25 +939,23 @@ export const CheckoutFlowScreen: React.FC = () => {
 
   // =========================================================================
   // SCREEN 5: ORDER REVIEW (Step 4 of 4)
-  // Editable order items, Selective Bento summary for Address/Delivery/Payment,
-  // Complete Price Breakdown, Duplicate Submission Guard, and Error/Retry State.
   // =========================================================================
   if (currentScreen === 'checkout_review') {
     const paymentLabels: Record<PaymentMethodId, string> = {
-      cod: 'Cash on Delivery (COD)',
+      cod: 'Cash on Delivery',
       bkash: `bKash (${checkoutDraft.bkashPhone})`,
       nagad: `Nagad (${checkoutDraft.nagadPhone})`,
       card: `Card (•••• ${checkoutDraft.cardNumber.replace(/\D/g, '').slice(-4) || '8910'})`,
-      paypal: 'PayPal Express',
+      paypal: 'PayPal',
     };
 
     const deliveryMethodLabels: Record<
       ShippingMethodId,
       { name: string; eta: string }
     > = {
-      standard: { name: 'Standard Doorstep', eta: '7–14 days' },
-      express: { name: 'Express Air Priority', eta: '3–7 days' },
-      hub_pickup: { name: 'Dhaka Hub Pickup', eta: '5–9 days' },
+      standard: { name: 'Standard Doorstep', eta: '7–12 days' },
+      express: { name: 'Priority Express', eta: '3–7 days' },
+      hub_pickup: { name: 'Dhaka Pickup Point', eta: '5–9 days' },
     };
 
     const handlePlaceOrderSubmit = () => {
@@ -1070,21 +967,12 @@ export const CheckoutFlowScreen: React.FC = () => {
       setOrderError(null);
 
       setTimeout(() => {
-        if (simulateGatewayFailure) {
-          setIsPlacingOrder(false);
-          submissionLockRef.current = false;
-          setOrderError(
-            'Gateway timeout while verifying customs manifest. Your account was not charged—please retry.'
-          );
-          return;
-        }
-
         const idempotencyKey = `${cartTotals.quoteId}-${selectedAddressId}-${paymentMethod}`;
         const created = placeOrder(idempotencyKey);
         setIsPlacingOrder(false);
         submissionLockRef.current = false;
         navigateTo('order_success', { orderId: created.id });
-      }, 650);
+      }, 500);
     };
 
     if (cart.length === 0) {
@@ -1112,8 +1000,8 @@ export const CheckoutFlowScreen: React.FC = () => {
             onNavigateStep={(scr) => navigateTo(scr)}
           />
 
-          <div className="p-4 space-y-4 pb-6">
-            {/* 1. Selective Bento Summary Grid (Address, Delivery Speed, Payment) */}
+          <div className="p-4 space-y-3.5 pb-6">
+            {/* 1. Summary Grid (Address, Delivery Speed, Payment) */}
             <div className="space-y-2.5">
               {/* Full-Width Address Card with Quick Edit */}
               <div className="p-3.5 rounded-xl bg-white border border-app-border flex items-start justify-between gap-3">
@@ -1149,7 +1037,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                 </button>
               </div>
 
-              {/* 2-Column Selective Bento Row for Delivery Method & Payment Method */}
+              {/* 2-Column Row for Delivery Method & Payment Method */}
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
@@ -1169,8 +1057,8 @@ export const CheckoutFlowScreen: React.FC = () => {
                     <p className="text-xs font-semibold text-content-primary truncate">
                       {deliveryMethodLabels[shippingMethod].name}
                     </p>
-                    <p className="text-[10px] text-content-muted">
-                      Est. {deliveryMethodLabels[shippingMethod].eta}
+                    <p className="text-[10px] text-content-muted tabular-nums">
+                      {deliveryMethodLabels[shippingMethod].eta}
                     </p>
                   </div>
                 </button>
@@ -1195,8 +1083,8 @@ export const CheckoutFlowScreen: React.FC = () => {
                     </p>
                     <p className="text-[10px] text-content-muted">
                       {paymentMethod === 'cod'
-                        ? 'Pay cash on arrival'
-                        : 'Ready to authorize'}
+                        ? 'Pay on delivery'
+                        : 'Verified'}
                     </p>
                   </div>
                 </button>
@@ -1204,15 +1092,10 @@ export const CheckoutFlowScreen: React.FC = () => {
             </div>
 
             {/* 2. Editable Order Items List */}
-            <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-content-primary">
-                  Order Items ({cartCount})
-                </h3>
-                <span className="text-[11px] text-content-secondary">
-                  Adjust quantity before placing order
-                </span>
-              </div>
+            <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2.5">
+              <h3 className="text-xs font-semibold text-content-primary">
+                Items ({cartCount})
+              </h3>
 
               <div className="divide-y divide-app-border/80">
                 {cart.map((item) => {
@@ -1241,8 +1124,7 @@ export const CheckoutFlowScreen: React.FC = () => {
                           </p>
                           <p className="text-[11px] text-content-secondary truncate">
                             {item.selectedColor}
-                            {item.selectedSize ? ` · ${item.selectedSize}` : ''} ·{' '}
-                            {formatPrice(unitBdt)}
+                            {item.selectedSize ? ` · ${item.selectedSize}` : ''}
                           </p>
                         </div>
                       </div>
@@ -1281,7 +1163,7 @@ export const CheckoutFlowScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* 3. Complete Landed Price Breakdown */}
+            {/* 3. Order Summary Breakdown */}
             <CheckoutPriceBreakdown
               itemCount={cartCount}
               baseItemsBdt={cartTotals.baseItemsBdt}
@@ -1294,43 +1176,18 @@ export const CheckoutFlowScreen: React.FC = () => {
               shippingLabel={deliveryMethodLabels[shippingMethod].name}
               totalBdt={cartTotals.totalBdt}
               formatPrice={formatPrice}
-              quoteId={cartTotals.quoteId}
-              ruleVersion={cartTotals.ruleVersion}
-              quoteStatus="confirmed"
             />
-
-            {/* Optional Resilience Test Toggle (Lets user verify Error & Retry state cleanly) */}
-            <div className="px-1 flex items-center justify-between text-[11px] text-content-muted">
-              <span className="inline-flex items-center gap-1">
-                <Lock className="w-3.5 h-3.5 text-brand-primary" />
-                <span>Duplicate-submission lock active</span>
-              </span>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={simulateGatewayFailure}
-                  onChange={(e) => {
-                    setSimulateGatewayFailure(e.target.checked);
-                    if (!e.target.checked) setOrderError(null);
-                  }}
-                  className="w-3.5 h-3.5 accent-emerald-700 rounded"
-                />
-                <span>Simulate network error</span>
-              </label>
-            </div>
           </div>
         </div>
 
         <CheckoutStickyFooter
-          totalLabel="Final Landed Total"
+          totalLabel="Total Payable"
           totalFormatted={formatPrice(cartTotals.totalBdt)}
-          subLabel={`Paying via ${paymentLabels[paymentMethod].split(' ')[0]}`}
-          primaryLabel={`Place Order · ${formatPrice(cartTotals.totalBdt)}`}
-          loadingLabel="Confirming Order..."
+          primaryLabel="Place Order"
+          loadingLabel="Placing Order..."
           isLoading={isPlacingOrder}
           errorMessage={orderError}
           onRetry={() => {
-            setSimulateGatewayFailure(false);
             setOrderError(null);
             handlePlaceOrderSubmit();
           }}
@@ -1341,44 +1198,41 @@ export const CheckoutFlowScreen: React.FC = () => {
   }
 
   // =========================================================================
-  // SCREEN 6: ORDER CONFIRMATION (Displayed strictly after successful creation)
+  // SCREEN 6: ORDER CONFIRMATION
   // =========================================================================
   const confirmedOrder = selectedOrder;
   const paymentMethodDisplay: Record<PaymentMethodId, string> = {
-    cod: 'Cash on Delivery (COD)',
-    bkash: 'bKash Mobile Wallet',
-    nagad: 'Nagad Mobile Banking',
-    card: 'Credit / Debit Card',
-    paypal: 'PayPal Express',
+    cod: 'Cash on Delivery',
+    bkash: 'bKash',
+    nagad: 'Nagad',
+    card: 'Card',
+    paypal: 'PayPal',
   };
 
   return (
     <div className="flex-1 flex flex-col justify-between bg-app-bg">
-      <div className="p-4 space-y-4 pb-6">
+      <div className="p-4 space-y-3.5 pb-6">
         {/* Top Confirmation Banner */}
-        <div className="bg-white rounded-2xl border border-app-border p-5 text-center space-y-2.5">
+        <div className="bg-white rounded-2xl border border-app-border p-5 text-center space-y-2">
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="w-12 h-12 rounded-full bg-brand-subtle text-brand-primary border border-brand-border flex items-center justify-center mx-auto"
+            className="w-11 h-11 rounded-full bg-brand-subtle text-brand-primary border border-brand-border flex items-center justify-center mx-auto"
           >
-            <CheckCircle2 className="w-6 h-6" />
+            <CheckCircle2 className="w-5 h-5" />
           </motion.div>
 
           <div className="space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-primary">
-              Customs Pre-Cleared · Order Confirmed
-            </span>
-            <h1 className="text-lg font-bold text-content-primary">
-              Thank you for your order!
+            <h1 className="text-base font-bold text-content-primary">
+              Order Confirmed
             </h1>
             <p className="text-xs text-content-secondary">
-              Order ID:{' '}
+              Order{' '}
               <strong className="tabular-nums text-content-primary font-semibold">
                 #{confirmedOrder?.id || 'DM123456'}
               </strong>{' '}
-              · Tracking:{' '}
+              · Tracking{' '}
               <strong className="tabular-nums text-content-primary font-semibold">
                 {confirmedOrder?.trackingCode || 'EC9823412BD'}
               </strong>
@@ -1386,29 +1240,29 @@ export const CheckoutFlowScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Selective Bento 2x2 Summary Grid (ETA, Courier, Payment, Total Paid/Payable) */}
+        {/* 2x2 Summary Grid (ETA, Courier, Payment, Total) */}
         <div className="grid grid-cols-2 gap-2.5">
-          <div className="p-3 rounded-xl bg-white border border-app-border space-y-1">
+          <div className="p-3 rounded-xl bg-white border border-app-border space-y-0.5">
             <span className="text-[11px] text-content-secondary block">
-              Estimated Delivery
+              Estimated Arrival
             </span>
             <span className="tabular-nums text-xs font-bold text-content-primary block">
-              {confirmedOrder?.estimatedDelivery || '7 – 14 days'}
+              {confirmedOrder?.estimatedDelivery || '7–12 days'}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-white border border-app-border space-y-1">
+          <div className="p-3 rounded-xl bg-white border border-app-border space-y-0.5">
             <span className="text-[11px] text-content-secondary block">
-              Assigned Courier
+              Courier
             </span>
             <span className="text-xs font-bold text-content-primary block truncate">
-              {confirmedOrder?.courierName || 'eCourier Bangladesh'}
+              {confirmedOrder?.courierName || 'eCourier'}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-white border border-app-border space-y-1">
+          <div className="p-3 rounded-xl bg-white border border-app-border space-y-0.5">
             <span className="text-[11px] text-content-secondary block">
-              Payment Method
+              Payment
             </span>
             <span className="text-xs font-semibold text-content-primary block truncate">
               {confirmedOrder
@@ -1417,9 +1271,9 @@ export const CheckoutFlowScreen: React.FC = () => {
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-white border border-app-border space-y-1">
+          <div className="p-3 rounded-xl bg-white border border-app-border space-y-0.5">
             <span className="text-[11px] text-content-secondary block">
-              Total Landed Amount
+              Total Paid
             </span>
             <span className="tabular-nums text-xs font-bold text-brand-primary block">
               {formatPrice(confirmedOrder?.totalBdt || 0)}
@@ -1429,7 +1283,7 @@ export const CheckoutFlowScreen: React.FC = () => {
 
         {/* Delivery Destination & Item Summary Card */}
         {confirmedOrder && (
-          <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
+          <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-3">
             <div className="pb-2.5 border-b border-app-border">
               <span className="text-[11px] font-medium text-content-secondary block">
                 Delivering To
@@ -1447,7 +1301,7 @@ export const CheckoutFlowScreen: React.FC = () => {
 
             <div className="space-y-2">
               <span className="text-[11px] font-medium text-content-secondary block">
-                Confirmed Items ({confirmedOrder.items.reduce((s, i) => s + i.quantity, 0)})
+                Items ({confirmedOrder.items.reduce((s, i) => s + i.quantity, 0)})
               </span>
               <div className="divide-y divide-app-border/70">
                 {confirmedOrder.items.map((item, idx) => (
@@ -1501,7 +1355,7 @@ export const CheckoutFlowScreen: React.FC = () => {
           className="h-11 px-4 rounded-xl bg-brand-primary hover:bg-brand-hover text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
         >
           <Package className="w-4 h-4" />
-          <span>Track Live Order</span>
+          <span>Track Order</span>
         </button>
       </div>
     </div>

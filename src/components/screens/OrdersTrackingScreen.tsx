@@ -3,12 +3,10 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckCircle2,
-  ChevronDown,
   Copy,
   FileText,
   MapPin,
   RefreshCcw,
-  ShieldCheck,
   Star,
   Truck,
   X,
@@ -31,7 +29,6 @@ export const OrdersTrackingScreen: React.FC = () => {
     'All' | 'Processing' | 'Shipped' | 'Delivered'
   >('All');
   const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [customsCertOpen, setCustomsCertOpen] = useState(false);
 
   // Screen Mode 1: My Orders List
   if (currentScreen === 'orders') {
@@ -125,12 +122,12 @@ export const OrdersTrackingScreen: React.FC = () => {
     );
   }
 
-  // Screen Mode 2: Live Cross-Border Order Tracking (DESIGN_SYSTEM_SPEC.md Section 5.4)
+  // Screen Mode 2: Live Order Tracking
   const routeSteps = [
-    { key: 'export', label: 'Export Hub', sub: 'Factory QC' },
-    { key: 'air', label: 'Air Freight', sub: 'Linehaul' },
-    { key: 'customs', label: 'BD Customs', sub: 'Pre-Cleared' },
-    { key: 'doorstep', label: 'Dhaka Doorstep', sub: 'eCourier' },
+    { key: 'export', label: 'Dispatched' },
+    { key: 'air', label: 'In Transit' },
+    { key: 'customs', label: 'Customs' },
+    { key: 'doorstep', label: 'Delivered' },
   ];
 
   const activeRouteIdx =
@@ -143,8 +140,8 @@ export const OrdersTrackingScreen: React.FC = () => {
   const isDelivered = selectedOrder.status === 'Delivered';
 
   return (
-    <div className="p-4 space-y-4 pb-6 bg-app-bg">
-      {/* 1. Clean Order Status & 4-Step Horizontal Micro-Progress Bar */}
+    <div className="p-4 space-y-3.5 pb-6 bg-app-bg">
+      {/* 1. Clean Order Status & 4-Step Horizontal Progress Bar */}
       <div className="bg-white rounded-xl border border-app-border p-4 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -180,8 +177,8 @@ export const OrdersTrackingScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Clean 4-Step Horizontal Micro-Progress Bar (Export Hub -> Air Freight -> BD Customs -> Dhaka Doorstep) */}
-        <div className="pt-2 border-t border-app-border">
+        {/* Clean 4-Step Horizontal Progress Bar */}
+        <div className="pt-3 border-t border-app-border">
           <div className="relative flex items-center justify-between">
             {/* Progress Track Line */}
             <div className="absolute left-4 right-4 top-3 h-0.5 bg-app-border" />
@@ -224,9 +221,6 @@ export const OrdersTrackingScreen: React.FC = () => {
                   >
                     {step.label}
                   </span>
-                  <span className="text-[10px] text-content-muted mt-0.5">
-                    {step.sub}
-                  </span>
                 </div>
               );
             })}
@@ -243,7 +237,7 @@ export const OrdersTrackingScreen: React.FC = () => {
               </strong>
             </span>
             <span className="tabular-nums font-semibold text-content-primary">
-              Tracking ID: {selectedOrder.trackingCode}
+              Tracking: {selectedOrder.trackingCode}
             </span>
           </div>
           <button
@@ -252,7 +246,7 @@ export const OrdersTrackingScreen: React.FC = () => {
               navigator.clipboard?.writeText(selectedOrder.trackingCode);
               showToast(`Copied tracking ID ${selectedOrder.trackingCode}`);
             }}
-            className="min-h-[36px] px-3 py-1.5 rounded-lg bg-app-subtle border border-app-border text-xs font-medium text-content-primary hover:bg-slate-200/70 flex items-center gap-1.5 transition-colors"
+            className="min-h-[34px] px-3 py-1 rounded-lg bg-app-subtle border border-app-border text-xs font-medium text-content-primary hover:bg-slate-200/70 flex items-center gap-1.5 transition-colors"
           >
             <Copy className="w-3.5 h-3.5 text-content-secondary" />
             <span>Copy</span>
@@ -260,12 +254,12 @@ export const OrdersTrackingScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Vertical Logistics Timeline (Active node in Blue-600 status-transit) */}
+      {/* 2. Vertical Shipment Updates Timeline */}
       <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-content-primary">
+        <h3 className="text-xs font-semibold text-content-primary">
           Shipment Updates
         </h3>
-        <div className="space-y-4 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-px before:bg-app-border">
+        <div className="space-y-3.5 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-px before:bg-app-border">
           {selectedOrder.milestones.map((ms, idx) => (
             <div key={idx} className="relative pl-7">
               <div
@@ -294,59 +288,14 @@ export const OrdersTrackingScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Secondary Disclosure Accordion for Customs & Warehouse QC Details */}
-      <div className="bg-white rounded-xl border border-app-border overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setCustomsCertOpen(!customsCertOpen)}
-          aria-expanded={customsCertOpen}
-          className="w-full min-h-[48px] px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
-            <span className="text-xs font-semibold text-content-primary">
-              Customs Clearance & Warehouse QC Certificate
-            </span>
-          </div>
-          <ChevronDown
-            className={`w-4 h-4 text-content-secondary transition-transform ${
-              customsCertOpen ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-
-        {customsCertOpen && (
-          <div className="px-4 pb-4 pt-2 border-t border-app-border space-y-2 text-xs text-content-secondary">
-            <div className="flex justify-between py-1 border-b border-app-border">
-              <span>Inspection Status</span>
-              <span className="font-semibold text-status-success">
-                Passed X-Ray & Seal Verification
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-app-border">
-              <span>Net Parcel Weight</span>
-              <span className="tabular-nums font-medium text-content-primary">
-                0.84 kg
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span>NBR Customs Reference</span>
-              <span className="tabular-nums font-medium text-content-primary">
-                BOE-{selectedOrder.id.slice(-4)} (Pre-Paid)
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 4. Post-Purchase Actions */}
+      {/* 3. Post-Purchase Actions */}
       <div className="grid grid-cols-3 gap-2">
         <button
           type="button"
           onClick={() =>
             showToast('Thank you! Your 5-star rating was submitted.')
           }
-          className="min-h-[44px] rounded-lg bg-white border border-app-border text-xs font-semibold text-content-primary flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
+          className="min-h-[42px] rounded-xl bg-white border border-app-border text-xs font-semibold text-content-primary flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
         >
           <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
           <span>Rate</span>
@@ -359,7 +308,7 @@ export const OrdersTrackingScreen: React.FC = () => {
             if (firstItem) addToCart(firstItem.productId, 1);
             navigateTo('cart');
           }}
-          className="min-h-[44px] rounded-lg bg-white border border-app-border text-xs font-semibold text-content-primary flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
+          className="min-h-[42px] rounded-xl bg-white border border-app-border text-xs font-semibold text-content-primary flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
         >
           <RefreshCcw className="w-3.5 h-3.5 text-content-secondary" />
           <span>Reorder</span>
@@ -368,14 +317,14 @@ export const OrdersTrackingScreen: React.FC = () => {
         <button
           type="button"
           onClick={() => setInvoiceOpen(true)}
-          className="min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+          className="min-h-[42px] rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
         >
           <FileText className="w-3.5 h-3.5" />
           <span>Invoice</span>
         </button>
       </div>
 
-      {/* Viewport-Docked Landed Cost Receipt / Invoice Bottom Sheet (Docked above BottomTabBar via #mobile-sheet-root) */}
+      {/* Viewport-Docked Order Invoice Bottom Sheet */}
       {typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
@@ -383,7 +332,7 @@ export const OrdersTrackingScreen: React.FC = () => {
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Customs-Cleared Tax Invoice"
+                aria-label="Order Invoice"
                 className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
               >
                 <motion.div
@@ -406,7 +355,7 @@ export const OrdersTrackingScreen: React.FC = () => {
                   <div className="px-4 py-2.5 border-b border-app-border flex items-center justify-between gap-2 shrink-0">
                     <div className="min-w-0">
                       <h3 className="text-sm font-semibold text-content-primary truncate">
-                        Customs-Cleared Tax Invoice
+                        Order Invoice
                       </h3>
                       <p className="tabular-nums text-xs text-content-secondary truncate">
                         Order #{selectedOrder.id} · {selectedOrder.placedDate}
@@ -434,14 +383,14 @@ export const OrdersTrackingScreen: React.FC = () => {
                       </div>
                     ))}
                     <div className="pt-2.5 border-t border-app-border flex justify-between gap-2 text-content-secondary">
-                      <span>Bangladesh Customs Duty & VAT</span>
+                      <span>Customs & Import VAT</span>
                       <span className="text-content-primary font-medium shrink-0">
-                        Pre-Paid Included
+                        Included
                       </span>
                     </div>
                     <div className="pt-2.5 border-t border-app-border flex justify-between items-baseline gap-2">
                       <span className="text-sm font-semibold text-content-primary">
-                        Total Landed Paid
+                        Total Paid
                       </span>
                       <span className="tabular-nums text-lg font-bold text-content-primary shrink-0">
                         {formatPrice(selectedOrder.totalBdt)}
@@ -455,7 +404,7 @@ export const OrdersTrackingScreen: React.FC = () => {
                       onClick={() => setInvoiceOpen(false)}
                       className="w-full min-h-[44px] rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
                     >
-                      Close Invoice
+                      Close
                     </button>
                   </div>
                 </motion.div>

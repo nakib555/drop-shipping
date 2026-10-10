@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Bell,
-  CheckCheck,
   Globe,
   Heart,
   MapPin,
@@ -24,7 +23,6 @@ export const TopAppBar: React.FC = () => {
     navigateTo,
     cartCount,
     unreadNotificationCount,
-    markAllNotificationsRead,
     selectedCategoryId,
     selectedProduct,
     toggleWishlist,
@@ -413,17 +411,6 @@ export const TopAppBar: React.FC = () => {
                 {wishlist.length}
               </span>
             )}
-          </button>
-        )}
-
-        {isNotifications && unreadNotificationCount > 0 && (
-          <button
-            type="button"
-            onClick={markAllNotificationsRead}
-            className="h-8 px-2.5 rounded-lg text-xs font-semibold text-brand-primary hover:bg-brand-subtle flex items-center gap-1 transition-colors whitespace-nowrap"
-          >
-            <CheckCheck className="w-3.5 h-3.5" />
-            <span>{isBn ? 'সব পঠিত' : 'Mark Read'}</span>
           </button>
         )}
 

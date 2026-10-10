@@ -21,7 +21,6 @@ import {
   Plus,
   Send,
   Settings,
-  ShieldCheck,
   ShoppingCart,
   Smartphone,
   Sparkles,
@@ -85,7 +84,7 @@ export const AccountSupportScreen: React.FC = () => {
   const [chatMessages, setChatMessages] = useState([
     {
       sender: 'agent',
-      text: 'Assalamu Alaikum! Welcome to DeshiMart 24/7 Support. How can we help with your cross-border order or landed cost today?',
+      text: 'Hello! Welcome to DeshiMart Support. How can we help with your order today?',
     },
   ]);
 
@@ -118,7 +117,7 @@ export const AccountSupportScreen: React.FC = () => {
         ...prev,
         {
           sender: 'agent',
-          text: 'Thanks for reaching out! All DeshiMart orders include 100% pre-cleared customs duty & VAT. A specialist in Dhaka has logged your request.',
+          text: 'Thanks for reaching out! Our support team has received your message and will assist you shortly.',
         },
       ]);
     }, 450);
@@ -164,15 +163,15 @@ export const AccountSupportScreen: React.FC = () => {
           </h2>
           <p className="text-xs text-content-secondary mt-1 max-w-[230px]">
             {language === 'BN'
-              ? 'পছন্দের গ্লোবাল পণ্য সেভ করে রাখুন এবং ল্যান্ডেড প্রাইস ড্রপ ট্র্যাক করুন।'
-              : 'Save your favorite global items and track their landed price drops here.'}
+              ? 'পছন্দের পণ্য সেভ করে রাখুন এবং প্রাইস ড্রপ ট্র্যাক করুন।'
+              : 'Save your favorite items and track price drops here.'}
           </p>
           <button
             type="button"
             onClick={() => navigateTo('home')}
             className="mt-5 px-6 min-h-[44px] rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
           >
-            {language === 'BN' ? 'শপিং শুরু করুন' : 'Explore Catalog'}
+            {language === 'BN' ? 'শপিং শুরু করুন' : 'Explore Products'}
           </button>
         </div>
       );
@@ -185,9 +184,6 @@ export const AccountSupportScreen: React.FC = () => {
             {language === 'BN'
               ? `সংরক্ষিত পণ্য (${wishlistedProducts.length})`
               : `Saved Items (${wishlistedProducts.length})`}
-          </span>
-          <span className="text-xs text-content-secondary">
-            {language === 'BN' ? 'ল্যান্ডেড প্রাইস অন্তর্ভুক্ত' : 'Landed Price Included'}
           </span>
         </div>
 
@@ -262,8 +258,8 @@ export const AccountSupportScreen: React.FC = () => {
         <div className="flex items-center justify-between px-1">
           <span className="text-sm font-semibold text-content-primary">
             {language === 'BN'
-              ? `আপনার ডেলিভারি ঠিকানা (${addresses.length})`
-              : `Saved Delivery Addresses (${addresses.length})`}
+              ? `ডেলিভারি ঠিকানা (${addresses.length})`
+              : `Delivery Addresses (${addresses.length})`}
           </span>
           <button
             type="button"
@@ -271,7 +267,7 @@ export const AccountSupportScreen: React.FC = () => {
             className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{language === 'BN' ? 'নতুন ঠিকানা' : 'Add Address'}</span>
+            <span>{language === 'BN' ? 'নতুন ঠিকানা' : 'Add New'}</span>
           </button>
         </div>
 
@@ -281,7 +277,7 @@ export const AccountSupportScreen: React.FC = () => {
             className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
           >
             <h3 className="text-sm font-semibold text-content-primary">
-              {language === 'BN' ? 'নতুন ডেলিভারি ঠিকানা যোগ করুন' : 'New Delivery Address'}
+              {language === 'BN' ? 'নতুন ঠিকানা' : 'New Address'}
             </h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -299,7 +295,7 @@ export const AccountSupportScreen: React.FC = () => {
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                  Recipient Name
+                  Full Name
                 </label>
                 <input
                   type="text"
@@ -312,7 +308,7 @@ export const AccountSupportScreen: React.FC = () => {
             </div>
             <div>
               <label className="block text-[11px] font-medium text-content-secondary mb-1">
-                Street / Area / House
+                Street Address
               </label>
               <input
                 type="text"
@@ -414,7 +410,7 @@ export const AccountSupportScreen: React.FC = () => {
                     {isDefault
                       ? language === 'BN'
                         ? '✓ ডিফল্ট ঠিকানা'
-                        : '✓ Default Address'
+                        : '✓ Default'
                       : language === 'BN'
                       ? 'ডিফল্ট হিসেবে সেট করুন'
                       : 'Set as Default'}
@@ -439,50 +435,40 @@ export const AccountSupportScreen: React.FC = () => {
     }[] = [
       {
         id: 'cod',
-        name: 'Cash on Delivery (COD)',
-        detail: 'Pay in BDT cash upon doorstep delivery anywhere in Bangladesh',
-        status: 'Verified Default',
+        name: 'Cash on Delivery',
+        detail: 'Pay in cash when your order arrives',
+        status: 'Available',
         icon: Banknote,
       },
       {
         id: 'bkash',
-        name: 'bKash Personal Wallet',
-        detail: '+880 1712-345678 · Instant Tokenized Checkout',
-        status: 'Connected',
+        name: 'bKash',
+        detail: '+880 1712-345678',
+        status: 'Saved',
         icon: Smartphone,
       },
       {
         id: 'nagad',
-        name: 'Nagad Mobile Banking',
-        detail: '+880 1819-345678 · Fast Bangladesh MFS',
-        status: 'Connected',
+        name: 'Nagad',
+        detail: '+880 1819-345678',
+        status: 'Saved',
         icon: Wallet,
       },
       {
         id: 'card',
-        name: 'Visa Platinum •••• 8910',
-        detail: 'Expires 12/28 · 3D Secure Cross-Border Enabled',
-        status: 'Saved Card',
+        name: 'Visa •••• 8910',
+        detail: 'Expires 12/28',
+        status: 'Saved',
         icon: CreditCard,
-      },
-      {
-        id: 'paypal',
-        name: 'PayPal Global Express',
-        detail: user.email,
-        status: 'USD Supported',
-        icon: Wallet,
       },
     ];
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-app-bg">
-        <div className="bg-brand-subtle border border-brand-border rounded-xl p-4 flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-brand-primary shrink-0" />
-          <p className="text-xs text-content-secondary leading-relaxed">
-            {language === 'BN'
-              ? 'দেশিমার্টে ক্যাশ অন ডেলিভারি, বিকাশ/নগদ এবং কার্ড পেমেন্ট শতভাগ নিরাপদ।'
-              : 'All payment methods include DeshiMart 30-day return & customs protection.'}
-          </p>
+      <div className="p-4 space-y-3.5 pb-6 bg-app-bg">
+        <div className="px-0.5">
+          <h2 className="text-sm font-semibold text-content-primary">
+            {language === 'BN' ? 'পেমেন্ট মাধ্যম' : 'Payment Methods'}
+          </h2>
         </div>
 
         <div className="space-y-2.5">
@@ -514,18 +500,20 @@ export const AccountSupportScreen: React.FC = () => {
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-content-primary truncate">
+                    <p className="text-xs font-semibold text-content-primary truncate">
                       {m.name}
                     </p>
-                    <p className="text-xs text-content-secondary truncate">{m.detail}</p>
+                    <p className="text-[11px] text-content-secondary truncate mt-0.5">
+                      {m.detail}
+                    </p>
                   </div>
                 </div>
                 <span
                   className={`text-[11px] font-semibold shrink-0 ml-2 ${
-                    active ? 'text-brand-primary' : 'text-content-secondary'
+                    active ? 'text-brand-primary' : 'text-content-muted'
                   }`}
                 >
-                  {active ? '✓ Active' : m.status}
+                  {active ? '✓ Default' : m.status}
                 </span>
               </button>
             );
@@ -559,7 +547,7 @@ export const AccountSupportScreen: React.FC = () => {
                   <CheckCircle2 className="w-4 h-4 text-brand-primary" />
                 </div>
                 <p className="text-xs text-content-secondary">
-                  {selectedProduct.originLabel} · Tier-1 Direct Exporter
+                  {selectedProduct.originLabel} · Verified Seller
                 </p>
               </div>
             </div>
@@ -611,8 +599,8 @@ export const AccountSupportScreen: React.FC = () => {
         <div className="space-y-2.5">
           <h3 className="text-sm font-semibold text-content-primary px-1">
             {language === 'BN'
-              ? 'সাপ্লায়ারের ভেরিফাইড পণ্যসমূহ'
-              : `Verified Catalog (${supplierCatalog.length} items)`}
+              ? 'সাপ্লায়ারের পণ্যসমূহ'
+              : `Products (${supplierCatalog.length})`}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {supplierCatalog.slice(0, 24).map((prod) => (
@@ -645,8 +633,6 @@ export const AccountSupportScreen: React.FC = () => {
             bg: read
               ? 'bg-app-subtle text-content-secondary'
               : 'bg-brand-subtle text-brand-primary',
-            categoryLabel: isBn ? 'শিপমেন্ট ট্র্যাকিং' : 'Shipment Update',
-            ctaLabel: isBn ? 'পার্সেল ট্র্যাক করুন' : 'Track Live Parcel',
           };
         case 'price_drop':
           return {
@@ -654,8 +640,6 @@ export const AccountSupportScreen: React.FC = () => {
             bg: read
               ? 'bg-app-subtle text-content-secondary'
               : 'bg-brand-subtle text-brand-primary',
-            categoryLabel: isBn ? 'প্রাইস ড্রপ অ্যালার্ট' : 'Landed Price Drop',
-            ctaLabel: isBn ? 'মূল্য চার্ট দেখুন' : 'View Price Radar',
           };
         default:
           return {
@@ -663,8 +647,6 @@ export const AccountSupportScreen: React.FC = () => {
             bg: read
               ? 'bg-app-subtle text-content-secondary'
               : 'bg-brand-subtle text-brand-primary',
-            categoryLabel: isBn ? 'কাস্টমস ডিল' : 'Curated Offer',
-            ctaLabel: isBn ? 'ক্যাটালগ দেখুন' : 'Explore Deal',
           };
       }
     };
@@ -682,23 +664,28 @@ export const AccountSupportScreen: React.FC = () => {
     };
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+      <div className="p-4 space-y-3 pb-6 bg-app-bg">
         {/* Segmented Filter Control */}
         <div className="flex items-center gap-1 p-1 bg-app-subtle border border-app-border rounded-xl overflow-x-auto no-scrollbar">
           {[
             {
               id: 'all' as const,
-              label: isBn ? `সব (${notifications.length})` : `All (${notifications.length})`,
+              label: isBn ? 'সব' : 'All',
             },
             {
               id: 'unread' as const,
-              label: isBn
-                ? `অপঠিত (${unreadNotificationCount})`
-                : `Unread (${unreadNotificationCount})`,
+              label:
+                unreadNotificationCount > 0
+                  ? isBn
+                    ? `অপঠিত (${unreadNotificationCount})`
+                    : `Unread (${unreadNotificationCount})`
+                  : isBn
+                  ? 'অপঠিত'
+                  : 'Unread',
             },
             {
               id: 'order' as const,
-              label: isBn ? 'শিপমেন্ট' : 'Orders',
+              label: isBn ? 'অর্ডার' : 'Orders',
             },
             {
               id: 'price_drop' as const,
@@ -711,7 +698,7 @@ export const AccountSupportScreen: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setNotifFilter(tab.id)}
-                className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                   active
                     ? 'bg-white text-content-primary shadow-2xs'
                     : 'text-content-secondary hover:text-content-primary'
@@ -723,21 +710,14 @@ export const AccountSupportScreen: React.FC = () => {
           })}
         </div>
 
-        {/* Summary & Bulk Action Row */}
-        <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-semibold text-content-secondary">
-            {isBn
-              ? `${filteredNotifications.length}টি নোটিফিকেশন`
-              : `Showing ${filteredNotifications.length} ${
-                  filteredNotifications.length === 1 ? 'update' : 'updates'
-                }`}
-          </span>
-          <div className="flex items-center gap-3">
+        {/* Clean Action Bar */}
+        {(unreadNotificationCount > 0 || hasReadNotifications) && (
+          <div className="flex items-center justify-end gap-3 px-0.5">
             {unreadNotificationCount > 0 && (
               <button
                 type="button"
                 onClick={markAllNotificationsRead}
-                className="text-xs font-semibold text-content-primary hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 <span>{isBn ? 'সব পঠিত করুন' : 'Mark all read'}</span>
@@ -753,12 +733,12 @@ export const AccountSupportScreen: React.FC = () => {
               </button>
             )}
           </div>
-        </div>
+        )}
 
         {/* Notification List or Empty State */}
         {filteredNotifications.length === 0 ? (
           <div className="bg-white rounded-xl border border-app-border p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-app-subtle text-content-secondary flex items-center justify-center mx-auto">
+            <div className="w-11 h-11 rounded-xl bg-app-subtle text-content-secondary flex items-center justify-center mx-auto">
               <Bell className="w-5 h-5" />
             </div>
             <div className="space-y-1">
@@ -766,15 +746,15 @@ export const AccountSupportScreen: React.FC = () => {
                 {notifFilter === 'unread'
                   ? isBn
                     ? 'কোনো অপঠিত নোটিফিকেশন নেই'
-                    : 'You’re All Caught Up'
+                    : 'All Caught Up'
                   : isBn
-                  ? 'কোনো নোটিফিকেশন পাওয়া যায়নি'
-                  : 'No Notifications Found'}
+                  ? 'কোনো নোটিফিকেশন নেই'
+                  : 'No Notifications'}
               </h3>
-              <p className="text-xs text-content-secondary max-w-[240px] mx-auto leading-relaxed">
+              <p className="text-xs text-content-secondary max-w-[230px] mx-auto leading-relaxed">
                 {isBn
-                  ? 'আপনার অর্ডার শিপমেন্ট এবং ৩০ দিনের প্রাইস ড্রপ অ্যালার্ট এখানে তাৎক্ষণিক দেখা যাবে।'
-                  : 'Live customs clearance milestones and 30-day landed price drop alerts will appear here.'}
+                  ? 'আপনার অর্ডার আপডেট এবং প্রাইস অ্যালার্ট এখানে দেখা যাবে।'
+                  : 'Order updates and price alerts will appear here.'}
               </p>
             </div>
             {notifFilter !== 'all' && (
@@ -783,99 +763,71 @@ export const AccountSupportScreen: React.FC = () => {
                 onClick={() => setNotifFilter('all')}
                 className="px-4 py-2 rounded-lg bg-app-subtle hover:bg-slate-200 text-xs font-semibold text-content-primary transition-colors"
               >
-                {isBn ? 'সব নোটিফিকেশন দেখুন' : 'Show All Notifications'}
+                {isBn ? 'সব দেখুন' : 'View All'}
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="bg-white rounded-xl border border-app-border divide-y divide-app-border overflow-hidden">
             {filteredNotifications.map((notif) => {
-              const { Icon, bg, categoryLabel, ctaLabel } = getNotifIconConfig(
-                notif.type,
-                notif.read
-              );
+              const { Icon, bg } = getNotifIconConfig(notif.type, notif.read);
               return (
                 <div
                   key={notif.id}
-                  className={`rounded-xl border p-3.5 transition-all bg-white ${
+                  onClick={() => handleNotificationClick(notif)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleNotificationClick(notif);
+                    }
+                  }}
+                  className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer ${
                     !notif.read
-                      ? 'border-app-borderStrong shadow-2xs'
-                      : 'border-app-border'
+                      ? 'bg-brand-subtle/20 hover:bg-brand-subtle/35'
+                      : 'bg-white hover:bg-app-subtle/40'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleNotificationClick(notif)}
-                      className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center shrink-0 mt-0.5 transition-colors`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </button>
+                  <div
+                    className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0 mt-0.5`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </div>
 
-                    <div className="flex-1 min-w-0">
-                      {/* Metadata Kicker Row */}
-                      <div className="flex items-center justify-between gap-2 text-[11px] text-content-secondary">
-                        <div className="flex items-center gap-1.5 min-w-0 truncate">
-                          <span
-                            className={`font-semibold ${
-                              !notif.read ? 'text-content-primary' : 'text-content-secondary'
-                            }`}
-                          >
-                            {categoryLabel}
-                          </span>
-                          <span aria-hidden="true">·</span>
-                          <span className="text-content-muted">{notif.timestamp}</span>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          {!notif.read && (
-                            <button
-                              type="button"
-                              title={isBn ? 'পঠিত হিসেবে চিহ্নিত করুন' : 'Mark as read'}
-                              onClick={() => markNotificationRead(notif.id)}
-                              className="text-[10px] font-semibold text-content-primary hover:underline px-1"
-                            >
-                              {isBn ? 'পঠিত' : 'Mark read'}
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            aria-label="Delete notification"
-                            onClick={() => deleteNotification(notif.id)}
-                            className="p-1 text-content-muted hover:text-promo-accent rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Main Clickable Content */}
-                      <button
-                        type="button"
-                        onClick={() => handleNotificationClick(notif)}
-                        className="w-full text-left mt-1 group"
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3
+                        className={`text-xs leading-snug line-clamp-1 ${
+                          !notif.read
+                            ? 'font-bold text-content-primary'
+                            : 'font-medium text-content-primary'
+                        }`}
                       >
-                        <h3
-                          className={`text-xs leading-snug group-hover:underline ${
-                            !notif.read
-                              ? 'font-bold text-content-primary'
-                              : 'font-medium text-content-secondary'
-                          }`}
-                        >
-                          {notif.title}
-                        </h3>
-                        <p className="text-xs text-content-secondary mt-1 leading-relaxed">
-                          {notif.body}
-                        </p>
+                        {notif.title}
+                      </h3>
 
-                        {notif.targetScreen && (
-                          <div className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-semibold text-content-primary group-hover:translate-x-0.5 transition-transform">
-                            <span>{ctaLabel}</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </div>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[11px] text-content-muted whitespace-nowrap">
+                          {notif.timestamp}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="Delete notification"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(notif.id);
+                          }}
+                          className="w-6 h-6 -mr-1 rounded-md text-content-muted hover:text-promo-accent flex items-center justify-center transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
+
+                    <p className="text-xs text-content-secondary mt-0.5 leading-relaxed line-clamp-2">
+                      {notif.body}
+                    </p>
                   </div>
                 </div>
               );
@@ -886,16 +838,16 @@ export const AccountSupportScreen: React.FC = () => {
     );
   }
 
-  // 6. SHOPPING GUIDES / BLOG SCREEN
+  // 6. SHOPPING GUIDES SCREEN
   if (currentScreen === 'guides') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-app-bg">
-        <div className="bg-brand-primary text-white rounded-2xl p-4">
-          <h2 className="text-sm font-semibold">
-            Cross-Border Shopping Guides
+      <div className="p-4 space-y-3.5 pb-6 bg-app-bg">
+        <div className="bg-white rounded-xl border border-app-border p-4">
+          <h2 className="text-sm font-semibold text-content-primary">
+            Shopping Guides
           </h2>
-          <p className="text-xs text-emerald-50/90 mt-1">
-            Learn how DeshiMart pre-clears customs duty and verifies factory exporters.
+          <p className="text-xs text-content-secondary mt-1">
+            Helpful tips for international orders, delivery options, and returns.
           </p>
         </div>
 
@@ -903,13 +855,11 @@ export const AccountSupportScreen: React.FC = () => {
           {shoppingGuides.map((guide) => (
             <article
               key={guide.id}
-              className="bg-white rounded-xl border border-app-border p-4 space-y-2.5"
+              className="bg-white rounded-xl border border-app-border p-4 space-y-2"
             >
-              <div className="flex items-center gap-2 text-[11px] text-content-secondary">
+              <div className="flex items-center gap-1.5 text-[11px] text-content-secondary">
                 <span className="font-semibold text-brand-primary">{guide.category}</span>
-                <span>·</span>
-                <span>{guide.date}</span>
-                <span>·</span>
+                <span aria-hidden="true">·</span>
                 <span>{guide.readTime}</span>
               </div>
               <h3 className="text-sm font-semibold text-content-primary">
@@ -936,45 +886,47 @@ export const AccountSupportScreen: React.FC = () => {
     );
   }
 
-  // 7. SETTINGS & CURRENCY / LANGUAGE SCREEN
+  // 7. APP SETTINGS SCREEN
   if (currentScreen === 'settings') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+      <div className="p-4 space-y-3.5 pb-6 bg-app-bg">
         {/* Currency Selection */}
         <div className="bg-white rounded-xl border border-app-border p-4 space-y-2.5">
-          <h2 className="text-sm font-semibold text-content-primary">
-            Landed Cost Display Currency
+          <h2 className="text-xs font-semibold text-content-primary">
+            Currency
           </h2>
           <div className="space-y-2">
             <button
               type="button"
               onClick={() => {
                 setCurrency('BDT');
-                showToast('Currency set to BDT (৳) Bangladeshi Taka');
+                showToast('Currency set to BDT (৳)');
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 currency === 'BDT'
-                  ? 'bg-brand-subtle/60 border-brand-primary'
+                  ? 'bg-brand-subtle/40 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
               <span className="text-xs font-semibold text-content-primary">
                 BDT (৳) — Bangladeshi Taka
               </span>
-              <span className="text-xs tabular-nums font-semibold text-brand-primary">
-                Bangladesh
-              </span>
+              {currency === 'BDT' && (
+                <span className="text-xs font-semibold text-brand-primary">
+                  ✓ Active
+                </span>
+              )}
             </button>
 
             <button
               type="button"
               onClick={() => {
                 setCurrency('USD');
-                showToast('Currency set to USD ($) US Dollar');
+                showToast('Currency set to USD ($)');
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 currency === 'USD'
-                  ? 'bg-brand-subtle/60 border-brand-primary'
+                  ? 'bg-brand-subtle/40 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
@@ -982,7 +934,7 @@ export const AccountSupportScreen: React.FC = () => {
                 USD ($) — US Dollar
               </span>
               <span className="text-xs tabular-nums font-medium text-content-secondary">
-                Global ($1 = ৳ 120)
+                {currency === 'USD' ? '✓ Active' : '$1 = ৳ 120'}
               </span>
             </button>
           </div>
@@ -990,7 +942,7 @@ export const AccountSupportScreen: React.FC = () => {
 
         {/* Language Selection */}
         <div className="bg-white rounded-xl border border-app-border p-4 space-y-2.5">
-          <h2 className="text-sm font-semibold text-content-primary">App Language</h2>
+          <h2 className="text-xs font-semibold text-content-primary">Language</h2>
           <div className="space-y-2">
             <button
               type="button"
@@ -1000,45 +952,49 @@ export const AccountSupportScreen: React.FC = () => {
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 language === 'EN'
-                  ? 'bg-brand-subtle/60 border-brand-primary'
+                  ? 'bg-brand-subtle/40 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
               <span className="text-xs font-semibold text-content-primary">English</span>
-              <span className="text-xs text-content-secondary font-medium">
-                Plus Jakarta Sans
-              </span>
+              {language === 'EN' && (
+                <span className="text-xs font-semibold text-brand-primary">
+                  ✓ Active
+                </span>
+              )}
             </button>
 
             <button
               type="button"
               onClick={() => {
                 setLanguage('BN');
-                showToast('ভাষা বাংলায় পরিবর্তন করা হয়েছে (Noto Sans Bengali)');
+                showToast('ভাষা বাংলায় পরিবর্তন করা হয়েছে');
               }}
               className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${
                 language === 'BN'
-                  ? 'bg-brand-subtle/60 border-brand-primary'
+                  ? 'bg-brand-subtle/40 border-brand-primary'
                   : 'bg-white border-app-border'
               }`}
             >
               <span className="text-xs font-semibold text-content-primary">
                 বাংলা (Bengali)
               </span>
-              <span className="text-xs text-content-secondary font-medium">
-                Noto Sans Bengali
-              </span>
+              {language === 'BN' && (
+                <span className="text-xs font-semibold text-brand-primary">
+                  ✓ সক্রিয়
+                </span>
+              )}
             </button>
           </div>
         </div>
 
-        {/* App Preferences */}
-        <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-content-primary">
-            App Preferences
+        {/* Display Preferences */}
+        <div className="bg-white rounded-xl border border-app-border p-4 space-y-2.5">
+          <h2 className="text-xs font-semibold text-content-primary">
+            Display
           </h2>
-          <label className="flex items-center justify-between text-xs font-medium text-content-secondary cursor-pointer">
-            <span>High-Contrast Outdoor Legibility</span>
+          <label className="flex items-center justify-between text-xs font-medium text-content-primary cursor-pointer py-0.5">
+            <span>High-Contrast Mode</span>
             <input
               type="checkbox"
               checked={darkMode}
@@ -1050,10 +1006,10 @@ export const AccountSupportScreen: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => navigateTo('home')}
-          className="w-full h-12 rounded-xl bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm transition-colors"
+          onClick={() => navigateTo('account')}
+          className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white font-semibold text-xs transition-colors"
         >
-          Save Changes
+          Done
         </button>
       </div>
     );
@@ -1062,10 +1018,10 @@ export const AccountSupportScreen: React.FC = () => {
   // 8. HELP & SUPPORT SCREEN
   if (currentScreen === 'support') {
     return (
-      <div className="p-4 space-y-4 pb-6 bg-app-bg">
+      <div className="p-4 space-y-3.5 pb-6 bg-app-bg">
         <div className="bg-white rounded-xl border border-app-border p-4 space-y-3">
           <h2 className="text-sm font-semibold text-content-primary">
-            How can we help you today?
+            Contact Support
           </h2>
           <div className="grid grid-cols-2 gap-2.5">
             <button
@@ -1075,15 +1031,15 @@ export const AccountSupportScreen: React.FC = () => {
             >
               <MessageCircle className="w-5 h-5 text-emerald-100" />
               <span className="text-xs font-semibold">
-                24/7 Live Chat
+                Live Chat
               </span>
-              <span className="text-[10px] text-emerald-100/90">Replies in &lt; 2m</span>
+              <span className="text-[11px] text-emerald-100/90">Available 24/7</span>
             </button>
 
             <button
               type="button"
               onClick={() =>
-                showToast('Calling DeshiMart Dhaka Support: +880 1712 345678')
+                showToast('Calling Support: +880 1712 345678')
               }
               className="p-3.5 rounded-xl bg-brand-subtle border border-brand-border flex flex-col items-center text-center gap-1"
             >
@@ -1091,7 +1047,7 @@ export const AccountSupportScreen: React.FC = () => {
               <span className="text-xs font-semibold text-content-primary">
                 Call Support
               </span>
-              <span className="text-[10px] tabular-nums text-content-secondary">
+              <span className="text-[11px] tabular-nums text-content-secondary">
                 +880 1712 345678
               </span>
             </button>
@@ -1103,11 +1059,11 @@ export const AccountSupportScreen: React.FC = () => {
           <h3 className="text-sm font-semibold text-content-primary">
             Frequently Asked Questions
           </h3>
-          <div className="space-y-2.5">
+          <div className="divide-y divide-app-border">
             {SUPPORT_FAQS.map((faq) => (
               <div
                 key={faq.question}
-                className="p-3 rounded-lg bg-app-subtle border border-app-border space-y-1"
+                className="py-3 first:pt-0 last:pb-0 space-y-1"
               >
                 <h4 className="text-xs font-semibold text-content-primary">
                   {faq.question}
@@ -1120,7 +1076,7 @@ export const AccountSupportScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Viewport-Docked Live Chat Drawer (Docked above BottomTabBar via #mobile-sheet-root) */}
+        {/* Viewport-Docked Live Chat Drawer */}
         {typeof document !== 'undefined' &&
           createPortal(
             <AnimatePresence>
@@ -1128,7 +1084,7 @@ export const AccountSupportScreen: React.FC = () => {
                 <div
                   role="dialog"
                   aria-modal="true"
-                  aria-label="DeshiMart Live Support"
+                  aria-label="DeshiMart Support Chat"
                   className="pointer-events-auto absolute inset-0 z-50 flex items-end justify-center"
                 >
                   <motion.div
@@ -1151,10 +1107,10 @@ export const AccountSupportScreen: React.FC = () => {
                     <div className="px-4 py-2.5 flex items-center justify-between border-b border-app-border shrink-0">
                       <div className="min-w-0">
                         <h3 className="text-xs font-bold text-content-primary truncate">
-                          DeshiMart Live Support (Dhaka Hub)
+                          DeshiMart Support
                         </h3>
-                        <span className="text-[10px] text-status-success font-medium block truncate">
-                          Online · Customs & Order Specialist
+                        <span className="text-[11px] text-status-success font-medium block truncate">
+                          Online
                         </span>
                       </div>
                       <button
@@ -1189,7 +1145,7 @@ export const AccountSupportScreen: React.FC = () => {
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
-                        placeholder="Ask about your order or customs duty..."
+                        placeholder="Write a message..."
                         className="flex-1 h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary"
                       />
                       <button
@@ -1222,9 +1178,9 @@ export const AccountSupportScreen: React.FC = () => {
         {
           label:
             language === 'BN'
-              ? 'আমার অর্ডার ও ট্র্যাকিং'
-              : 'My Orders & Tracking',
-          subtitle: `${orders.length} orders · ${activeOrdersCount} in transit`,
+              ? 'আমার অর্ডার'
+              : 'My Orders',
+          subtitle: `${orders.length} orders · ${activeOrdersCount} active`,
           icon: Package,
           screen: 'orders' as const,
         },
@@ -1233,7 +1189,7 @@ export const AccountSupportScreen: React.FC = () => {
             language === 'BN'
               ? 'ডেলিভারি ঠিকানা'
               : 'Delivery Addresses',
-          subtitle: `${addresses.length} saved addresses`,
+          subtitle: `${addresses.length} saved`,
           icon: MapPin,
           screen: 'addresses' as const,
         },
@@ -1256,7 +1212,7 @@ export const AccountSupportScreen: React.FC = () => {
           label:
             language === 'BN'
               ? 'উইশলিস্ট'
-              : 'Saved Wishlist',
+              : 'Wishlist',
           subtitle: `${wishlist.length} saved items`,
           icon: Heart,
           screen: 'wishlist' as const,
@@ -1264,9 +1220,9 @@ export const AccountSupportScreen: React.FC = () => {
         {
           label:
             language === 'BN'
-              ? '৩০ দিনের প্রাইস ট্র্যাকার'
-              : '30-Day Price History',
-          subtitle: 'Landed price trends',
+              ? '৩০ দিনের প্রাইস হিস্ট্রি'
+              : 'Price History',
+          subtitle: '30-day price trends',
           icon: TrendingDown,
           screen: 'price_tracker' as const,
         },
@@ -1274,8 +1230,8 @@ export const AccountSupportScreen: React.FC = () => {
           label:
             language === 'BN'
               ? 'শিপিং রুট তুলনা'
-              : 'Shipping Route Compare',
-          subtitle: 'Direct Air vs Consolidated',
+              : 'Route Compare',
+          subtitle: 'Compare delivery speed & cost',
           icon: Truck,
           screen: 'seller_compare' as const,
         },
@@ -1292,7 +1248,7 @@ export const AccountSupportScreen: React.FC = () => {
               : 'Notifications',
           subtitle:
             unreadNotificationCount > 0
-              ? `${unreadNotificationCount} unread updates`
+              ? `${unreadNotificationCount} unread`
               : 'All caught up',
           icon: Bell,
           screen: 'notifications' as const,
@@ -1302,7 +1258,7 @@ export const AccountSupportScreen: React.FC = () => {
             language === 'BN'
               ? 'হেল্প ও সাপোর্ট'
               : 'Help & Support',
-          subtitle: '24/7 Live Chat & FAQs',
+          subtitle: 'Live chat & FAQs',
           icon: HelpCircle,
           screen: 'support' as const,
         },
@@ -1310,15 +1266,15 @@ export const AccountSupportScreen: React.FC = () => {
           label:
             language === 'BN'
               ? 'শপিং গাইড'
-              : 'Import & Customs Guide',
-          subtitle: 'Duty & delivery overview',
+              : 'Shopping Guides',
+          subtitle: 'Delivery & return tips',
           icon: BookOpen,
           screen: 'guides' as const,
         },
         {
           label:
             language === 'BN'
-              ? 'সেটিংস'
+              ? 'অ্যাপ সেটিংস'
               : 'App Settings',
           subtitle: `${currency} · ${language === 'EN' ? 'English' : 'বাংলা'}`,
           icon: Globe,

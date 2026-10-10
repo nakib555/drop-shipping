@@ -11,6 +11,30 @@ import {
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
 
+function formatCleanDeliveryWindow(raw?: string): string {
+  if (!raw) return '7–12 days';
+  const cleaned = raw
+    .replace(/business\s+days?/gi, 'days')
+    .replace(/^ships\s+in\s+/i, '')
+    .replace(/^ships\s+/i, '')
+    .trim();
+  if (/overnight/i.test(cleaned)) return '2–4 days';
+  if (/1\s*month/i.test(cleaned)) return '10–14 days';
+  if (/1-2\s+business\s+days/i.test(raw) || /1-2\s+days/i.test(cleaned)) return '3–5 days';
+  if (/3-5/i.test(cleaned)) return '3–5 days';
+  if (/4-7/i.test(cleaned)) return '4–7 days';
+  if (/1\s+week/i.test(cleaned)) return '5–7 days';
+  if (/2\s+weeks/i.test(cleaned)) return '7–12 days';
+  return cleaned.length > 14 ? '7–12 days' : cleaned;
+}
+
+function formatCleanRouteName(name: string): string {
+  return name
+    .replace(/\bDhaka Ready Hub\b/i, 'Dhaka Ready')
+    .replace(/\bPriority Air Express\b/i, 'Priority Express')
+    .trim();
+}
+
 export const SellerCompareScreen: React.FC = () => {
   const {
     currentScreen,
@@ -80,15 +104,15 @@ export const SellerCompareScreen: React.FC = () => {
       },
       {
         label: 'Delivery Window',
-        valA: prodA.routes[0]?.deliveryDays || '7–12 days',
-        valB: prodB.routes[0]?.deliveryDays || '7–12 days',
+        valA: formatCleanDeliveryWindow(prodA.routes[0]?.deliveryDays),
+        valB: formatCleanDeliveryWindow(prodB.routes[0]?.deliveryDays),
       },
     ];
 
     return (
       <div className="p-4 space-y-4 pb-6 bg-app-bg">
         {/* Product Selectors */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {[prodA, prodB].map((prod, idx) => (
             <div
               key={idx}
@@ -168,11 +192,11 @@ export const SellerCompareScreen: React.FC = () => {
         </div>
 
         {/* Add to Bag Row */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => addToCart(prodA.id, 1)}
-            className="h-12 rounded-lg bg-white border border-app-borderStrong text-content-primary hover:bg-slate-50 text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
+            className="h-11 rounded-xl bg-white border border-app-borderStrong text-content-primary hover:bg-slate-50 text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodA.name.split(' ')[0]}</span>
@@ -180,7 +204,7 @@ export const SellerCompareScreen: React.FC = () => {
           <button
             type="button"
             onClick={() => addToCart(prodB.id, 1)}
-            className="h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
+            className="h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs leading-4 font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add {prodB.name.split(' ')[0]}</span>
@@ -202,29 +226,29 @@ export const SellerCompareScreen: React.FC = () => {
   });
 
   return (
-    <div className="p-4 space-y-4 pb-6 bg-app-bg">
+    <div className="p-4 space-y-3.5 pb-6 bg-app-bg">
       {/* Product Selector Header */}
-      <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-app-border p-3.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={selectedProduct.image}
             alt={selectedProduct.name}
             referrerPolicy="no-referrer"
-            className="w-12 h-12 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
+            className="w-11 h-11 rounded-lg object-contain bg-slate-50 p-1 border border-app-border shrink-0"
           />
           <div className="min-w-0">
-            <h2 className="text-sm leading-5 font-medium text-content-primary truncate">
+            <h2 className="text-sm leading-5 font-semibold text-content-primary truncate">
               {selectedProduct.name}
             </h2>
-            <p className="text-xs leading-4 text-content-secondary mt-1">
-              Select your preferred cross-border route
+            <p className="text-xs leading-4 text-content-secondary mt-0.5">
+              Compare landed price & delivery speed
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => navigateTo('spec_compare')}
-          className="h-8 px-3 rounded-lg bg-app-subtle border border-app-border text-xs leading-4 font-medium text-content-primary hover:bg-slate-200/70 shrink-0"
+          className="h-8 px-3 rounded-lg bg-app-subtle border border-app-border text-xs leading-4 font-medium text-content-primary hover:bg-slate-200/70 shrink-0 transition-colors"
         >
           Compare 2 Items
         </button>
@@ -235,16 +259,16 @@ export const SellerCompareScreen: React.FC = () => {
         {(
           [
             { id: 'all', label: 'All Routes' },
-            { id: 'cheapest', label: 'Cheapest Landed' },
-            { id: 'fastest', label: 'Fastest Air' },
-            { id: 'rated', label: 'Best Rated' },
+            { id: 'cheapest', label: 'Lowest Price' },
+            { id: 'fastest', label: 'Fastest Delivery' },
+            { id: 'rated', label: 'Top Rated' },
           ] as const
         ).map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setRouteFilter(tab.id)}
-            className={`h-9 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap transition-colors border ${
+            className={`h-8 px-3 rounded-lg text-xs leading-4 font-medium whitespace-nowrap transition-colors border ${
               routeFilter === tab.id
                 ? 'bg-brand-primary text-white border-brand-primary font-semibold'
                 : 'bg-white text-content-secondary border-app-border hover:border-app-borderStrong'
@@ -255,150 +279,127 @@ export const SellerCompareScreen: React.FC = () => {
         ))}
       </div>
 
-      {/* 3-Column Route Comparison Cards */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Unified Full-Width Route Selection & Breakdown Cards (Zero duplicated small-width boxes) */}
+      <div className="space-y-2.5">
         {sortedRoutes.map((rt) => {
           const isSelected = rt.id === activeRouteId;
+          const cleanName = formatCleanRouteName(rt.name);
+          const cleanWindow = formatCleanDeliveryWindow(rt.deliveryDays);
+
           return (
-            <motion.button
+            <motion.div
               key={rt.id}
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
-              className={`rounded-xl p-3 border text-center flex flex-col justify-between transition-all ${
-                isSelected
-                  ? 'bg-brand-subtle/60 border-brand-primary'
-                  : 'bg-white border-app-border hover:border-app-borderStrong'
-              }`}
-            >
-              <div>
-                <span
-                  className={`inline-block text-[10px] leading-4 font-semibold uppercase tracking-wide mb-1 ${
-                    isSelected ? 'text-brand-primary' : 'text-content-secondary'
-                  }`}
-                >
-                  {rt.badge}
-                </span>
-                <h3 className="text-xs leading-4 font-semibold text-content-primary">
-                  {rt.name}
-                </h3>
-                <p className="text-[11px] leading-4 text-content-secondary mt-1 truncate">
-                  {rt.originCountry}
-                </p>
-              </div>
-
-              <div className="my-2 py-2 border-y border-app-border">
-                <span className="block tabular-nums text-sm leading-5 font-bold text-content-primary">
-                  {formatPrice(rt.totalLandedBdt)}
-                </span>
-                <span className="block text-[11px] leading-4 text-content-secondary mt-1">
-                  {rt.deliveryDays}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-center gap-1 text-[11px] leading-4 tabular-nums font-medium text-content-primary">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span>{rt.rating.toFixed(1)}</span>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Detailed Route Breakdown List */}
-      <div className="space-y-2">
-        {sortedRoutes.map((rt) => {
-          const isSelected = rt.id === activeRouteId;
-          return (
-            <div
-              key={rt.id}
+              whileTap={{ scale: 0.99 }}
               onClick={() => selectRouteForProduct(selectedProduct.id, rt.id)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
                   selectRouteForProduct(selectedProduct.id, rt.id);
                 }
               }}
-              className={`rounded-xl p-4 border transition-colors cursor-pointer bg-white ${
+              className={`rounded-xl p-3.5 border transition-all cursor-pointer bg-white ${
                 isSelected
-                  ? 'border-brand-primary bg-brand-subtle/20'
-                  : 'border-app-border'
+                  ? 'border-brand-primary bg-brand-subtle/20 ring-1 ring-brand-primary/15'
+                  : 'border-app-border hover:border-app-borderStrong'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                    className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                       isSelected
                         ? 'bg-brand-primary text-white'
                         : 'border border-slate-300'
                     }`}
                   >
-                    {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                   </div>
-                  <span className="text-xs leading-4 font-semibold text-content-primary">
-                    {rt.name}
+                  <span className="text-xs leading-4 font-semibold text-content-primary truncate">
+                    {cleanName}
                   </span>
-                  <span className="text-xs leading-4 text-content-secondary">
-                    · {rt.originCountry}
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] leading-3.5 font-semibold uppercase tracking-wide shrink-0 ${
+                      isSelected
+                        ? 'bg-brand-subtle text-brand-primary'
+                        : 'bg-app-subtle text-content-muted'
+                    }`}
+                  >
+                    {rt.badge}
                   </span>
                 </div>
-                <span className="tabular-nums text-xs leading-4 font-semibold text-content-primary">
-                  {rt.onTimeRate} On-Time
-                </span>
+
+                <div className="flex items-center gap-2 text-[11px] leading-4 tabular-nums shrink-0">
+                  <span className="text-content-secondary font-medium">
+                    {cleanWindow}
+                  </span>
+                  <span className="text-slate-300" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className="inline-flex items-center gap-0.5 font-semibold text-content-primary">
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                    <span>{rt.rating.toFixed(1)}</span>
+                  </span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-xs leading-4 text-content-secondary bg-app-subtle border border-app-border p-3 rounded-lg">
+              <div className="grid grid-cols-3 gap-2 text-xs leading-4 text-content-secondary bg-app-subtle border border-app-border p-2.5 rounded-lg">
                 <div>
-                  <span className="block text-[10px] leading-4 text-content-muted">Base + Ship</span>
+                  <span className="block text-[10px] leading-3.5 text-content-muted mb-0.5">
+                    Item + Shipping
+                  </span>
                   <span className="tabular-nums font-semibold text-content-primary">
                     {formatPrice(rt.basePriceBdt + rt.shippingBdt)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px] leading-4 text-content-muted">Duty + VAT</span>
+                  <span className="block text-[10px] leading-3.5 text-content-muted mb-0.5">
+                    Duty + VAT
+                  </span>
                   <span className="tabular-nums font-semibold text-content-primary">
                     {formatPrice(rt.dutyBdt + rt.vatBdt)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px] leading-4 text-content-muted">Landed Total</span>
+                  <span className="block text-[10px] leading-3.5 text-content-muted mb-0.5">
+                    Landed Total
+                  </span>
                   <span className="tabular-nums font-bold text-content-primary">
                     {formatPrice(rt.totalLandedBdt)}
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Guarantee Summary */}
-      <div className="bg-white rounded-xl border border-app-border p-4 space-y-2">
+      <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2">
         <h3 className="text-xs leading-4 font-semibold text-content-primary mb-1">
-          Included on All 3 Routes
+          Included with Every Route
         </h3>
         <div className="flex items-center gap-2 text-xs leading-4 text-content-secondary">
-          <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
-          <span>True Landed Price (Zero extra customs charge on arrival)</span>
+          <CheckCircle2 className="w-3.5 h-3.5 text-status-success shrink-0" />
+          <span>All-inclusive landed price (no extra customs fee on delivery)</span>
         </div>
         <div className="flex items-center gap-2 text-xs leading-4 text-content-secondary">
-          <Truck className="w-4 h-4 text-status-transit shrink-0" />
-          <span>Live milestone tracking from export hub to Dhaka</span>
+          <Truck className="w-3.5 h-3.5 text-status-transit shrink-0" />
+          <span>Real-time doorstep delivery tracking across Bangladesh</span>
         </div>
         <div className="flex items-center gap-2 text-xs leading-4 text-content-secondary">
-          <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
-          <span>Pre-shipment physical quality inspection</span>
+          <ShieldCheck className="w-3.5 h-3.5 text-status-success shrink-0" />
+          <span>Verified pre-shipment quality inspection</span>
         </div>
       </div>
 
       <button
         type="button"
         onClick={() => navigateTo('product_detail', { productId: selectedProduct.id })}
-        className="w-full h-12 rounded-lg bg-brand-primary hover:bg-brand-hover text-white font-semibold text-sm leading-5 transition-colors"
+        className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white font-semibold text-xs leading-4 transition-colors"
       >
-        Confirm Selected Route
+        Apply Selected Route
       </button>
     </div>
   );

@@ -8,11 +8,9 @@ import {
   Loader2,
   Minus,
   Plus,
-  ShoppingCart,
   Star,
   Tag,
   Trash2,
-  Truck,
   X,
 } from 'lucide-react';
 import { useDeshiMart } from '../../context/DeshiMartContext';
@@ -298,11 +296,11 @@ export const CartScreen: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col justify-between bg-app-bg">
-      <div className="p-4 space-y-4 pb-6">
+      <div className="p-4 space-y-3.5 pb-6">
         {/* Top Summary & Clear Cart Action */}
         <div className="flex items-center justify-between px-0.5">
-          <span className="text-xs font-medium text-content-secondary">
-            {cartCount} {cartCount === 1 ? 'item' : 'items'} · Customs & VAT pre-calculated
+          <span className="text-xs font-semibold text-content-primary">
+            {cartCount} {cartCount === 1 ? 'item' : 'items'} in cart
           </span>
           <button
             type="button"
@@ -323,6 +321,9 @@ export const CartScreen: React.FC = () => {
                 prod.routes.find((r) => r.id === item.selectedRouteId) ||
                 prod.routes[0];
               const unitLanded = route ? route.totalLandedBdt : prod.totalLandedBdt;
+              const cleanRouteName = (route?.name || 'Global Direct')
+                .replace(/\bDhaka Ready Hub\b/i, 'Dhaka Ready')
+                .replace(/\bPriority Air Express\b/i, 'Priority Express');
 
               return (
                 <motion.div
@@ -367,7 +368,7 @@ export const CartScreen: React.FC = () => {
                     <p className="text-[11px] text-content-secondary mt-0.5 truncate">
                       {item.selectedColor}
                       {item.selectedSize ? ` · ${item.selectedSize}` : ''} ·{' '}
-                      <span>{route?.name || 'Direct Air'}</span>
+                      <span>{cleanRouteName}</span>
                     </p>
 
                     <div className="flex items-center justify-between mt-2.5">
@@ -412,69 +413,53 @@ export const CartScreen: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* 2. Selective Bento Module (10–20% Secondary Logistics & Parcel Consolidation) */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {/* Bento Tile 1: Combined Parcel Freight Savings */}
-          <button
-            type="button"
-            role="switch"
-            aria-checked={consolidateParcel}
-            onClick={() => {
-              const next = !consolidateParcel;
-              setConsolidateParcel(next);
-              showToast(
-                next
-                  ? 'Combined Parcel enabled (25% air freight savings)'
-                  : 'Items will ship in individual parcels',
-                'info'
-              );
-            }}
-            className={`p-3 rounded-xl border text-left flex flex-col justify-between gap-1.5 transition-colors ${
-              consolidateParcel
-                ? 'bg-brand-subtle/50 border-brand-border'
-                : 'bg-white border-app-border'
-            }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-content-secondary">
-                <Boxes className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                <span>Combine Box</span>
+        {/* 2. Single Clean Combined Parcel Toggle Row (Zero duplicated static customs box) */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={consolidateParcel}
+          onClick={() => {
+            const next = !consolidateParcel;
+            setConsolidateParcel(next);
+            showToast(
+              next
+                ? 'Combined parcel enabled (25% shipping discount)'
+                : 'Items will ship separately',
+              'info'
+            );
+          }}
+          className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between gap-3 transition-colors ${
+            consolidateParcel
+              ? 'bg-brand-subtle/40 border-brand-border'
+              : 'bg-white border-app-border'
+          }`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Boxes className="w-4 h-4 text-brand-primary shrink-0" />
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-content-primary block truncate">
+                Combine items in one parcel
               </span>
-              <span
-                className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                  consolidateParcel
-                    ? 'bg-brand-primary text-white'
-                    : 'bg-app-subtle text-content-muted'
-                }`}
-              >
-                {consolidateParcel ? 'ON' : 'OFF'}
+              <span className="text-[11px] text-content-secondary block truncate">
+                {cartCount >= 2 && consolidateParcel
+                  ? `Saving ${formatPrice(cartTotals.consolidationSavingsBdt)} on international shipping`
+                  : 'Save 25% on shipping when ordering 2+ items'}
               </span>
-            </div>
-            <div className="text-xs font-semibold text-content-primary truncate">
-              {cartCount >= 2 && consolidateParcel
-                ? `Save ${formatPrice(cartTotals.consolidationSavingsBdt)}`
-                : '25% off 2+ items'}
-            </div>
-          </button>
-
-          {/* Bento Tile 2: Pre-Cleared Bangladesh Customs Guarantee */}
-          <div className="p-3 rounded-xl bg-white border border-app-border flex flex-col justify-between gap-1.5">
-            <div className="flex items-center justify-between w-full text-content-secondary">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium">
-                <Truck className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-                <span>BD Customs</span>
-              </span>
-              <span className="text-[10px] font-medium text-brand-primary">
-                Included
-              </span>
-            </div>
-            <div className="text-xs font-semibold text-content-primary truncate">
-              Zero fee on arrival
             </div>
           </div>
-        </div>
 
-        {/* 3. Promo Voucher Input with Validation, Loading & Applied States */}
+          <span
+            className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
+              consolidateParcel
+                ? 'bg-brand-primary text-white'
+                : 'bg-app-subtle text-content-muted'
+            }`}
+          >
+            {consolidateParcel ? 'ON' : 'OFF'}
+          </span>
+        </button>
+
+        {/* 3. Promo Voucher Input */}
         <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2.5">
           <form onSubmit={handleApplyPromo} className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -489,7 +474,7 @@ export const CartScreen: React.FC = () => {
                     setVoucherErrorMsg(null);
                   }
                 }}
-                placeholder="Promo code (DESHI10, FIRST500)"
+                placeholder="Enter promo code"
                 aria-label="Promo code"
                 className="w-full h-10 pl-9 pr-3 rounded-lg bg-app-bg border border-app-border text-xs uppercase text-content-primary placeholder:normal-case placeholder:text-content-muted focus:outline-none focus:border-brand-primary"
               />
@@ -502,7 +487,7 @@ export const CartScreen: React.FC = () => {
               {voucherState === 'applying' ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Checking</span>
+                  <span>Applying</span>
                 </>
               ) : (
                 <span>Apply</span>
@@ -510,7 +495,7 @@ export const CartScreen: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick-Tap Available Vouchers */}
+          {/* Clean Available Voucher Chips */}
           {!promoCode && (
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
               {promoVouchers
@@ -525,9 +510,9 @@ export const CartScreen: React.FC = () => {
                       applyPromoCode(v.code);
                       setVoucherState('applied');
                     }}
-                    className="h-6 px-2 rounded-md bg-app-bg hover:bg-brand-subtle border border-app-border hover:border-brand-border text-[10px] font-mono-num font-semibold text-content-secondary hover:text-brand-primary whitespace-nowrap transition-colors"
+                    className="h-6 px-2.5 rounded-md bg-app-bg hover:bg-brand-subtle border border-app-border hover:border-brand-border text-[10px] font-mono-num font-semibold text-content-secondary hover:text-brand-primary whitespace-nowrap transition-colors"
                   >
-                    Tap: {v.code}
+                    {v.code}
                   </button>
                 ))}
             </div>
@@ -548,7 +533,7 @@ export const CartScreen: React.FC = () => {
               <span className="inline-flex items-center gap-1.5 text-brand-primary font-semibold">
                 <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>
-                  {promoCode} applied (-{formatPrice(cartTotals.promoDiscountBdt)})
+                  {promoCode} (-{formatPrice(cartTotals.promoDiscountBdt)})
                 </span>
               </span>
               <button
@@ -566,7 +551,7 @@ export const CartScreen: React.FC = () => {
           )}
         </div>
 
-        {/* 4. Complete Landed Price Breakdown */}
+        {/* 4. Order Summary Breakdown */}
         <CheckoutPriceBreakdown
           itemCount={cartCount}
           baseItemsBdt={cartTotals.baseItemsBdt}
@@ -576,20 +561,16 @@ export const CartScreen: React.FC = () => {
           promoCode={promoCode}
           promoDiscountBdt={cartTotals.promoDiscountBdt}
           shippingBdt={cartTotals.shippingBdt}
-          shippingLabel="Doorstep Delivery (Selected at Checkout)"
+          shippingLabel="Doorstep Delivery"
           totalBdt={cartTotals.subtotalBdt}
           formatPrice={formatPrice}
-          quoteId={cartTotals.quoteId}
-          ruleVersion={cartTotals.ruleVersion}
-          quoteStatus={cartTotals.status}
         />
       </div>
 
       {/* 5. Sticky Bottom Checkout Bar */}
       <CheckoutStickyFooter
-        totalLabel={`Cart Total (${cartCount} ${cartCount === 1 ? 'item' : 'items'})`}
+        totalLabel={`Total (${cartCount} ${cartCount === 1 ? 'item' : 'items'})`}
         totalFormatted={formatPrice(cartTotals.subtotalBdt)}
-        subLabel="Customs duty & 15% VAT pre-cleared"
         primaryLabel="Proceed to Checkout"
         onPrimaryClick={() => navigateTo('checkout_shipping')}
       />

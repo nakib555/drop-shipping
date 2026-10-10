@@ -299,9 +299,19 @@ export function createSafePaymentToken(params: {
   amountBdt: number;
   bkashPhone?: string;
   nagadPhone?: string;
+  rocketPhone?: string;
+  upayPhone?: string;
   cardLast4?: string;
 }): TokenizedPaymentSession {
-  const { method, amountBdt, bkashPhone, nagadPhone, cardLast4 } = params;
+  const {
+    method,
+    amountBdt,
+    bkashPhone,
+    nagadPhone,
+    rocketPhone,
+    upayPhone,
+    cardLast4,
+  } = params;
   const nowIso = new Date().toISOString();
 
   if (method === 'cod') {
@@ -343,6 +353,40 @@ export function createSafePaymentToken(params: {
       tokenId: `TOK-NAGAD-${Date.now().toString(36).toUpperCase()}`,
       method: 'nagad',
       providerLabel: 'Nagad MFS Merchant Gateway',
+      maskedAccount: masked,
+      verificationStatus: 'tokenized_authorized',
+      authorizedAmountBdt: amountBdt,
+      timestamp: nowIso,
+    };
+  }
+
+  if (method === 'rocket') {
+    const clean = (rocketPhone || '01911345678').replace(/\D/g, '');
+    const masked =
+      clean.length >= 7
+        ? `${clean.slice(0, 3)}•••••${clean.slice(-3)}`
+        : '019•••••678';
+    return {
+      tokenId: `TOK-ROCKET-${Date.now().toString(36).toUpperCase()}`,
+      method: 'rocket',
+      providerLabel: 'DBBL Rocket Mobile Banking',
+      maskedAccount: masked,
+      verificationStatus: 'tokenized_authorized',
+      authorizedAmountBdt: amountBdt,
+      timestamp: nowIso,
+    };
+  }
+
+  if (method === 'upay') {
+    const clean = (upayPhone || '01615345678').replace(/\D/g, '');
+    const masked =
+      clean.length >= 7
+        ? `${clean.slice(0, 3)}•••••${clean.slice(-3)}`
+        : '016•••••678';
+    return {
+      tokenId: `TOK-UPAY-${Date.now().toString(36).toUpperCase()}`,
+      method: 'upay',
+      providerLabel: 'UCB Upay Digital Wallet',
       maskedAccount: masked,
       verificationStatus: 'tokenized_authorized',
       authorizedAmountBdt: amountBdt,

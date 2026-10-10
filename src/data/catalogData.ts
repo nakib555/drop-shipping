@@ -87,18 +87,24 @@ export const SHOPPING_GUIDES: GuideArticle[] = [];
 
 export const SUPPORT_FAQS = [
   {
-    question: 'What does "True Landed Price" mean?',
+    question: 'Are customs duties and taxes included in the price?',
     answer:
-      'True Landed Price is the complete price to receive the product in Bangladesh, calculated from the live API base price + international linehaul freight + Bangladesh NBR customs duty (10%) + VAT (15%).',
+      'Yes. Every price shown includes international shipping, customs duty, and VAT—with no extra charges on delivery.',
   },
   {
-    question: 'Where does the product catalog come from?',
+    question: 'How long does delivery take across Bangladesh?',
     answer:
-      'All products, specifications, dimensions, SKUs, barcodes, stock counts, and buyer reviews are fetched live from public e-commerce APIs (DummyJSON, FakeStoreAPI, and Platzi API).',
+      'Standard delivery takes 7–12 days, Priority Express takes 3–7 days, and Dhaka Ready items arrive in 1–3 days.',
   },
   {
-    question: 'Can I pay with Cash on Delivery (COD) or bKash/Nagad?',
+    question: 'What payment methods are accepted?',
     answer:
-      'Yes. Checkout supports Cash on Delivery across Bangladesh, bKash and Nagad mobile wallets, and tokenized 3DS cards.',
+      'We accept Cash on Delivery (COD), bKash, Nagad, and Visa, Mastercard, or AMEX cards.',
+  },
+  {
+    question: 'What is the return and refund policy?',
+    answer:
+      'Eligible items can be returned within 7 days of delivery for a full refund or replacement.',
   },
 ];
+

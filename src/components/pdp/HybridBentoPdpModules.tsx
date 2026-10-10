@@ -1234,11 +1234,10 @@ export const PdpAccordionSections: React.FC<PdpAccordionSectionsProps> = ({
                   </strong>{' '}
                   Estimated for delivery to Bangladesh via{' '}
                   <span className="text-content-secondary font-medium">
-                    {activeRoute?.name || 'Direct Air Line'}
+                    {activeRoute?.name || 'Global Direct'}
                   </span>{' '}
-                  ({activeRoute?.originCountry || product.originLabel}) based on
-                  declared item value ({formatPrice(baseBdt)}) and standard HS{' '}
-                  {resolvedHsCode} import tariff rules.
+                  based on declared item value ({formatPrice(baseBdt)}) and
+                  standard HS {resolvedHsCode} import tariff rules.
                 </p>
               </div>
             </motion.div>

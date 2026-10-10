@@ -754,13 +754,13 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const prod = catalogProducts.find((p) => p.id === productId);
     setPriceAlerts((prev) => {
       const next = !prev[productId];
-      showToast(next ? '30-Day Price Drop Alert activated!' : 'Price Drop Alert paused', 'info');
+      showToast(next ? 'Price alert enabled' : 'Price alert paused', 'info');
       if (next && prod) {
         const alertNotif: AppNotification = {
           id: `notif-alert-${Date.now()}`,
           type: 'price_drop',
-          title: `Price Radar Active: ${prod.name}`,
-          body: `Tracking 30-day landed cost (${formatPrice(prod.totalLandedBdt)}). You will be alerted immediately on any supplier or duty drop.`,
+          title: `Price Alert: ${prod.name}`,
+          body: `Tracking price drops from ${formatPrice(prod.totalLandedBdt)}.`,
           timestamp: 'Just now',
           read: false,
           targetScreen: 'price_tracker',
@@ -1000,8 +1000,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             image: prod.image,
             quantity: item.quantity,
             variant: `${item.selectedColor}${
-              item.selectedSize ? ` · Size ${item.selectedSize}` : ''
-            } · ${route?.name || 'Global Direct'}`,
+              item.selectedSize ? ` · ${item.selectedSize}` : ''
+            }`,
             landedUnitBdt: route ? route.totalLandedBdt : prod.totalLandedBdt,
           };
         });
@@ -1011,10 +1011,10 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           placedDate: 'Oct 10, 2026',
           estimatedDelivery:
             shippingMethod === 'express'
-              ? 'Est. 3 – 7 days'
+              ? '3–7 days'
               : shippingMethod === 'hub_pickup'
-              ? 'Est. 5 – 9 days (Dhaka Hub)'
-              : 'Est. 7 – 14 days',
+              ? '5–9 days'
+              : '7–12 days',
           status: 'Processing',
           items: orderItems,
           subtotalBdt: finalQuote.subtotalBdt,
@@ -1031,38 +1031,38 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           shippingAddress: chosenAddress,
           courierName:
             shippingMethod === 'hub_pickup'
-              ? 'DeshiMart Banani Hub Pickup'
+              ? 'Banani Pickup Point'
               : shippingMethod === 'express'
-              ? 'DHL / Pathao Priority Air'
-              : 'eCourier Bangladesh',
+              ? 'DHL Express'
+              : 'eCourier',
           trackingCode: `EC${Math.floor(1000000 + Math.random() * 8999999)}BD`,
           milestones: [
             {
-              title: 'Order Confirmed & Quote Locked',
-              location: `Quote ${finalQuote.quoteId} · ${paymentToken.providerLabel}`,
+              title: 'Order Confirmed',
+              location: `${chosenAddress.city}, Bangladesh`,
               timestamp: 'Just now',
               completed: true,
               current: true,
             },
             {
-              title: 'Supplier Quality Check & Dispatch (Estimated)',
-              location: 'Verified Supplier Warehouse',
-              timestamp: 'Est. within 12–24 hours',
+              title: 'Dispatched from Origin',
+              location: 'International Dispatch',
+              timestamp: 'Within 24 hours',
               completed: false,
             },
             {
-              title: 'International Air Freight & BD Customs Assessment',
-              location: 'Hazrat Shahjalal Int. Airport, Dhaka',
-              timestamp: 'Est. 3–5 days',
+              title: 'Customs Clearance',
+              location: 'Dhaka, Bangladesh',
+              timestamp: '3–5 days',
               completed: false,
             },
             {
-              title: 'Doorstep Delivery via Assigned Courier',
+              title: 'Doorstep Delivery',
               location: chosenAddress.address,
               timestamp:
                 shippingMethod === 'express'
-                  ? 'Est. 3–7 days'
-                  : 'Est. 7–14 days',
+                  ? '3–7 days'
+                  : '7–12 days',
               completed: false,
             },
           ],
@@ -1071,7 +1071,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     if (wasDuplicate) {
-      showToast(`Order #${committedOrder.id} already confirmed (Idempotent Guard)`, 'info');
+      showToast(`Order #${committedOrder.id} already confirmed`, 'info');
       return committedOrder;
     }
 
@@ -1091,14 +1091,14 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       id: `notif-order-${Date.now()}`,
       type: 'order',
       title: `Order #${committedOrder.id} Confirmed`,
-      body: `Quote ${finalQuote.quoteId} locked (${paymentToken.maskedAccount}). Delivering to ${chosenAddress.city} in ${committedOrder.estimatedDelivery}.`,
+      body: `Delivering to ${chosenAddress.city} in ${committedOrder.estimatedDelivery}.`,
       timestamp: 'Just now',
       read: false,
       targetScreen: 'order_tracking',
       targetOrderId: committedOrder.id,
     };
     setNotifications((prev) => [newOrderNotif, ...prev]);
-    showToast(`Order #${committedOrder.id} placed successfully!`);
+    showToast(`Order #${committedOrder.id} placed!`);
     return committedOrder;
   };
 
@@ -1566,15 +1566,11 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const statusNotif: AppNotification = {
           id: `notif-admin-ord-${Date.now()}`,
           type: 'order',
-          title: `Order #${ord.id} ${
-            nextStatus === 'Shipped'
-              ? 'Cleared Customs & Shipped'
-              : 'Delivered to Doorstep'
-          }`,
+          title: `Order #${ord.id} · ${nextStatus}`,
           body:
             nextStatus === 'Shipped'
-              ? `Parcel #${ord.trackingCode} cleared Dhaka HS-Code customs and is in transit with ${ord.courierName}.`
-              : `Parcel #${ord.trackingCode} was delivered to ${ord.shippingAddress.city}. Tax invoice is ready.`,
+              ? `On the way via ${ord.courierName} (${ord.trackingCode}).`
+              : `Delivered to ${ord.shippingAddress.city}.`,
           timestamp: 'Just now',
           read: false,
           targetScreen: 'order_tracking',

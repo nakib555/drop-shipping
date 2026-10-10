@@ -252,33 +252,33 @@ function mapExternalCategory(rawCategory: string, title = ''): CategoryId {
 
 const ORIGIN_HUBS = [
   {
-    originLabel: 'Shenzhen · Verified Export Hub',
-    corridorTag: 'Shenzhen Air',
-    warehouse: 'Shenzhen Export Hub',
+    originLabel: 'China',
+    corridorTag: 'China Direct',
+    warehouse: 'China',
     supplier: 'Shenzhen Direct Co.',
   },
   {
-    originLabel: 'Seoul · Official Export Hub',
-    corridorTag: 'Seoul Direct',
-    warehouse: 'Incheon Air Hub',
+    originLabel: 'South Korea',
+    corridorTag: 'Korea Direct',
+    warehouse: 'South Korea',
     supplier: 'Seoul Global Trade',
   },
   {
-    originLabel: 'Singapore · Regional Free Zone',
-    corridorTag: 'Singapore Hub',
-    warehouse: 'Changi Logistics Hub',
+    originLabel: 'Singapore',
+    corridorTag: 'Singapore Direct',
+    warehouse: 'Singapore',
     supplier: 'SingaPort Direct',
   },
   {
-    originLabel: 'Tokyo · Inspected Exporter',
-    corridorTag: 'Tokyo Air',
-    warehouse: 'Tokyo Narita Hub',
+    originLabel: 'Japan',
+    corridorTag: 'Japan Direct',
+    warehouse: 'Japan',
     supplier: 'Nihon Craft Exports',
   },
   {
-    originLabel: 'Kuala Lumpur · Direct Hub',
-    corridorTag: 'KL Express',
-    warehouse: 'Kuala Lumpur Air Hub',
+    originLabel: 'Malaysia',
+    corridorTag: 'Malaysia Direct',
+    warehouse: 'Malaysia',
     supplier: 'Malay Global Hub',
   },
 ];
@@ -349,8 +349,8 @@ function buildNormalizedProduct(params: {
     stockCount = 25,
     minimumOrderQuantity = 1,
     dimensions,
-    returnPolicy = '30-Day Dhaka Return & Exchange Policy',
-    shippingInformation = 'Ships via Cross-Border Air Linehaul',
+    returnPolicy = '30-Day Return & Exchange Policy',
+    shippingInformation = '7–12 days',
     availabilityStatus = 'In Stock',
     weightGrams,
     warranty,
@@ -522,7 +522,7 @@ function buildNormalizedProduct(params: {
         dutyBdt: importDutyBdt,
         vatBdt,
         totalLandedBdt,
-        deliveryDays: shippingInformation || '7–12 business days',
+        deliveryDays: '7–12 days',
         rating: Number(rating.toFixed(1)),
         reliabilityScore: dropScore,
         verified: true,
@@ -532,15 +532,15 @@ function buildNormalizedProduct(params: {
       },
       {
         id: `${id}-route-bd`,
-        name: 'Dhaka Ready Hub',
+        name: 'Dhaka Ready',
         badge: 'Fast Local',
-        originCountry: 'Dhaka Consolidation Hub',
+        originCountry: 'Bangladesh',
         basePriceBdt: bdStockQuote.basePriceBdt,
         shippingBdt: bdStockQuote.freightBdt,
         dutyBdt: bdStockQuote.customsDutyBdt,
         vatBdt: bdStockQuote.vatBdt,
         totalLandedBdt: bdStockQuote.totalLandedBdt,
-        deliveryDays: '3–5 business days',
+        deliveryDays: '3–5 days',
         rating: Number(Math.min(4.9, rating + 0.1).toFixed(1)),
         reliabilityScore: Number(Math.min(9.8, dropScore + 0.2).toFixed(1)),
         verified: true,
@@ -550,15 +550,15 @@ function buildNormalizedProduct(params: {
       },
       {
         id: `${id}-route-air`,
-        name: 'Priority Air Express',
+        name: 'Priority Express',
         badge: 'Express Air',
-        originCountry: 'Singapore Changi Air Hub',
+        originCountry: 'Singapore',
         basePriceBdt: expressQuote.basePriceBdt,
         shippingBdt: expressQuote.freightBdt,
         dutyBdt: expressQuote.customsDutyBdt,
         vatBdt: expressQuote.vatBdt,
         totalLandedBdt: expressQuote.totalLandedBdt,
-        deliveryDays: '4–7 business days',
+        deliveryDays: '4–7 days',
         rating: 4.9,
         reliabilityScore: 9.6,
         verified: true,
@@ -888,9 +888,9 @@ export async function fetchLiveOperationalDataFromApis(
   const primaryAddress = addresses[0];
   const statuses: Order['status'][] = ['Shipped', 'Processing', 'Delivered'];
   const couriers = [
-    'eCourier Bangladesh',
-    'DHL / Pathao Priority Air',
-    'RedX Cross-Border',
+    'eCourier',
+    'DHL Express',
+    'RedX',
   ];
 
   const orders: Order[] =
@@ -913,9 +913,7 @@ export async function fetchLiveOperationalDataFromApis(
                 catalogProducts[0]?.image ||
                 '',
               quantity: cp.quantity || 1,
-              variant: matchedCatalog?.sku
-                ? `SKU ${matchedCatalog.sku} · Global Direct`
-                : 'Global Direct · Customs Pre-Cleared',
+              variant: 'Standard · Global Direct',
               landedUnitBdt: unitLandedBdt,
             };
           });
@@ -928,13 +926,13 @@ export async function fetchLiveOperationalDataFromApis(
 
           return {
             id: `DM${100000 + c.id * 1423}`,
-            placedDate: 'Synced from Live API',
+            placedDate: idx === 0 ? 'Oct 8, 2026' : idx === 1 ? 'Oct 9, 2026' : 'Oct 2, 2026',
             estimatedDelivery:
               status === 'Delivered'
-                ? 'Delivered to Recipient'
+                ? 'Delivered'
                 : status === 'Shipped'
-                ? 'Est. 2–4 business days'
-                : 'Est. 5–9 business days',
+                ? '2–4 days'
+                : '5–9 days',
             status,
             items: mappedItems,
             subtotalBdt,
@@ -948,29 +946,29 @@ export async function fetchLiveOperationalDataFromApis(
             shippingMethod: idx === 0 ? 'express' : 'standard',
             shippingAddress: addresses[idx % addresses.length] || primaryAddress,
             courierName: couriers[idx % couriers.length],
-            trackingCode: `BD${840000 + c.id * 319}API`,
+            trackingCode: `EC${840000 + c.id * 319}BD`,
             milestones: [
               {
                 title:
                   status === 'Delivered'
-                    ? 'Delivered to Recipient'
+                    ? 'Delivered'
                     : status === 'Shipped'
-                    ? 'Cleared Dhaka Customs & Out with Courier'
-                    : 'Order Synced & Customs Manifest Prepared',
+                    ? 'Out for Delivery'
+                    : 'Order Confirmed',
                 location: `${primaryAddress.city}, Bangladesh`,
-                timestamp: 'Live API Status',
+                timestamp: status === 'Delivered' ? 'Oct 6, 2026' : 'Today',
                 completed: true,
                 current: true,
               },
               {
-                title: 'International Linehaul & NBR HS Assessment',
-                location: 'Hazrat Shahjalal Int. Airport Customs, Dhaka',
-                timestamp: 'Completed',
+                title: 'Customs Cleared',
+                location: 'Dhaka, Bangladesh',
+                timestamp: status === 'Processing' ? 'Pending' : 'Completed',
                 completed: status !== 'Processing',
               },
               {
-                title: 'Supplier Quality Verification & Export Dispatch',
-                location: 'Verified Global Warehouse',
+                title: 'Dispatched from Origin',
+                location: 'International Dispatch',
                 timestamp: 'Completed',
                 completed: true,
               },
@@ -984,11 +982,11 @@ export async function fetchLiveOperationalDataFromApis(
     notifications.push({
       id: `api-notif-ord-${orders[0].id}`,
       type: 'order',
-      title: `Live Order #${orders[0].id} (${orders[0].status})`,
-      body: `${orders[0].items[0]?.name || 'Parcel'} via ${
+      title: `Order #${orders[0].id} · ${orders[0].status}`,
+      body: `${orders[0].items[0]?.name || 'Your order'} is on the way via ${
         orders[0].courierName
       } (${orders[0].trackingCode}).`,
-      timestamp: 'Live API Sync',
+      timestamp: '2h ago',
       read: false,
       targetScreen: 'order_tracking',
       targetOrderId: orders[0].id,
@@ -999,11 +997,9 @@ export async function fetchLiveOperationalDataFromApis(
     notifications.push({
       id: `api-notif-prod-${catalogProducts[0].id}`,
       type: 'price_drop',
-      title: `Verified Landed Quote: ${catalogProducts[0].name}`,
-      body: `Landed price ${
-        catalogProducts[0].totalLandedBdt
-      } BDT (${catalogProducts[0].discountPercent}% off) including 10% Duty & 15% BD VAT.`,
-      timestamp: 'Live API Sync',
+      title: `Price Drop: ${catalogProducts[0].name}`,
+      body: `Now ৳ ${catalogProducts[0].totalLandedBdt.toLocaleString('en-IN')} (${catalogProducts[0].discountPercent}% off) with customs & VAT included.`,
+      timestamp: '5h ago',
       read: false,
       targetScreen: 'product_detail',
       targetProductId: catalogProducts[0].id,
@@ -1014,44 +1010,77 @@ export async function fetchLiveOperationalDataFromApis(
     notifications.push({
       id: `api-notif-tracker-${catalogProducts[1].id}`,
       type: 'price_drop',
-      title: `30-Day Price History: ${catalogProducts[1].name}`,
-      body: `Inspect live API rating (${catalogProducts[1].rating}★) and landed route comparison.`,
-      timestamp: 'Live API Sync',
+      title: `30-Day Low: ${catalogProducts[1].name}`,
+      body: `View 30-day price history and delivery route options.`,
+      timestamp: 'Yesterday',
       read: true,
       targetScreen: 'price_tracker',
       targetProductId: catalogProducts[1].id,
     });
   }
 
-  const guideCategories: GuideArticle['category'][] = [
-    'Tips',
-    'Trends',
-    'Safety',
+  const curatedGuideTemplates: {
+    title: string;
+    category: GuideArticle['category'];
+    date: string;
+    readTime: string;
+    summary: string;
+    bulletPoints: string[];
+  }[] = [
+    {
+      title: 'How All-Inclusive Pricing Works',
+      category: 'Tips',
+      date: 'Oct 2026',
+      readTime: '2 min read',
+      summary:
+        'Every product price includes international shipping, customs clearance, and local delivery—so there are no surprise fees when your parcel arrives.',
+      bulletPoints: [
+        'Customs duty and import VAT are pre-calculated at checkout.',
+        'Combine 2 or more items in one parcel to save 25% on shipping.',
+        'Track every milestone from dispatch to doorstep delivery.',
+      ],
+    },
+    {
+      title: 'Choosing the Right Delivery Speed',
+      category: 'Trends',
+      date: 'Oct 2026',
+      readTime: '2 min read',
+      summary:
+        'Compare Direct Air, Standard Doorstep, and Dhaka Ready options to balance delivery speed and total cost.',
+      bulletPoints: [
+        'Dhaka Ready items ship locally and arrive in 1–3 days.',
+        'Priority Express delivers international orders in 3–7 days.',
+        'Standard Doorstep covers all 64 districts in 7–12 days.',
+      ],
+    },
+    {
+      title: 'Safe Payments & Easy Returns',
+      category: 'Safety',
+      date: 'Oct 2026',
+      readTime: '2 min read',
+      summary:
+        'Shop confidently with Cash on Delivery, bKash, Nagad, or card payments backed by our 7-day return policy.',
+      bulletPoints: [
+        'Pay in cash upon delivery or use bKash, Nagad, and cards.',
+        'Every seller is verified before listing in the catalog.',
+        'Request a return or replacement within 7 days of delivery.',
+      ],
+    },
   ];
-  const guides: GuideArticle[] =
-    postsRes?.posts && postsRes.posts.length > 0
-      ? postsRes.posts.slice(0, 4).map((post, idx) => {
-          const sentences = post.body
-            .split('.')
-            .map((s) => s.trim())
-            .filter((s) => s.length > 15);
-          return {
-            id: `api-guide-${post.id}`,
-            title: post.title,
-            subtitle: `Tags: ${(post.tags || ['cross-border', 'customs']).join(
-              ', '
-            )} · ${post.views || 420} views`,
-            category: guideCategories[idx % guideCategories.length],
-            date: 'Live API Article',
-            readTime: '3 min read',
-            summary: post.body,
-            bulletPoints:
-              sentences.length >= 2
-                ? sentences.slice(0, 3).map((s) => `${s}.`)
-                : [post.body],
-          };
-        })
-      : [];
+
+  const guides: GuideArticle[] = curatedGuideTemplates.map((tpl, idx) => {
+    const apiPostId = postsRes?.posts?.[idx]?.id ?? idx + 1;
+    return {
+      id: `api-guide-${apiPostId}`,
+      title: tpl.title,
+      subtitle: `${tpl.category} · ${tpl.readTime}`,
+      category: tpl.category,
+      date: tpl.date,
+      readTime: tpl.readTime,
+      summary: tpl.summary,
+      bulletPoints: tpl.bulletPoints,
+    };
+  });
 
   return { addresses, orders, notifications, guides };
 }

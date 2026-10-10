@@ -17,6 +17,7 @@ import { CheckoutFlowScreen } from './components/screens/CheckoutFlowScreen';
 import { OrdersTrackingScreen } from './components/screens/OrdersTrackingScreen';
 import { AccountSupportScreen } from './components/screens/AccountSupportScreen';
 import { AdminDashboardScreen } from './components/screens/AdminDashboardScreen';
+import { PostLoginSetupScreen } from './components/screens/PostLoginSetupScreen';
 import { AppErrorBoundary } from './components/shared/AppErrorBoundary';
 
 const ScreenRouter: React.FC = () => {
@@ -27,6 +28,8 @@ const ScreenRouter: React.FC = () => {
     case 'onboarding':
     case 'auth':
       return <SplashOnboarding />;
+    case 'post_login_setup':
+      return <PostLoginSetupScreen />;
     case 'home':
       return <HomeScreen />;
     case 'categories':

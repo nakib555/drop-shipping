@@ -26,7 +26,8 @@ export type ScreenId =
   | 'support'
   | 'settings'
   | 'guides'
-  | 'admin_dashboard';
+  | 'admin_dashboard'
+  | 'post_login_setup';
 
 // Clean production types — zero ExperienceMode types
 export type UserRole = 'customer' | 'admin';
@@ -177,7 +178,14 @@ export interface CartItem {
 }
 
 export type ShippingMethodId = 'standard' | 'express' | 'hub_pickup';
-export type PaymentMethodId = 'cod' | 'bkash' | 'nagad' | 'card' | 'paypal';
+export type PaymentMethodId =
+  | 'cod'
+  | 'bkash'
+  | 'nagad'
+  | 'rocket'
+  | 'upay'
+  | 'card'
+  | 'paypal';
 
 export interface ShippingAddress {
   id: string;
@@ -187,6 +195,8 @@ export interface ShippingAddress {
   address: string;
   city: string;
   postalCode: string;
+  lat?: number;
+  lng?: number;
   isDefault?: boolean;
 }
 

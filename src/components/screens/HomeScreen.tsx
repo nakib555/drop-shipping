@@ -80,16 +80,13 @@ export const HomeScreen: React.FC = () => {
     () => [
       {
         id: 'hero-direct',
-        kicker: isBn
-          ? 'আনুমানিক কাস্টমস ডিউটি ও ভ্যাট হিসাবসহ'
-          : 'Estimated Duty & 15% VAT Breakdown',
         title: isBn
-          ? 'গ্লোবাল ফ্যাক্টরি থেকে সরাসরি ঢাকা ডেলিভারি'
-          : 'Direct Factory Finds, Delivered to Dhaka',
+          ? 'গ্লোবাল পণ্য, সরাসরি আপনার দরজায়'
+          : 'Global Products, Delivered to You',
         subtitle: isBn
-          ? 'অর্ডার করার আগেই পণ্যমূল্য, এয়ার ফ্রেইট ও কাস্টমস চার্জ তুলনা করুন।'
-          : 'Compare item price, international freight, and estimated customs duties upfront.',
-        primaryLabel: isBn ? 'ক্যাটালগ দেখুন' : 'Explore Catalog',
+          ? 'কাস্টমস ও ডেলিভারি চার্জসহ সম্পূর্ণ মূল্য।'
+          : 'All-inclusive pricing with customs & delivery included.',
+        primaryLabel: isBn ? 'পণ্য দেখুন' : 'Shop Now',
         primaryAction: () => {
           const catalogEl = document.getElementById('home-catalog-section');
           if (catalogEl) {
@@ -102,31 +99,25 @@ export const HomeScreen: React.FC = () => {
       },
       {
         id: 'hero-price-drop',
-        kicker: isBn
-          ? '৩০ দিনের ল্যান্ডেড প্রাইস ট্র্যাকার'
-          : '30-Day Historical Landed Price Tracker',
         title: isBn
-          ? 'দামের ইতিহাস যাচাই করে সেরা ডিলে কিনুন'
-          : 'Verify Historical Landed Prices Before Buying',
+          ? '৩০ দিনের দামের ইতিহাস দেখুন'
+          : '30-Day Price History',
         subtitle: isBn
-          ? 'গত ৩০ দিনের ল্যান্ডেড মূল্যের চার্ট দেখুন এবং প্রাইস অ্যালার্ট সেট করুন।'
-          : 'Inspect 30-day landed price trends and set target price alerts.',
-        primaryLabel: isBn ? 'প্রাইস হিস্ট্রি' : 'Price History',
+          ? 'কেনার আগে দামের পরিবর্তন যাচাই করুন।'
+          : 'Track price drops before you buy.',
+        primaryLabel: isBn ? 'প্রাইস হিস্ট্রি' : 'View Trends',
         primaryAction: () => navigateTo('price_tracker'),
         product: products[1] || products[0],
       },
       {
         id: 'hero-fast-air',
-        kicker: isBn
-          ? 'রুট তুলনা ও অর্ডার ট্র্যাকিং'
-          : 'Multi-Route Shipping & Order Tracking',
         title: isBn
-          ? 'এয়ার এক্সপ্রেস ও ঢাকা হাব রুট তুলনা করুন'
-          : 'Compare Air Express vs. Dhaka Hub Routes',
+          ? 'দ্রুত ও সাশ্রয়ী শিপিং রুট'
+          : 'Flexible Delivery Options',
         subtitle: isBn
-          ? 'ক্যাশ অন ডেলিভারি, বিকাশ, নগদ অথবা কার্ডে নিরাপদে পেমেন্ট করুন।'
-          : 'Pay in BDT via Cash on Delivery, bKash, Nagad, or Card.',
-        primaryLabel: isBn ? 'রুট তুলনা করুন' : 'Compare Routes',
+          ? 'ক্যাশ অন ডেলিভারি, বিকাশ, নগদ ও কার্ড পেমেন্ট।'
+          : 'Pay with Cash on Delivery, bKash, Nagad, or Card.',
+        primaryLabel: isBn ? 'রুট তুলনা' : 'Compare Routes',
         primaryAction: () => navigateTo('seller_compare'),
         product: products[3] || products[0],
       },
@@ -153,13 +144,6 @@ export const HomeScreen: React.FC = () => {
 
   const activeSlide = heroSlides[heroIndex] || heroSlides[0];
   const heroProduct = activeSlide.product;
-  const heroPricing = useMemo(
-    () =>
-      heroProduct
-        ? getCanonicalLandedPricing(heroProduct, selectedRouteByProduct)
-        : null,
-    [heroProduct, selectedRouteByProduct]
-  );
 
   // Deduplicated catalog products by stable product ID
   const uniqueCatalogProducts = useMemo(() => {
@@ -466,21 +450,17 @@ export const HomeScreen: React.FC = () => {
         )}
       </div>
 
-      {/* 2. Compact Promotional Hero Carousel (Hidden while actively typing a search query so results appear immediately) */}
+      {/* 2. Clean Promotional Hero Banner */}
       {!searchQuery.trim() && (
         <section
-          aria-label={
-            isBn
-              ? 'ক্রস-বর্ডার শপিং হাইলাইটস'
-              : 'Cross-Border Shopping Highlights'
-          }
+          aria-label={isBn ? 'ফিচার্ড হাইলাইটস' : 'Featured Highlights'}
           onMouseEnter={() => setIsHeroPaused(true)}
           onMouseLeave={() => setIsHeroPaused(false)}
           onTouchStart={() => setIsHeroPaused(true)}
           onTouchEnd={() => setIsHeroPaused(false)}
           onFocusCapture={() => setIsHeroPaused(true)}
           onBlurCapture={() => setIsHeroPaused(false)}
-          className="relative overflow-hidden rounded-2xl bg-brand-primary text-white p-3.5 sm:p-4 select-none"
+          className="relative overflow-hidden rounded-2xl bg-brand-primary text-white p-4 select-none"
         >
           <AnimatePresence mode="wait" custom={heroDirection} initial={false}>
             <motion.div
@@ -489,13 +469,13 @@ export const HomeScreen: React.FC = () => {
               initial={
                 prefersReducedMotion
                   ? { opacity: 1, x: 0 }
-                  : { opacity: 0, x: heroDirection > 0 ? 28 : -28 }
+                  : { opacity: 0, x: heroDirection > 0 ? 24 : -24 }
               }
               animate={{ opacity: 1, x: 0 }}
               exit={
                 prefersReducedMotion
                   ? { opacity: 0 }
-                  : { opacity: 0, x: heroDirection > 0 ? -28 : 28 }
+                  : { opacity: 0, x: heroDirection > 0 ? -24 : 24 }
               }
               transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
               drag={prefersReducedMotion ? false : 'x'}
@@ -512,18 +492,14 @@ export const HomeScreen: React.FC = () => {
                   );
                 }
               }}
-              className="flex items-center justify-between gap-3 cursor-grab active:cursor-grabbing"
+              className="flex items-center justify-between gap-3.5 cursor-grab active:cursor-grabbing"
             >
-              <div className="flex-1 min-w-0 space-y-1">
-                <p className="text-[11px] font-medium text-emerald-100 truncate">
-                  {activeSlide.kicker}
-                </p>
-
-                <h2 className="text-[15px] sm:text-base leading-5 font-bold tracking-tight text-white line-clamp-2">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <h2 className="text-base sm:text-lg leading-snug font-bold tracking-tight text-white line-clamp-2">
                   {activeSlide.title}
                 </h2>
 
-                <p className="text-xs leading-4 text-emerald-50/90 line-clamp-2">
+                <p className="text-xs leading-relaxed text-emerald-50/90 line-clamp-1">
                   {activeSlide.subtitle}
                 </p>
 
@@ -531,51 +507,38 @@ export const HomeScreen: React.FC = () => {
                   <button
                     type="button"
                     onClick={activeSlide.primaryAction}
-                    className="h-9 px-3.5 rounded-xl bg-white text-brand-primary hover:bg-brand-subtle font-semibold text-xs transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="h-9 px-4 rounded-xl bg-white text-brand-primary hover:bg-brand-subtle font-semibold text-xs inline-flex items-center gap-1.5 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
-                    {activeSlide.primaryLabel}
+                    <span>{activeSlide.primaryLabel}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {heroProduct && heroPricing && (
-                <div
+              {heroProduct && (
+                <button
+                  type="button"
                   onClick={() =>
                     navigateTo('product_detail', { productId: heroProduct.id })
                   }
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${isBn ? heroProduct.nameBn : heroProduct.name}, ${formatPrice(
-                    heroPricing.estimatedLandedBdt
-                  )}`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      navigateTo('product_detail', { productId: heroProduct.id });
-                    }
-                  }}
-                  className="w-20 sm:w-22 shrink-0 bg-white/10 border border-white/15 rounded-xl p-1.5 text-center cursor-pointer hover:bg-white/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  aria-label={isBn ? heroProduct.nameBn : heroProduct.name}
+                  className="w-20 h-20 sm:w-22 sm:h-22 shrink-0 rounded-xl bg-white p-1.5 overflow-hidden shadow-xs hover:scale-[1.02] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <div className="w-full aspect-square rounded-lg bg-white overflow-hidden mb-1">
-                    <img
-                      src={heroProduct.image}
-                      alt={isBn ? heroProduct.nameBn : heroProduct.name}
-                      width={88}
-                      height={88}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="block font-mono-num text-[11px] leading-3.5 font-bold text-white truncate">
-                    {formatPrice(heroPricing.estimatedLandedBdt)}
-                  </span>
-                </div>
+                  <img
+                    src={heroProduct.image}
+                    alt={isBn ? heroProduct.nameBn : heroProduct.name}
+                    width={88}
+                    height={88}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain"
+                  />
+                </button>
               )}
             </motion.div>
           </AnimatePresence>
 
           {/* Quiet Pagination Dots */}
-          <div className="flex items-center justify-center gap-1.5 pt-2.5">
+          <div className="flex items-center justify-center gap-1.5 pt-3">
             {heroSlides.map((slide, idx) => {
               const active = idx === heroIndex;
               return (
