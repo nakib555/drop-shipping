@@ -1104,7 +1104,7 @@ export const CheckoutFlowScreen: React.FC = () => {
         const created = placeOrder(idempotencyKey);
         setIsPlacingOrder(false);
         submissionLockRef.current = false;
-        navigateTo('order_success', { orderId: created.id });
+        navigateTo('order_success', { orderId: created.id, replace: true, direction: 'forward' });
       }, 500);
     };
 

@@ -40,17 +40,19 @@ export const ProductDetailScreen: React.FC = () => {
     showToast,
   } = useDeshiMart();
 
+  const defaultEdition =
+    selectedProduct.editions?.[0] ||
+    (selectedProduct.category === 'electronics'
+      ? 'Standard Global (220V)'
+      : 'Standard Fit');
+
   const [selectedColor, setSelectedColor] = useState(
     selectedProduct.colors[0]?.name || 'Standard Edition'
   );
   const [selectedSize, setSelectedSize] = useState(
     selectedProduct.sizes?.[1] || selectedProduct.sizes?.[0] || ''
   );
-  const [selectedEdition, setSelectedEdition] = useState(
-    selectedProduct.category === 'electronics'
-      ? 'Standard Global (220V)'
-      : 'Standard Export Pack'
-  );
+  const [selectedEdition, setSelectedEdition] = useState(defaultEdition);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageView, setActiveImageView] = useState<number>(0);
   const [zoomOpen, setZoomOpen] = useState(false);
@@ -76,9 +78,10 @@ export const ProductDetailScreen: React.FC = () => {
     setSelectedColor(selectedProduct.colors[0]?.name || 'Standard Edition');
     setSelectedSize(selectedProduct.sizes?.[1] || selectedProduct.sizes?.[0] || '');
     setSelectedEdition(
-      selectedProduct.category === 'electronics'
-        ? 'Standard Global (220V)'
-        : 'Standard Export Pack'
+      selectedProduct.editions?.[0] ||
+        (selectedProduct.category === 'electronics'
+          ? 'Standard Global (220V)'
+          : 'Standard Fit')
     );
     setQuantity(1);
     setActiveImageView(0);
@@ -116,16 +119,54 @@ export const ProductDetailScreen: React.FC = () => {
     [selectedProduct.category]
   );
 
-  const similarProducts = useMemo(
-    () =>
-      products
-        .filter(
+  const similarProducts = useMemo(() => {
+    const isAthleticShorts =
+      selectedProduct.name.toLowerCase().includes('athletic shorts') ||
+      selectedProduct.subcategory === "Women's Activewear";
+
+    if (isAthleticShorts) {
+      // Prioritize contextual fitness and activewear companions (Water Bottle, Compression Socks, Running Shoes, Yoga Mat)
+      const contextualList = products.filter((p) => {
+        if (p.id === selectedProduct.id) return false;
+        const n = p.name.toLowerCase();
+        return (
+          n.includes('water bottle') ||
+          n.includes('sock') ||
+          n.includes('running shoe') ||
+          n.includes('yoga') ||
+          n.includes('activewear') ||
+          p.subcategory === "Women's Activewear"
+        );
+      });
+
+      const otherFashion = products.filter(
+        (p) =>
+          p.id !== selectedProduct.id &&
+          p.category === 'fashion' &&
+          !contextualList.some((cp) => cp.id === p.id)
+      );
+
+      return [...contextualList, ...otherFashion].slice(0, 8);
+    }
+
+    const sameSubcategory = selectedProduct.subcategory
+      ? products.filter(
           (p) =>
-            p.id !== selectedProduct.id && p.category === selectedProduct.category
+            p.id !== selectedProduct.id &&
+            p.category === selectedProduct.category &&
+            p.subcategory === selectedProduct.subcategory
         )
-        .slice(0, 8),
-    [products, selectedProduct.category, selectedProduct.id]
-  );
+      : [];
+
+    const otherCategoryProducts = products.filter(
+      (p) =>
+        p.id !== selectedProduct.id &&
+        p.category === selectedProduct.category &&
+        !sameSubcategory.some((sp) => sp.id === p.id)
+    );
+
+    return [...sameSubcategory, ...otherCategoryProducts].slice(0, 8);
+  }, [products, selectedProduct]);
 
   const recentlyViewedProducts = useMemo(
     () =>

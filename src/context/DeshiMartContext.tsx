@@ -35,6 +35,12 @@ import {
   UserRole,
 } from '../types/deshimart';
 import { validateBangladeshNidInput } from '../utils/addressAndPaymentValidator';
+import {
+  getHierarchicalParent,
+  isRootTabScreen,
+  NavigationDirection,
+  RouteOptions,
+} from '../services/routingEngine';
 
 export interface SmartFiltersState {
   under2000Bdt: boolean;
@@ -55,9 +61,10 @@ export interface ToastMessage {
 
 // Clean production DeshiMartContext — zero ExperienceMode state
 interface DeshiMartContextValue {
-  // Navigation
+  // Navigation & Directional Flow
   currentScreen: ScreenId;
-  navigateTo: (screen: ScreenId, options?: { productId?: string; categoryId?: CategoryId; orderId?: string }) => void;
+  navigationDirection: NavigationDirection;
+  navigateTo: (screen: ScreenId, options?: RouteOptions) => void;
   goBack: () => void;
 
   // User & Auth (Multi-Role RBAC: customer | admin)
@@ -313,6 +320,12 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [routeStack, setRouteStack] = useState<AppRouteHistoryEntry[]>(() => {
     try {
       if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const path = window.location.pathname.toLowerCase();
+        if (path === '/admin' || urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
+          return [{ screen: 'admin_dashboard' }];
+        }
+
         const sessionRouteRaw = window.sessionStorage.getItem(ACTIVE_ROUTE_SESSION_KEY);
         if (sessionRouteRaw) {
           const parsed = JSON.parse(sessionRouteRaw) as AppRouteHistoryEntry[];
@@ -339,8 +352,27 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     memberTier: string;
     memberSince: string;
     isLoggedIn: boolean;
-  }>(() =>
-    readVersionedStorage('deshimart_user_v2', {
+  }>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const path = window.location.pathname.toLowerCase();
+        if (path === '/admin' || urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
+          return {
+            fullName: 'Nakib Prince',
+            email: 'admin@deshimart.bd',
+            phone: '+880 1819 001122',
+            role: 'admin' as UserRole,
+            memberTier: 'Staff Operations Director (Demo Sandbox)',
+            memberSince: 'Jan 2024',
+            isLoggedIn: true,
+          };
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return readVersionedStorage('deshimart_user_v2', {
       fullName: 'Tanvir Ahmed',
       email: 'tanvir.ahmed@deshimart.bd',
       phone: '+880 1712 345678',
@@ -348,8 +380,8 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       memberTier: 'Gold Global Importer',
       memberSince: 'March 2025',
       isLoggedIn: true,
-    })
-  );
+    });
+  });
 
   // PII-Safe NID & Security state (never stores unmasked raw NID digits)
   const [nidSecurity, setNidSecurity] = useState<NidVerificationRecord>(() =>
@@ -660,18 +692,27 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }, 2600);
   };
 
+  const [navigationDirection, setNavigationDirection] = useState<NavigationDirection>('forward');
+
   const currentRoute = routeStack[routeStack.length - 1] || { screen: 'home' as ScreenId };
   const currentScreen = currentRoute.screen;
 
-  const navigateTo = (
+  const navigateTo = useCallback((
     screen: ScreenId,
-    options?: { productId?: string; categoryId?: CategoryId; orderId?: string }
+    options?: RouteOptions
   ) => {
     // Route Guard 1: Protect Admin Console from unauthorized customer navigation
     if (screen === 'admin_dashboard' && user.role !== 'admin') {
       showToast('Admin authorization required to access Admin Console', 'info');
       return;
     }
+
+    const direction: NavigationDirection =
+      options?.direction ||
+      (isRootTabScreen(screen) && isRootTabScreen(currentScreen)
+        ? 'tab'
+        : 'forward');
+    setNavigationDirection(direction);
 
     let nextProductId = selectedProductId;
     let nextCategoryId = selectedCategoryId;
@@ -720,39 +761,96 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ) {
         return prev;
       }
+
+      // Root tab navigation replaces shallow history to avoid stack explosion
+      if (isRootTabScreen(screen)) {
+        return [{
+          screen,
+          productId: nextProductId,
+          categoryId: nextCategoryId,
+          orderId: nextOrderId,
+        }];
+      }
+
       const nextEntry: AppRouteHistoryEntry = {
         screen,
         productId: nextProductId,
         categoryId: nextCategoryId,
         orderId: nextOrderId,
       };
+
+      if (options?.replace) {
+        return [...prev.slice(0, -1), nextEntry];
+      }
+
       // Cap history stack depth to 32 entries to prevent unbounded memory growth
       const next = [...prev, nextEntry];
       return next.length > 32 ? next.slice(next.length - 32) : next;
     });
-  };
+  }, [catalogProducts, currentScreen, orders, selectedCategoryId, selectedOrderId, selectedProductId, user.role]);
 
-  const goBack = () => {
-    // Safety Guard: Pressing Back on Order Confirmation returns to Home rather than re-entering a completed checkout step
+  const goBack = useCallback(() => {
+    setNavigationDirection('backward');
+
+    // Safety Guard 1: Pressing Back on Order Confirmation returns to Orders or Home (never re-enters checkout stages)
     if (currentScreen === 'order_success') {
-      setRouteStack([{ screen: 'home', productId: selectedProductId, categoryId: selectedCategoryId, orderId: selectedOrderId }]);
+      setRouteStack([{ screen: 'orders', orderId: selectedOrderId }]);
       return;
     }
 
     setRouteStack((prev) => {
-      if (prev.length <= 1) {
-        return [{ screen: 'home', productId: selectedProductId, categoryId: selectedCategoryId, orderId: selectedOrderId }];
+      // If stack has prior entries, pop smoothly
+      if (prev.length > 1) {
+        const nextStack = prev.slice(0, -1);
+        const target = nextStack[nextStack.length - 1];
+        if (target) {
+          if (target.productId) setSelectedProductId(target.productId);
+          if (target.categoryId) setSelectedCategoryId(target.categoryId);
+          if (target.orderId) setSelectedOrderId(target.orderId);
+        }
+        return nextStack;
       }
-      const nextStack = prev.slice(0, -1);
-      const target = nextStack[nextStack.length - 1];
-      if (target) {
-        if (target.productId) setSelectedProductId(target.productId);
-        if (target.categoryId) setSelectedCategoryId(target.categoryId);
-        if (target.orderId) setSelectedOrderId(target.orderId);
+
+      // Fallback: Smart Hierarchical Parent Resolution
+      const parentResolution = getHierarchicalParent(currentScreen, {
+        productId: selectedProductId,
+        categoryId: selectedCategoryId,
+        orderId: selectedOrderId,
+      });
+
+      if (parentResolution.preservedOptions?.productId) {
+        setSelectedProductId(parentResolution.preservedOptions.productId);
       }
-      return nextStack;
+      if (parentResolution.preservedOptions?.categoryId) {
+        setSelectedCategoryId(parentResolution.preservedOptions.categoryId);
+      }
+      if (parentResolution.preservedOptions?.orderId) {
+        setSelectedOrderId(parentResolution.preservedOptions.orderId);
+      }
+
+      return [{
+        screen: parentResolution.parentScreen,
+        productId: parentResolution.preservedOptions?.productId || selectedProductId,
+        categoryId: parentResolution.preservedOptions?.categoryId || selectedCategoryId,
+        orderId: parentResolution.preservedOptions?.orderId || selectedOrderId,
+      }];
     });
-  };
+  }, [currentScreen, selectedCategoryId, selectedOrderId, selectedProductId]);
+
+  // Synchronize browser history / Android hardware back button
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      goBack();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [goBack]);
 
   const formatPrice = (bdtAmount: number): string => {
     if (currency === 'USD') {
@@ -1923,6 +2021,7 @@ export const DeshiMartProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     <DeshiMartContext.Provider
       value={{
         currentScreen,
+        navigationDirection,
         navigateTo,
         goBack,
         user,

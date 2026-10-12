@@ -1,6 +1,6 @@
 {
-  "summary":  "Comprehensive engineering specification and remediation plan for professional noise cleaning in the DeshiMart Admin Console (AdminDashboardScreen.tsx), removing internal audit logs and rule version telemetry, streamlining KPI cards to 1 primary metric and 1 concise sub-label, and compacting order and catalog rows with balanced action controls.",
-  "updatedAt":  "2026-10-10T15:24:09.538511154Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Comprehensive Engineering Implementation Plan for DeshiMart Mobile Routing & Directional Navigation:\n- Establishes smart hierarchical back-navigation across all app flows (Catalog, Checkout, Tracking, Account, Comparison).\n- Maps default hierarchical fallback parents for every ScreenId when history stack is shallow or multi-entry.\n- Implements directional flow awareness (forward, backward, root tab switch) with motion transition support.\n- Hardens browser PopState & hardware back-button synchronization.\n- Enforces checkout flow immutability to prevent re-entering completed checkout stages after order placement.",
+  "updatedAt": "2026-10-12T16:59:54.731935442Z",
+  "requestFeedback": true,
+  "userFacing": true
 }

@@ -11,6 +11,7 @@ import { PWAInstallPopup } from '../shared/PWAInstallPopup';
 export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
     currentScreen,
+    navigationDirection,
     selectedProductId,
     language,
     darkMode,
@@ -37,6 +38,20 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
   const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
     scrollMemoryRef.current[activeRouteKey] = e.currentTarget.scrollTop;
   };
+
+  const transitionInitial =
+    navigationDirection === 'tab'
+      ? { opacity: 0, x: 0 }
+      : navigationDirection === 'forward'
+      ? { opacity: 0, x: 22 }
+      : { opacity: 0, x: -22 };
+
+  const transitionExit =
+    navigationDirection === 'tab'
+      ? { opacity: 0, x: 0 }
+      : navigationDirection === 'forward'
+      ? { opacity: 0, x: -18 }
+      : { opacity: 0, x: 18 };
 
   return (
     <div
@@ -71,10 +86,10 @@ export const MobileShell: React.FC<{ children: React.ReactNode }> = ({ children 
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${currentScreen}-${selectedProductId}`}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -3 }}
-              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              initial={transitionInitial}
+              animate={{ opacity: 1, x: 0 }}
+              exit={transitionExit}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               className="flex-1 flex flex-col min-h-full w-full max-w-full min-w-0"
             >
               {children}

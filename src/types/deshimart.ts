@@ -137,6 +137,8 @@ export interface Product {
   availabilityStatus?: string;
   dimensions?: string;
   category: CategoryId;
+  subcategory?: string;
+  subcategoryBn?: string;
   image: string;
   gallery?: string[];
   hsCode?: string;
@@ -163,6 +165,7 @@ export interface Product {
   inStock: boolean;
   colors: { name: string; hex: string }[];
   sizes?: string[];
+  editions?: string[];
   tags?: string[];
   highlights: string[];
   specs: {

@@ -75,14 +75,6 @@ export const BottomTabBar: React.FC = () => {
       ],
     },
     {
-      id: 'wishlist',
-      label: 'Wishlist',
-      labelBn: 'উইশলিস্ট',
-      icon: Heart,
-      matchScreens: ['wishlist'],
-      badge: wishlist.length,
-    },
-    {
       id: 'orders',
       label: 'Orders',
       labelBn: 'অর্ডার',
@@ -129,7 +121,7 @@ export const BottomTabBar: React.FC = () => {
       aria-label="Primary Bottom Navigation"
       className="z-50 pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur border-t border-app-border shrink-0 select-none"
     >
-      <div className="h-[58px] grid grid-cols-6 items-center px-1.5">
+      <div className="h-[58px] grid grid-cols-5 items-center px-1.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = tab.matchScreens.includes(currentScreen);
@@ -140,7 +132,7 @@ export const BottomTabBar: React.FC = () => {
               type="button"
               aria-current={isActive ? 'page' : undefined}
               whileTap={{ scale: 0.94 }}
-              onClick={() => navigateTo(tab.id)}
+              onClick={() => navigateTo(tab.id, { direction: 'tab' })}
               className={`group relative w-full h-12 px-0.5 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
                 isActive
                   ? 'text-brand-primary text-[10px] font-semibold'

@@ -321,9 +321,11 @@ export const PdpVariantSelector: React.FC<PdpVariantSelectorProps> = ({
 }) => {
   const isFashion = product.category === 'fashion' || Boolean(product.sizes?.length);
   const editionOptions =
-    product.category === 'electronics'
+    product.editions && product.editions.length > 0
+      ? product.editions
+      : product.category === 'electronics'
       ? ['Standard Global (220V)', 'Pro Bundle (+Adapter)', 'Regional Unlocked (OOS)']
-      : ['Standard Export Pack', 'Gift Box Edition'];
+      : ['Standard Fit', 'Tailored Edition'];
 
   return (
     <section

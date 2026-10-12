@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -148,6 +148,7 @@ export const AccountSupportScreen: React.FC = () => {
     dateOfBirth?: string;
   }>({});
   const [showUpdateNidForm, setShowUpdateNidForm] = useState(false);
+  const versionTapRef = useRef<{ count: number; lastTime: number }>({ count: 0, lastTime: 0 });
 
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1311,6 +1312,44 @@ export const AccountSupportScreen: React.FC = () => {
           )}
         </div>
 
+        {/* App Version & Build Information (5-tap trigger unlocks Admin Console) */}
+        <div className="bg-white rounded-xl border border-app-border p-4 flex items-center justify-between gap-3 select-none">
+          <div>
+            <h2 className="text-xs font-semibold text-content-primary">
+              {language === 'BN' ? 'অ্যাপ সংস্করণ' : 'App Version'}
+            </h2>
+            <p className="text-[11px] text-content-secondary mt-0.5">
+              Production Build · NBR Cross-Border Tariff v2.5.0
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const now = Date.now();
+              if (now - versionTapRef.current.lastTime < 2000) {
+                versionTapRef.current.count += 1;
+              } else {
+                versionTapRef.current.count = 1;
+              }
+              versionTapRef.current.lastTime = now;
+
+              if (versionTapRef.current.count >= 5) {
+                versionTapRef.current.count = 0;
+                switchUserRole('admin');
+                showToast(
+                  language === 'BN'
+                    ? 'অ্যাডমিন কনসোল আনলক করা হয়েছে!'
+                    : 'Admin Console Unlocked!',
+                  'success'
+                );
+              }
+            }}
+            className="text-xs font-mono font-semibold text-content-secondary hover:text-content-primary px-2.5 py-1 rounded-md bg-app-subtle active:scale-95 transition-transform"
+          >
+            v2.5.0-BD
+          </button>
+        </div>
+
         <button
           type="button"
           onClick={() => navigateTo('account')}
@@ -2077,41 +2116,8 @@ export const AccountSupportScreen: React.FC = () => {
 
   return (
     <div className="p-4 space-y-4 pb-6 bg-app-bg">
-      {/* 1. Clean Customer Profile Card with Role Switcher & 4-Stat Strip */}
+      {/* 1. Clean Customer Profile Card with 4-Stat Strip */}
       <div className="bg-white rounded-2xl border border-app-border overflow-hidden">
-        {/* Role Switcher Bar */}
-        <div className="px-4 py-2.5 bg-app-subtle border-b border-app-border flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold text-content-secondary">
-            {language === 'BN' ? 'অ্যাকাউন্ট মোড' : 'Account Mode'}
-          </span>
-          <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-app-border">
-            <button
-              type="button"
-              onClick={() => {
-                if (user.role !== 'customer') switchUserRole('customer');
-              }}
-              className={`h-7 px-3 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${
-                user.role === 'customer'
-                  ? 'bg-brand-primary text-white'
-                  : 'text-content-secondary hover:text-content-primary'
-              }`}
-            >
-              {language === 'BN' ? 'কাস্টমার' : 'Customer'}
-            </button>
-            <button
-              type="button"
-              onClick={() => switchUserRole('admin')}
-              className={`h-7 px-3 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${
-                user.role === 'admin'
-                  ? 'bg-brand-primary text-white'
-                  : 'text-content-secondary hover:text-content-primary'
-              }`}
-            >
-              {language === 'BN' ? 'অ্যাডমিন' : 'Admin'}
-            </button>
-          </div>
-        </div>
-
         {/* Member Identity Block */}
         <div className="p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">

@@ -389,7 +389,8 @@ export const TopAppBar: React.FC = () => {
             </>
           )}
 
-          {currentScreen === 'cart' && (
+          {/* Wishlist Action Icon across screens (excluding product detail where local bookmark exists, and wishlist itself) */}
+          {currentScreen !== 'product_detail' && currentScreen !== 'wishlist' && (
             <button
               type="button"
               aria-label={

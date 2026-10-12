@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Package,
   Plus,
   RotateCcw,
   Scale,
@@ -515,7 +516,22 @@ export const HomeScreen: React.FC = () => {
                 </div>
               </div>
 
-              {heroProduct && (
+              {activeSlide.id === 'hero-fast-air' ? (
+                <button
+                  type="button"
+                  onClick={activeSlide.primaryAction}
+                  aria-label={isBn ? 'মাল্টি-কুরিয়ার ডেলিভারি অপশন' : 'Multi-courier parcel delivery options'}
+                  className="w-20 h-20 sm:w-22 sm:h-22 shrink-0 rounded-xl bg-white/95 p-2 overflow-hidden shadow-xs hover:scale-[1.02] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white flex flex-col items-center justify-center text-center gap-1 text-slate-800"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-emerald-100 text-brand-primary flex items-center justify-center">
+                    <Truck className="w-5 h-5 stroke-[2.2]" />
+                  </div>
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-brand-primary uppercase tracking-tight">
+                    <Package className="w-2.5 h-2.5" />
+                    <span>BD Express</span>
+                  </div>
+                </button>
+              ) : heroProduct ? (
                 <button
                   type="button"
                   onClick={() =>
@@ -533,7 +549,7 @@ export const HomeScreen: React.FC = () => {
                     className="w-full h-full object-contain"
                   />
                 </button>
-              )}
+              ) : null}
             </motion.div>
           </AnimatePresence>
 
