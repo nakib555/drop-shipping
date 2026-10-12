@@ -1554,172 +1554,152 @@ export const AccountSupportScreen: React.FC = () => {
       setNidFormErrors({});
       showToast(
         isBn
-          ? 'নমুনা ১০-ডিজিট স্মার্ট এনআইডি পূরণ করা হয়েছে'
-          : 'Sample 10-digit Smart NID filled for testing',
+          ? 'নমুনা স্মার্ট এনআইডি পূরণ করা হয়েছে'
+          : 'Sample 10-digit Smart NID loaded',
         'info'
       );
     };
 
     return (
-      <div className="p-4 space-y-4 pb-6 bg-app-bg">
-        {/* 1. Digital Bangladesh Smart NID & NBR Customs Status Card */}
-        <div
-          className={`rounded-2xl border p-4 space-y-3.5 transition-all ${
-            isVerified
-              ? 'bg-brand-subtle/35 border-brand-primary'
-              : 'bg-white border-app-border'
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
+      <div className="p-4 space-y-4 pb-8 bg-app-bg">
+        {/* 1. Official National ID Status Card */}
+        <div className="bg-white rounded-2xl border border-app-border overflow-hidden shadow-2xs">
+          <div className="p-4 flex items-center justify-between gap-3 border-b border-app-border/70">
             <div className="flex items-center gap-3 min-w-0">
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                   isVerified
                     ? 'bg-brand-primary text-white'
                     : 'bg-app-subtle text-content-secondary border border-app-border'
                 }`}
               >
-                <ShieldCheck className="w-5 h-5" />
+                <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-content-primary">
-                    {isBn
-                      ? 'বাংলাদেশ জাতীয় পরিচয়পত্র (NID)'
-                      : 'Bangladesh National ID (NID)'}
+                    {isBn ? 'জাতীয় পরিচয়পত্র (NID)' : 'National ID (NID)'}
                   </h2>
                   <span
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                       isVerified
-                        ? 'bg-brand-primary text-white'
-                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        ? 'bg-emerald-50 text-brand-primary border border-emerald-200'
+                        : 'bg-amber-50 text-amber-800 border border-amber-200'
                     }`}
                   >
                     {isVerified
-                      ? isBn
-                        ? '✓ যাচাইকৃত'
-                        : '✓ Verified'
-                      : isBn
-                      ? 'অযাচাইকৃত'
-                      : 'Unverified'}
+                      ? isBn ? 'যাচাইকৃত' : 'Verified'
+                      : isBn ? 'অযাচাইকৃত' : 'Action Required'}
                   </span>
                 </div>
-                <p className="text-xs text-content-secondary mt-0.5 leading-snug">
+                <p className="text-[11px] text-content-secondary truncate mt-0.5">
                   {isVerified
                     ? isBn
-                      ? 'এনবিআর কাস্টমস ফাস্ট-ট্র্যাক এবং উচ্চ-মূল্যের COD সক্রিয় রয়েছে।'
-                      : 'NBR Customs Fast-Track & High-Value COD protection active.'
+                      ? 'এনবিআর কাস্টমস ক্লিয়ারেন্স নিশ্চিত'
+                      : 'NBR customs clearance & COD active'
                     : isBn
-                    ? 'আন্তর্জাতিক কাস্টমস ক্লিয়ারেন্স ও অ্যাকাউন্ট নিরাপত্তার জন্য এনআইডি যাচাই করুন।'
-                    : 'Verify your NID for Dhaka airport customs clearance & account security.'}
+                      ? 'আন্তর্জাতিক পণ্যের জন্য এনআইডি যাচাই করুন'
+                      : 'Required for cross-border customs clearance'}
                 </p>
               </div>
             </div>
+
+            {isVerified && !showUpdateNidForm && (
+              <button
+                type="button"
+                onClick={() => setShowUpdateNidForm(true)}
+                className="h-8 px-3 rounded-lg bg-app-subtle hover:bg-slate-200 text-xs font-semibold text-content-primary transition-colors shrink-0"
+              >
+                {isBn ? 'এডিট' : 'Edit'}
+              </button>
+            )}
           </div>
 
+          {/* Verified NID Summary Grid */}
           {isVerified && (
-            <div className="bg-white rounded-xl border border-app-border p-3.5 space-y-2.5">
-              <div className="flex items-center justify-between border-b border-app-border pb-2">
+            <div className="p-4 space-y-3 bg-slate-50/50">
+              <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-content-muted block">
-                    {isBn ? 'এনআইডি কার্ডধারীর নাম' : 'NID Holder Name'}
+                  <span className="text-[10px] uppercase font-semibold text-content-muted block">
+                    {isBn ? 'কার্ডধারীর নাম' : 'Holder Name'}
                   </span>
-                  <span className="text-xs font-bold text-content-primary">
+                  <span className="font-semibold text-content-primary truncate block mt-0.5">
                     {nidSecurity.holderName || user.fullName}
                   </span>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-brand-subtle text-brand-primary text-[10px] font-semibold">
-                  {getBangladeshNidFormatLabel(nidSecurity.nidFormat, isBn)}
-                </span>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
                 <div>
-                  <span className="text-[10px] text-content-muted block">
-                    {isBn ? 'গোপনীয় এনআইডি নম্বর' : 'Masked NID Number'}
+                  <span className="text-[10px] uppercase font-semibold text-content-muted block">
+                    {isBn ? 'এনআইডি নম্বর' : 'NID Number'}
                   </span>
-                  <span className="font-mono-num font-bold text-content-primary">
+                  <span className="font-mono-num font-bold text-content-primary block mt-0.5">
                     {nidSecurity.maskedNid}
                   </span>
                 </div>
+
                 <div>
-                  <span className="text-[10px] text-content-muted block">
-                    {isBn ? 'জন্ম তারিখ' : 'Date of Birth'}
+                  <span className="text-[10px] uppercase font-semibold text-content-muted block">
+                    {isBn ? 'কার্ডের ধরন' : 'Format'}
                   </span>
-                  <span className="font-mono-num font-semibold text-content-primary">
-                    {nidSecurity.dateOfBirth}
+                  <span className="font-medium text-content-secondary block mt-0.5">
+                    {getBangladeshNidFormatLabel(nidSecurity.nidFormat, isBn)}
                   </span>
                 </div>
+
                 <div>
-                  <span className="text-[10px] text-content-muted block">
-                    {isBn ? 'কাস্টমস ক্লিয়ারেন্স টোকেন' : 'NBR Customs Token'}
+                  <span className="text-[10px] uppercase font-semibold text-content-muted block">
+                    {isBn ? 'কাস্টমস টোকেন' : 'Customs Token'}
                   </span>
-                  <span className="font-mono-num text-[11px] font-semibold text-brand-primary">
+                  <span className="font-mono-num font-medium text-brand-primary truncate block mt-0.5">
                     {nidSecurity.verificationToken}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-content-muted block">
-                    {isBn ? 'যাচাইয়ের তারিখ' : 'Verified On'}
-                  </span>
-                  <span className="font-mono-num text-[11px] font-medium text-content-secondary">
-                    {nidSecurity.verifiedAt || 'Today'}
                   </span>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-app-border flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowUpdateNidForm((prev) => !prev)}
-                  className="text-xs font-semibold text-brand-primary hover:underline"
-                >
-                  {showUpdateNidForm
-                    ? isBn
-                      ? 'বাতিল করুন'
-                      : 'Cancel Update'
-                    : isBn
-                    ? 'এনআইডি তথ্য পরিবর্তন করুন'
-                    : 'Update NID Record'}
-                </button>
-                <button
-                  type="button"
-                  onClick={revokeNidVerification}
-                  className="text-xs font-medium text-content-muted hover:text-promo-accent transition-colors"
-                >
-                  {isBn ? 'মুছে ফেলুন' : 'Remove NID'}
-                </button>
-              </div>
+              {showUpdateNidForm && (
+                <div className="pt-2 border-t border-app-border flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setShowUpdateNidForm(false)}
+                    className="text-xs font-semibold text-content-secondary hover:text-content-primary"
+                  >
+                    {isBn ? 'বাতিল' : 'Cancel'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={revokeNidVerification}
+                    className="text-xs font-medium text-red-600 hover:text-red-700"
+                  >
+                    {isBn ? 'এনআইডি মুছুন' : 'Remove NID'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* 2. NID Verification Form (Shown when Unverified or Updating) */}
+        {/* 2. Streamlined Verification Form (When Unverified or Updating) */}
         {(!isVerified || showUpdateNidForm) && (
           <form
             onSubmit={handleVerifyNidSubmit}
             noValidate
-            className="bg-white rounded-2xl border border-app-border p-4 space-y-3.5"
+            className="bg-white rounded-2xl border border-app-border p-4 space-y-3.5 shadow-2xs"
           >
-            <div className="flex items-center justify-between gap-2 border-b border-app-border pb-2.5">
+            <div className="flex items-center justify-between border-b border-app-border/70 pb-2.5">
               <div>
                 <h3 className="text-xs font-bold text-content-primary">
-                  {isBn
-                    ? 'এনআইডি যাচাইকরণ ফর্ম'
-                    : 'Verify Bangladesh National ID'}
+                  {isBn ? 'এনআইডি তথ্য প্রদান করুন' : 'Identity Verification'}
                 </h3>
                 <p className="text-[11px] text-content-secondary mt-0.5">
-                  {isBn
-                    ? '১০-ডিজিট স্মার্ট কার্ড, ১৩-ডিজিট বা ১৭-ডিজিট এনআইডি সমর্থিত'
-                    : 'Supports 10-digit Smart Card, 13-digit, or 17-digit EC NID'}
+                  10-digit Smart Card or 13/17-digit NID
                 </p>
               </div>
               <button
                 type="button"
                 onClick={fillSampleSmartNid}
-                className="h-7 px-2.5 rounded-lg bg-brand-subtle border border-brand-border text-brand-primary text-[11px] font-semibold hover:bg-emerald-100/70 transition-colors shrink-0"
+                className="text-[11px] font-semibold text-brand-primary hover:underline shrink-0"
               >
-                {isBn ? 'ডেমো এনআইডি' : 'Fill Sample NID'}
+                {isBn ? 'নমুনা ব্যবহার করুন' : 'Use Sample'}
               </button>
             </div>
 
@@ -1728,9 +1708,7 @@ export const AccountSupportScreen: React.FC = () => {
                 htmlFor="nid-holder-name"
                 className="block text-xs font-medium text-content-secondary mb-1"
               >
-                {isBn
-                  ? 'পূর্ণ নাম (এনআইডি অনুযায়ী)'
-                  : 'Full Name (Exactly as on NID)'}
+                {isBn ? 'পূর্ণ নাম (এনআইডি অনুযায়ী)' : 'Full Name (as on NID)'}
               </label>
               <input
                 id="nid-holder-name"
@@ -1743,7 +1721,7 @@ export const AccountSupportScreen: React.FC = () => {
                   }
                 }}
                 placeholder="e.g. Tanvir Ahmed"
-                className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border text-xs text-content-primary focus:outline-none focus:border-brand-primary"
               />
               {nidFormErrors.holderName && (
                 <p role="alert" className="text-[11px] text-red-600 mt-1">
@@ -1758,9 +1736,7 @@ export const AccountSupportScreen: React.FC = () => {
                   htmlFor="nid-number-input"
                   className="block text-xs font-medium text-content-secondary mb-1"
                 >
-                  {isBn
-                    ? 'এনআইডি নম্বর (১০ / ১৩ / ১৭ ডিজিট)'
-                    : 'NID Number (10 / 13 / 17 Digits)'}
+                  {isBn ? 'এনআইডি নম্বর' : 'NID Number'}
                 </label>
                 <input
                   id="nid-number-input"
@@ -1775,7 +1751,7 @@ export const AccountSupportScreen: React.FC = () => {
                     }
                   }}
                   placeholder="1996482910"
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                  className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                 />
                 {nidFormErrors.nidNumber && (
                   <p role="alert" className="text-[11px] text-red-600 mt-1">
@@ -1789,7 +1765,7 @@ export const AccountSupportScreen: React.FC = () => {
                   htmlFor="nid-dob-input"
                   className="block text-xs font-medium text-content-secondary mb-1"
                 >
-                  {isBn ? 'জন্ম তারিখ (১৮+ বছর)' : 'Date of Birth (18+ Years)'}
+                  {isBn ? 'জন্ম তারিখ' : 'Date of Birth'}
                 </label>
                 <input
                   id="nid-dob-input"
@@ -1801,7 +1777,7 @@ export const AccountSupportScreen: React.FC = () => {
                       setNidFormErrors((p) => ({ ...p, dateOfBirth: undefined }));
                     }
                   }}
-                  className="w-full h-10 px-3 rounded-lg bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
+                  className="w-full h-10 px-3 rounded-xl bg-app-subtle border border-app-border tabular-nums text-xs text-content-primary focus:outline-none focus:border-brand-primary"
                 />
                 {nidFormErrors.dateOfBirth && (
                   <p role="alert" className="text-[11px] text-red-600 mt-1">
@@ -1811,110 +1787,44 @@ export const AccountSupportScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Smart NID Card Front & Back Verification Check */}
-            <div className="space-y-1.5">
-              <span className="block text-xs font-medium text-content-secondary">
+            <div className="p-3 rounded-xl bg-app-subtle/80 border border-app-border flex items-center gap-2 text-content-secondary">
+              <Lock className="w-4 h-4 text-brand-primary shrink-0" />
+              <span className="text-[11px] leading-snug">
                 {isBn
-                  ? 'স্মার্ট কার্ড ডকুমেন্ট যাচাই'
-                  : 'Smart Card Document Check'}
+                  ? 'আপনার পূর্ণ এনআইডি সংরক্ষিত হয় না; শুধুমাত্র শেষ ৪ ডিজিট ও কাস্টমস টোকেন সংরক্ষিত থাকে।'
+                  : 'Zero raw PII storage: Only masked last 4 digits and customs token are retained.'}
               </span>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setFrontDocChecked((v) => !v)}
-                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors ${
-                    frontDocChecked
-                      ? 'bg-brand-subtle/40 border-brand-primary text-content-primary'
-                      : 'bg-app-subtle border-app-border text-content-secondary'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold truncate">
-                      {isBn ? 'সামনের অংশ' : 'NID Front Side'}
-                    </p>
-                    <p className="text-[10px] text-content-muted truncate">
-                      {frontDocChecked ? 'Chip & Photo Ready' : 'Tap to confirm'}
-                    </p>
-                  </div>
-                  <CheckCircle2
-                    className={`w-4 h-4 shrink-0 ${
-                      frontDocChecked ? 'text-brand-primary' : 'text-content-muted'
-                    }`}
-                  />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBackDocChecked((v) => !v)}
-                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors ${
-                    backDocChecked
-                      ? 'bg-brand-subtle/40 border-brand-primary text-content-primary'
-                      : 'bg-app-subtle border-app-border text-content-secondary'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold truncate">
-                      {isBn ? 'পেছনের অংশ' : 'NID Back Side'}
-                    </p>
-                    <p className="text-[10px] text-content-muted truncate">
-                      {backDocChecked ? 'MRZ Barcode Ready' : 'Tap to confirm'}
-                    </p>
-                  </div>
-                  <CheckCircle2
-                    className={`w-4 h-4 shrink-0 ${
-                      backDocChecked ? 'text-brand-primary' : 'text-content-muted'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-app-subtle border border-app-border flex items-start gap-2.5">
-              <Lock className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-              <p className="text-[11px] text-content-secondary leading-relaxed">
-                {isBn
-                  ? 'নিরাপত্তা নীতি: আপনার পূর্ণ এনআইডি নম্বর কখনোই ব্রাউজারে সংরক্ষণ করা হয় না। শুধুমাত্র শেষ ৪ ডিজিট (•••• ১২৩৪) ও কাস্টমস টোকেন সংরক্ষিত থাকে।'
-                  : 'Zero-PII Storage Guarantee: Your full NID number is never stored in plain text. Only the masked last 4 digits and an encrypted NBR customs token are retained.'}
-              </p>
             </div>
 
             <button
               type="submit"
-              className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="w-full h-11 rounded-xl bg-brand-primary hover:bg-brand-hover text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>
-                {isBn
-                  ? 'এনআইডি যাচাই ও সেভ করুন'
-                  : 'Verify & Activate Customs Fast-Track'}
+                {isBn ? 'এনআইডি যাচাই সম্পন্ন করুন' : 'Verify National ID'}
               </span>
             </button>
           </form>
         )}
 
         {/* 3. Account & Checkout Security Controls */}
-        <div className="bg-white rounded-2xl border border-app-border p-4 space-y-3">
-          <div className="flex items-center gap-2 border-b border-app-border pb-2.5">
+        <div className="bg-white rounded-2xl border border-app-border p-4 space-y-3 shadow-2xs">
+          <div className="flex items-center gap-2 border-b border-app-border/70 pb-2.5">
             <Fingerprint className="w-4 h-4 text-brand-primary" />
             <h3 className="text-xs font-bold text-content-primary">
-              {isBn
-                ? 'অ্যাকাউন্ট ও পেমেন্ট নিরাপত্তা নিয়ন্ত্রণ'
-                : 'Account & Checkout Security Controls'}
+              {isBn ? 'অ্যাকাউন্ট নিরাপত্তা' : 'Account Security'}
             </h3>
           </div>
 
-          <div className="divide-y divide-app-border">
+          <div className="divide-y divide-app-border/70">
             <label className="py-2.5 first:pt-0 flex items-center justify-between gap-3 cursor-pointer">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-content-primary">
-                  {isBn
-                    ? '২-ধাপ ওটিপি যাচাইকরণ (2FA)'
-                    : '2-Step SMS / Email OTP Verification'}
+                  {isBn ? '২-ধাপ ওটিপি যাচাই (2FA)' : 'Two-Factor Authentication'}
                 </p>
                 <p className="text-[11px] text-content-secondary mt-0.5">
-                  {isBn
-                    ? 'নতুন ডিভাইস লগইন এবং পেমেন্ট পরিবর্তনের সময় ওটিপি আবশ্যক'
-                    : 'Require OTP when signing in from a new device or changing wallets'}
+                  {isBn ? 'লগইন ও পেমেন্টে ওটিপি কোড আবশ্যক' : 'Require OTP code for sensitive actions'}
                 </p>
               </div>
               <input
@@ -1932,14 +1842,10 @@ export const AccountSupportScreen: React.FC = () => {
             <label className="py-2.5 flex items-center justify-between gap-3 cursor-pointer">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-content-primary">
-                  {isBn
-                    ? 'উচ্চ-মূল্যের COD সুরক্ষা লক (≥ ৳১৫,০০০)'
-                    : 'High-Value COD NID Protection (≥ ৳15,000)'}
+                  {isBn ? 'উচ্চ-মূল্যের COD সুরক্ষা (≥ ৳১৫,০০০)' : 'High-Value COD Protection'}
                 </p>
                 <p className="text-[11px] text-content-secondary mt-0.5">
-                  {isBn
-                    ? 'অনুমোদিত এনআইডি ছাড়া ১৫,০০০ টাকার বেশি ক্যাশ অন ডেলিভারি অর্ডার ব্লক করুন'
-                    : 'Prevent unauthorized high-value Cash on Delivery orders without verified NID'}
+                  {isBn ? 'অনুমোদিত এনআইডি ছাড়া বড় COD ব্লক রাখুন' : 'Enforce verified NID on orders ≥ ৳15,000'}
                 </p>
               </div>
               <input
@@ -1957,14 +1863,10 @@ export const AccountSupportScreen: React.FC = () => {
             <label className="py-2.5 last:pb-0 flex items-center justify-between gap-3 cursor-pointer">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-content-primary">
-                  {isBn
-                    ? 'বায়োমেট্রিক পাসকি লক'
-                    : 'Biometric / Device Passkey Approval'}
+                  {isBn ? 'বায়োমেট্রিক পাসকি' : 'Biometric Passkey'}
                 </p>
                 <p className="text-[11px] text-content-secondary mt-0.5">
-                  {isBn
-                    ? 'দ্রুত চেকআউটের জন্য ডিভাইস আনলক পিন বা ফিঙ্গারপ্রিন্ট ব্যবহার করুন'
-                    : 'Use device screen lock or fingerprint for 1-tap order confirmation'}
+                  {isBn ? 'ডিভাইস ফিঙ্গারপ্রিন্ট বা ফেস আনলক' : 'Device fingerprint or face unlock'}
                 </p>
               </div>
               <input
